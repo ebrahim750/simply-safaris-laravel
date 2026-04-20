@@ -174,6 +174,21 @@ test('root users can upload logo assets', function () {
     Storage::disk('public')->assertExists($siteSettings->favicon_path);
 });
 
+test('uploaded favicon is reflected in the app shell', function () {
+    Storage::fake('public');
+
+    $siteSettings = SiteSetting::query()->create([
+        'site_name' => 'Favicon Site',
+        'favicon_path' => 'site-settings/favicon.png',
+    ]);
+
+    Storage::disk('public')->put($siteSettings->favicon_path, 'favicon');
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee(Storage::disk('public')->url($siteSettings->favicon_path), false);
+});
+
 test('non root users cannot update general site settings', function () {
     $user = User::factory()->create([
         'account_type' => 'admin',

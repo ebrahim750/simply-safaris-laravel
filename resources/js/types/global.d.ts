@@ -23,6 +23,11 @@ declare module '@inertiajs/core' {
             };
             sidebarOpen: boolean;
             applyUserChosenTheme: boolean;
+            siteSettings: {
+                siteName: string;
+                adminLogoLightUrl: string | null;
+                adminLogoDarkUrl: string | null;
+            };
             [key: string]: unknown;
         };
     }

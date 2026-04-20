@@ -2,7 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -35,6 +39,28 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $faviconUrl = null;
+        $siteSettings = Schema::hasTable('site_settings')
+            ? SiteSetting::query()->first()
+            : null;
+        $siteName = $siteSettings?->site_name ?: config('app.name');
+        $adminLogoLightUrl = null;
+        $adminLogoDarkUrl = null;
+
+        if ($siteSettings?->favicon_path) {
+            $faviconUrl = Storage::disk('public')->url($siteSettings->favicon_path);
+        }
+
+        if ($siteSettings?->admin_logo_path_light) {
+            $adminLogoLightUrl = Storage::disk('public')->url($siteSettings->admin_logo_path_light);
+        }
+
+        if ($siteSettings?->admin_logo_path_dark) {
+            $adminLogoDarkUrl = Storage::disk('public')->url($siteSettings->admin_logo_path_dark);
+        }
+
+        View::share('faviconUrl', $faviconUrl);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -46,6 +72,12 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'applyUserChosenTheme' => ! ($request->is('/') || $request->routeIs('home')),
+            'faviconUrl' => $faviconUrl,
+            'siteSettings' => [
+                'siteName' => $siteName,
+                'adminLogoLightUrl' => $adminLogoLightUrl,
+                'adminLogoDarkUrl' => $adminLogoDarkUrl,
+            ],
         ];
     }
 }
