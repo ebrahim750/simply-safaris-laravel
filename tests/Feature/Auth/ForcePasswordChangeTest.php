@@ -3,11 +3,14 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
 test('users with force password change enabled are redirected after login', function () {
+    Http::fake(['https://challenges.cloudflare.com/turnstile/*' => Http::response(['success' => true])]);
+
     $user = User::factory()->create([
         'force_password_change' => true,
     ]);
@@ -15,6 +18,7 @@ test('users with force password change enabled are redirected after login', func
     $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
+        'cf-turnstile-response' => 'fake-token',
     ])->assertRedirect(route('force-password.edit', absolute: false));
 
     $this->assertAuthenticatedAs($user);

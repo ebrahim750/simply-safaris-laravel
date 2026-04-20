@@ -67,14 +67,20 @@ type RootUser = {
     created_at: string | null;
     created_at_display: string;
     can_delete: boolean;
+    force_password_change: boolean;
 };
 
 const props = defineProps<{
     users: RootUser[];
 }>();
 const isCreateUserDialogOpen = ref(false);
+const isEditUserDialogOpen = ref(false);
 const deletingUserId = ref<number | null>(null);
+const editingUserId = ref<number | null>(null);
+const sendingResetLinkUserId = ref<number | null>(null);
 const isDeleteDialogOpen = ref(false);
+const activeEditTab = ref<'details' | 'password'>('details');
+const userBeingEdited = ref<RootUser | null>(null);
 const userPendingDeletion = ref<RootUser | null>(null);
 const createUserForm = useForm({
     name: '',
@@ -83,6 +89,15 @@ const createUserForm = useForm({
     password: '',
     password_confirmation: '',
     send_credentials_email: false,
+});
+const editDetailsForm = useForm({
+    name: '',
+    email: '',
+    account_type: 'admin',
+});
+const editPasswordForm = useForm({
+    password: '',
+    password_confirmation: '',
 });
 
 defineOptions({
@@ -146,6 +161,15 @@ function resetCreateUserForm(): void {
     createUserForm.send_credentials_email = false;
 }
 
+function resetEditUserForms(): void {
+    editDetailsForm.reset();
+    editDetailsForm.clearErrors();
+    editDetailsForm.account_type = 'admin';
+
+    editPasswordForm.reset();
+    editPasswordForm.clearErrors();
+}
+
 function submitCreateUser(): void {
     createUserForm
         .transform((data) => ({
@@ -160,6 +184,113 @@ function submitCreateUser(): void {
                 resetCreateUserForm();
             },
         });
+}
+
+function openEditDialog(user: RootUser): void {
+    if (!user.can_delete) {
+        return;
+    }
+
+    userBeingEdited.value = user;
+    activeEditTab.value = 'details';
+    editDetailsForm.name = user.name;
+    editDetailsForm.email = user.email;
+    editDetailsForm.account_type = user.account_type;
+    editPasswordForm.password = '';
+    editPasswordForm.password_confirmation = '';
+    editDetailsForm.clearErrors();
+    editPasswordForm.clearErrors();
+    isEditUserDialogOpen.value = true;
+}
+
+function handleEditDialogOpenChange(open: boolean): void {
+    isEditUserDialogOpen.value = open;
+
+    if (!open) {
+        userBeingEdited.value = null;
+        activeEditTab.value = 'details';
+        resetEditUserForms();
+    }
+}
+
+function generateEditPassword(length: number = 16): void {
+    const characters =
+        'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    const randomValues = crypto.getRandomValues(new Uint32Array(length));
+
+    editPasswordForm.password = Array.from(randomValues, (value) => {
+        return characters[value % characters.length];
+    }).join('');
+    editPasswordForm.password_confirmation = editPasswordForm.password;
+}
+
+function submitEditDetails(): void {
+    if (userBeingEdited.value === null) {
+        return;
+    }
+
+    editingUserId.value = userBeingEdited.value.id;
+
+    editDetailsForm.patch(
+        RootAccessUserController.update.url(userBeingEdited.value.id),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                isEditUserDialogOpen.value = false;
+            },
+            onFinish: () => {
+                editingUserId.value = null;
+            },
+        },
+    );
+}
+
+function submitEditPassword(): void {
+    if (userBeingEdited.value === null) {
+        return;
+    }
+
+    editingUserId.value = userBeingEdited.value.id;
+
+    editPasswordForm
+        .transform((data) => ({
+            ...data,
+            password_confirmation: data.password,
+        }))
+        .put(
+            RootAccessUserController.updatePassword.url(userBeingEdited.value.id),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    isEditUserDialogOpen.value = false;
+                },
+                onFinish: () => {
+                    editingUserId.value = null;
+                },
+            },
+        );
+}
+
+function sendPasswordResetLink(): void {
+    if (userBeingEdited.value === null) {
+        return;
+    }
+
+    sendingResetLinkUserId.value = userBeingEdited.value.id;
+
+    router.post(
+        RootAccessUserController.sendPasswordResetLink.url(userBeingEdited.value.id),
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                isEditUserDialogOpen.value = false;
+            },
+            onFinish: () => {
+                sendingResetLinkUserId.value = null;
+            },
+        },
+    );
 }
 
 function openDeleteDialog(user: RootUser): void {
@@ -303,6 +434,7 @@ const columns: ColumnDef<RootUser>[] = [
                                   size: 'sm',
                                   class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
                                   type: 'button',
+                                  onClick: () => openEditDialog(row.original),
                               },
                               {
                                   default: () => 'Edit',
@@ -412,6 +544,165 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
             title="Users"
             description="Manage visibility into every account from the root access area."
         />
+
+        <Dialog
+            :open="isEditUserDialogOpen"
+            @update:open="handleEditDialogOpenChange"
+        >
+            <DialogContent class="sm:max-w-2xl">
+                <template v-if="userBeingEdited">
+                    <DialogHeader class="space-y-3">
+                        <DialogTitle>Edit user</DialogTitle>
+                    </DialogHeader>
+
+                    <div class="space-y-6">
+                        <div class="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                            <Button
+                                type="button"
+                                :variant="activeEditTab === 'details' ? 'secondary' : 'ghost'"
+                                class="h-9"
+                                @click="activeEditTab = 'details'"
+                            >
+                                Details
+                            </Button>
+                            <Button
+                                type="button"
+                                :variant="activeEditTab === 'password' ? 'secondary' : 'ghost'"
+                                class="h-9"
+                                @click="activeEditTab = 'password'"
+                            >
+                                Password
+                            </Button>
+                        </div>
+
+                        <form
+                            v-if="activeEditTab === 'details'"
+                            class="space-y-6"
+                            @submit.prevent="submitEditDetails"
+                        >
+                            <div class="grid gap-4">
+                                <div class="grid gap-2">
+                                    <Label for="edit_name">Name</Label>
+                                    <Input
+                                        id="edit_name"
+                                        v-model="editDetailsForm.name"
+                                        placeholder="Full name"
+                                        required
+                                    />
+                                    <InputError :message="editDetailsForm.errors.name" />
+                                </div>
+
+                                <div class="grid gap-2">
+                                    <Label for="edit_email">Email address</Label>
+                                    <Input
+                                        id="edit_email"
+                                        v-model="editDetailsForm.email"
+                                        type="email"
+                                        placeholder="email@example.com"
+                                        required
+                                    />
+                                    <InputError :message="editDetailsForm.errors.email" />
+                                </div>
+
+                                <div class="grid gap-2">
+                                    <Label for="edit_account_type">Account type</Label>
+                                    <Select v-model="editDetailsForm.account_type">
+                                        <SelectTrigger id="edit_account_type" class="w-full">
+                                            <SelectValue placeholder="Select account type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                            <SelectItem value="root">Root</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError :message="editDetailsForm.errors.account_type" />
+                                </div>
+                            </div>
+
+                            <DialogFooter class="justify-start gap-2 sm:justify-start">
+                                <Button
+                                    type="submit"
+                                    :disabled="editingUserId === userBeingEdited.id"
+                                    data-test="save-user-details-button"
+                                >
+                                    <Spinner
+                                        v-if="editingUserId === userBeingEdited.id"
+                                    />
+                                    Save details
+                                </Button>
+                            </DialogFooter>
+                        </form>
+
+                        <div v-else class="space-y-6">
+                            <div class="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                                Setting a password here marks the user to change it on their next login.
+                            </div>
+
+                            <form class="space-y-6" @submit.prevent="submitEditPassword">
+                                <div class="grid gap-4">
+                                    <div class="grid gap-2">
+                                        <Label for="edit_password">New password</Label>
+                                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                                            <PasswordInput
+                                                id="edit_password"
+                                                v-model="editPasswordForm.password"
+                                                autocomplete="new-password"
+                                                placeholder="New password"
+                                                class="w-full"
+                                                required
+                                                @update:model-value="
+                                                    editPasswordForm.password_confirmation =
+                                                        String($event)
+                                                "
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                class="whitespace-nowrap"
+                                                @click="generateEditPassword()"
+                                            >
+                                                Generate
+                                            </Button>
+                                        </div>
+                                        <InputError :message="editPasswordForm.errors.password" />
+                                        <InputError
+                                            :message="editPasswordForm.errors.password_confirmation"
+                                        />
+                                    </div>
+                                </div>
+
+                                <DialogFooter class="justify-start gap-2 sm:justify-start">
+                                    <Button
+                                        type="submit"
+                                        :disabled="editingUserId === userBeingEdited.id"
+                                        data-test="save-user-password-button"
+                                    >
+                                        <Spinner
+                                            v-if="editingUserId === userBeingEdited.id"
+                                        />
+                                        Save password
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        :disabled="sendingResetLinkUserId === userBeingEdited.id"
+                                        data-test="send-user-password-reset-link-button"
+                                        @click="sendPasswordResetLink"
+                                    >
+                                        <Spinner
+                                            v-if="
+                                                sendingResetLinkUserId === userBeingEdited.id
+                                            "
+                                        />
+                                        Send reset link
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </div>
+                    </div>
+                </template>
+            </DialogContent>
+        </Dialog>
 
         <Card>
             <CardHeader>

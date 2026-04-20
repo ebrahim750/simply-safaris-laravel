@@ -1,8 +1,12 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
+
+uses(RefreshDatabase::class);
 
 test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
@@ -11,11 +15,14 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
+    Http::fake(['https://challenges.cloudflare.com/turnstile/*' => Http::response(['success' => true])]);
+
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
+        'cf-turnstile-response' => 'fake-token',
     ]);
 
     $this->assertAuthenticated();
@@ -24,6 +31,8 @@ test('users can authenticate using the login screen', function () {
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+
+    Http::fake(['https://challenges.cloudflare.com/turnstile/*' => Http::response(['success' => true])]);
 
     Features::twoFactorAuthentication([
         'confirm' => true,
@@ -41,6 +50,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $response = $this->post(route('login'), [
         'email' => $user->email,
         'password' => 'password',
+        'cf-turnstile-response' => 'fake-token',
     ]);
 
     $response->assertRedirect(route('two-factor.login'));
@@ -49,11 +59,14 @@ test('users with two factor enabled are redirected to two factor challenge', fun
 });
 
 test('users can not authenticate with invalid password', function () {
+    Http::fake(['https://challenges.cloudflare.com/turnstile/*' => Http::response(['success' => true])]);
+
     $user = User::factory()->create();
 
     $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'wrong-password',
+        'cf-turnstile-response' => 'fake-token',
     ]);
 
     $this->assertGuest();
@@ -76,7 +89,22 @@ test('users are rate limited', function () {
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'wrong-password',
+        'cf-turnstile-response' => 'fake-token',
     ]);
 
     $response->assertTooManyRequests();
+});
+
+test('users cannot authenticate when turnstile fails', function () {
+    Http::fake(['https://challenges.cloudflare.com/turnstile/*' => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']])]);
+
+    $user = User::factory()->create();
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'cf-turnstile-response' => 'bad-token',
+    ]);
+
+    $this->assertGuest();
 });

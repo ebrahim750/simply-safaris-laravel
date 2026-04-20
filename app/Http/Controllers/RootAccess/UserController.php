@@ -4,12 +4,15 @@ namespace App\Http\Controllers\RootAccess;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RootAccess\StoreUserRequest;
+use App\Http\Requests\RootAccess\UpdateUserPasswordRequest;
+use App\Http\Requests\RootAccess\UpdateUserRequest;
 use App\Mail\UserCredentialsEmail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +26,7 @@ class UserController extends Controller
         return Inertia::render('root-access/Users', [
             'users' => User::query()
                 ->latest('id')
-                ->get(['id', 'name', 'email', 'account_type', 'created_at'])
+                ->get(['id', 'name', 'email', 'account_type', 'force_password_change', 'created_at'])
                 ->map(fn (User $user): array => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -32,6 +35,7 @@ class UserController extends Controller
                     'created_at' => $user->created_at?->toIso8601String(),
                     'created_at_display' => $user->created_at?->format('M j, Y g:i A') ?? 'N/A',
                     'can_delete' => $request->user()?->id !== $user->id,
+                    'force_password_change' => $user->force_password_change,
                 ]),
         ]);
     }
@@ -60,6 +64,47 @@ class UserController extends Controller
 
         return to_route('root-access.users')
             ->with('status', "Created user {$user->email}.");
+    }
+
+    /**
+     * Update the specified user.
+     */
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    {
+        abort_if($request->user()?->is($user), 403);
+
+        $user->update($request->validated());
+
+        return to_route('root-access.users')
+            ->with('status', "Updated user {$user->email}.");
+    }
+
+    /**
+     * Update the specified user's password.
+     */
+    public function updatePassword(UpdateUserPasswordRequest $request, User $user): RedirectResponse
+    {
+        abort_if($request->user()?->is($user), 403);
+
+        $user->password = $request->string('password')->toString();
+        $user->force_password_change = true;
+        $user->save();
+
+        return to_route('root-access.users')
+            ->with('status', "Updated password for {$user->email}.");
+    }
+
+    /**
+     * Send a password reset link to the specified user.
+     */
+    public function sendPasswordResetLink(Request $request, User $user): RedirectResponse
+    {
+        abort_if($request->user()?->is($user), 403);
+
+        Password::broker()->sendResetLink(['email' => $user->email]);
+
+        return to_route('root-access.users')
+            ->with('status', "Sent password reset link to {$user->email}.");
     }
 
     /**

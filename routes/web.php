@@ -21,6 +21,9 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::post('root-access/prod-test/email-test', [ProdTestController::class, 'sendEmailTest'])->name('root-access.prod-test.email-test.store');
         Route::get('root-access/users', [UserController::class, 'index'])->name('root-access.users');
         Route::post('root-access/users', [UserController::class, 'store'])->name('root-access.users.store');
+        Route::patch('root-access/users/{user}', [UserController::class, 'update'])->name('root-access.users.update');
+        Route::put('root-access/users/{user}/password', [UserController::class, 'updatePassword'])->name('root-access.users.password.update');
+        Route::post('root-access/users/{user}/password-reset-link', [UserController::class, 'sendPasswordResetLink'])->name('root-access.users.password-reset-link.store');
         Route::delete('root-access/users/{user}', [UserController::class, 'destroy'])->name('root-access.users.destroy');
     });
 });

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -21,7 +22,16 @@ defineOptions({
 defineProps<{
     status?: string;
     canResetPassword: boolean;
+    turnstileSiteKey: string;
 }>();
+
+onMounted(() => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+});
 </script>
 
 <template>
@@ -84,6 +94,14 @@ defineProps<{
                     <Checkbox id="remember" name="remember" :tabindex="3" />
                     <span>Remember me</span>
                 </Label>
+            </div>
+
+            <div class="grid gap-2">
+                <div
+                    class="cf-turnstile"
+                    :data-sitekey="turnstileSiteKey"
+                />
+                <InputError :message="errors['cf-turnstile-response']" />
             </div>
 
             <Button

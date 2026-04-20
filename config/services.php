@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'cf_turnstile' => [
+        'site_key' => env('CF_TURNSTILE_SITE_KEY'),
+        'secret' => env('CF_TURNSTILE_SECRET_KEY'),
+    ],
+
 ];
