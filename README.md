@@ -1,0 +1,1 @@
+"# Simply Safaris Laravel" 
