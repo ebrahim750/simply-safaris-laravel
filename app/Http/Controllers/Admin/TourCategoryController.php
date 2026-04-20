@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreTourCategoryRequest;
+use App\Http\Requests\Admin\UpdateTourCategoryRequest;
 use App\Models\TourCategory;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TourCategoryController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         return Inertia::render('admin/tours/Categories', [
             'categories' => TourCategory::query()
@@ -23,5 +25,27 @@ class TourCategoryController extends Controller
                     'created_at_display' => $category->created_at?->format('M j, Y g:i A') ?? 'N/A',
                 ]),
         ]);
+    }
+
+    public function store(StoreTourCategoryRequest $request): RedirectResponse
+    {
+        TourCategory::query()->create($request->validated());
+
+        return to_route('admin.tours.categories');
+    }
+
+    public function update(UpdateTourCategoryRequest $request, TourCategory $category): RedirectResponse
+    {
+        $category->update($request->validated());
+
+        return to_route('admin.tours.categories');
+    }
+
+    public function destroy(TourCategory $category): RedirectResponse
+    {
+        $category->tours()->detach();
+        $category->delete();
+
+        return to_route('admin.tours.categories');
     }
 }

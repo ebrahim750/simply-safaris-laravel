@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('site_name');
             $table->string('site_tagline')->nullable();
+            $table->string('currency', 3)->default('USD');
             $table->string('primary_color', 20)->nullable();
             $table->string('secondary_color', 20)->nullable();
             $table->string('accent_color', 20)->nullable();

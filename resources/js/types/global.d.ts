@@ -23,7 +23,7 @@ declare module '@inertiajs/core' {
             };
             sidebarOpen: boolean;
             applyUserChosenTheme: boolean;
-            siteSettings: {
+            appBranding: {
                 siteName: string;
                 adminLogoLightUrl: string | null;
                 adminLogoDarkUrl: string | null;

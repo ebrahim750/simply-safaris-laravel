@@ -43,7 +43,9 @@ class HandleInertiaRequests extends Middleware
         $siteSettings = Schema::hasTable('site_settings')
             ? SiteSetting::query()->first()
             : null;
-        $siteName = $siteSettings?->site_name ?: config('app.name');
+        $siteName = blank($siteSettings?->site_name)
+            ? config('app.name')
+            : $siteSettings->site_name;
         $adminLogoLightUrl = null;
         $adminLogoDarkUrl = null;
 
@@ -60,6 +62,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         View::share('faviconUrl', $faviconUrl);
+        View::share('siteName', $siteName);
 
         return [
             ...parent::share($request),
@@ -73,7 +76,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'applyUserChosenTheme' => ! ($request->is('/') || $request->routeIs('home')),
             'faviconUrl' => $faviconUrl,
-            'siteSettings' => [
+            'appBranding' => [
                 'siteName' => $siteName,
                 'adminLogoLightUrl' => $adminLogoLightUrl,
                 'adminLogoDarkUrl' => $adminLogoDarkUrl,

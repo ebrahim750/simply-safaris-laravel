@@ -25,8 +25,15 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::middleware('admin')->group(function () {
         Route::get('admin/tours', [TourController::class, 'index'])->name('admin.tours');
+        Route::patch('admin/tours/{tour}/hidden', [TourController::class, 'toggleHidden'])->name('admin.tours.hidden.toggle');
         Route::get('admin/tours/categories', [TourCategoryController::class, 'index'])->name('admin.tours.categories');
+        Route::post('admin/tours/categories', [TourCategoryController::class, 'store'])->name('admin.tours.categories.store');
+        Route::patch('admin/tours/categories/{category}', [TourCategoryController::class, 'update'])->name('admin.tours.categories.update');
+        Route::delete('admin/tours/categories/{category}', [TourCategoryController::class, 'destroy'])->name('admin.tours.categories.destroy');
         Route::get('admin/tours/activities', [TourActivityController::class, 'index'])->name('admin.tours.activities');
+        Route::post('admin/tours/activities', [TourActivityController::class, 'store'])->name('admin.tours.activities.store');
+        Route::patch('admin/tours/activities/{activity}', [TourActivityController::class, 'update'])->name('admin.tours.activities.update');
+        Route::delete('admin/tours/activities/{activity}', [TourActivityController::class, 'destroy'])->name('admin.tours.activities.destroy');
     });
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');

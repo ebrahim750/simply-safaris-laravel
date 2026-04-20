@@ -14,16 +14,30 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type SiteSettings = {
     site_name: string;
     site_tagline: string | null;
+    currency: string;
+};
+
+type CurrencyOption = {
+    value: string;
+    label: string;
 };
 
 const props = defineProps<{
     siteSettings: SiteSettings;
+    currencyOptions: CurrencyOption[];
 }>();
 
 defineOptions({
@@ -51,6 +65,7 @@ const status = computed(() => page.props.flash.status);
 const form = useForm({
     site_name: props.siteSettings.site_name,
     site_tagline: props.siteSettings.site_tagline ?? '',
+    currency: props.siteSettings.currency,
     _method: 'put',
 });
 
@@ -132,6 +147,25 @@ function isActive(href: string): boolean {
                                 placeholder="Short tagline"
                             />
                             <InputError :message="form.errors.site_tagline" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="currency">Currency</Label>
+                            <Select v-model="form.currency">
+                                <SelectTrigger id="currency" class="w-full">
+                                    <SelectValue placeholder="Select currency" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="option in props.currencyOptions"
+                                        :key="option.value"
+                                        :value="option.value"
+                                    >
+                                        {{ option.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError :message="form.errors.currency" />
                         </div>
                     </div>
 

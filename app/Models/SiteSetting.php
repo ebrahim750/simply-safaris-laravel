@@ -9,6 +9,7 @@ class SiteSetting extends Model
     protected $fillable = [
         'site_name',
         'site_tagline',
+        'currency',
         'primary_color',
         'secondary_color',
         'accent_color',

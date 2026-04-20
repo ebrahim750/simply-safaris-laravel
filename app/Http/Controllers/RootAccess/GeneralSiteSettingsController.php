@@ -11,6 +11,16 @@ use Inertia\Response;
 
 class GeneralSiteSettingsController extends Controller
 {
+    private const CURRENCY_OPTIONS = [
+        ['value' => 'USD', 'label' => 'US Dollar (USD)'],
+        ['value' => 'EUR', 'label' => 'Euro (EUR)'],
+        ['value' => 'GBP', 'label' => 'British Pound (GBP)'],
+        ['value' => 'KES', 'label' => 'Kenyan Shilling (KES)'],
+        ['value' => 'TZS', 'label' => 'Tanzanian Shilling (TZS)'],
+        ['value' => 'UGX', 'label' => 'Ugandan Shilling (UGX)'],
+        ['value' => 'ZAR', 'label' => 'South African Rand (ZAR)'],
+    ];
+
     public function index(): Response
     {
         $siteSettings = $this->resolveSiteSettings();
@@ -19,7 +29,9 @@ class GeneralSiteSettingsController extends Controller
             'siteSettings' => [
                 'site_name' => $siteSettings->site_name,
                 'site_tagline' => $siteSettings->site_tagline,
+                'currency' => $siteSettings->currency,
             ],
+            'currencyOptions' => self::CURRENCY_OPTIONS,
         ]);
     }
 
@@ -37,6 +49,7 @@ class GeneralSiteSettingsController extends Controller
     {
         return SiteSetting::query()->firstOrCreate([], [
             'site_name' => config('app.name'),
+            'currency' => 'USD',
         ]);
     }
 }

@@ -7,7 +7,7 @@ import {
     TestTubeDiagonal,
     Users,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -17,7 +17,6 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
-    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -46,11 +45,7 @@ const isRootUser = computed(() => page.props.auth.user.account_type === 'root');
 const isAdminOrRoot = computed(() =>
     ['root', 'admin'].includes(page.props.auth.user.account_type)
 );
-const isToursExpanded = ref(false);
-
-const toggleTours = () => {
-    isToursExpanded.value = !isToursExpanded.value;
-};
+const isToursExpanded = computed(() => isCurrentOrParentUrl(adminTours().url));
 
 const mainNavItems: NavItem[] = [
     {
@@ -96,32 +91,19 @@ const rootAccessNavItems: NavItem[] = [
         <SidebarContent>
             <NavMain :items="mainNavItems" />
             <SidebarGroup v-if="isAdminOrRoot" class="px-2 py-0">
-                <SidebarGroupLabel>Tours</SidebarGroupLabel>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             as-child
                             :is-active="isCurrentOrParentUrl(adminTours().url)"
                             tooltip="Tours"
-                            @click="toggleTours"
                         >
-                            <button type="button" class="cursor-pointer w-full">
+                            <Link :href="adminTours()">
                                 <Map />
                                 <span>Tours</span>
-                            </button>
+                            </Link>
                         </SidebarMenuButton>
                         <SidebarMenuSub v-if="isToursExpanded">
-                            <SidebarMenuSubItem>
-                                <SidebarMenuSubButton
-                                    as-child
-                                    :is-active="isCurrentUrl(adminTours().url)"
-                                    tooltip="All Tours"
-                                >
-                                    <Link :href="adminTours()">
-                                        All Tours
-                                    </Link>
-                                </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child

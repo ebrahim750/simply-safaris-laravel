@@ -5,49 +5,47 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 
 const page = usePage();
 
-const siteSettings = computed(() => page.props.siteSettings);
-const siteName = computed(() => siteSettings.value.siteName ?? page.props.name);
-const adminLogoLightUrl = computed(() => siteSettings.value.adminLogoLightUrl);
-const adminLogoDarkUrl = computed(() => siteSettings.value.adminLogoDarkUrl);
+const appBranding = computed(() => page.props.appBranding);
+const siteName = computed(() => appBranding.value.siteName ?? page.props.name);
+const adminLogoLightUrl = computed(() => appBranding.value.adminLogoLightUrl);
+const adminLogoDarkUrl = computed(() => appBranding.value.adminLogoDarkUrl);
 const hasCustomAdminLogo = computed(
     () => Boolean(adminLogoLightUrl.value || adminLogoDarkUrl.value),
 );
 </script>
 
 <template>
-    <div
-        class="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
-    >
-        <template v-if="hasCustomAdminLogo">
+    <template v-if="hasCustomAdminLogo">
+        <template v-if="adminLogoLightUrl && adminLogoDarkUrl">
             <img
-                v-if="adminLogoLightUrl"
                 :src="adminLogoLightUrl"
                 :alt="`${siteName} logo`"
-                class="block size-full object-contain p-1 dark:hidden"
+                class="block h-8 w-auto max-w-32 object-contain dark:hidden"
             >
             <img
-                v-if="adminLogoDarkUrl"
                 :src="adminLogoDarkUrl"
                 :alt="`${siteName} logo`"
-                class="hidden size-full object-contain p-1 dark:block"
-            >
-            <img
-                v-else-if="adminLogoLightUrl"
-                :src="adminLogoLightUrl"
-                :alt="`${siteName} logo`"
-                class="hidden size-full object-contain p-1 dark:block"
-            >
-            <img
-                v-else-if="adminLogoDarkUrl"
-                :src="adminLogoDarkUrl"
-                :alt="`${siteName} logo`"
-                class="block size-full object-contain p-1 dark:hidden"
+                class="hidden h-8 w-auto max-w-32 object-contain dark:block"
             >
         </template>
-        <AppLogoIcon
-            v-else
-            class="size-5 fill-current text-white dark:text-black"
-        />
+        <img
+            v-else-if="adminLogoLightUrl"
+            :src="adminLogoLightUrl"
+            :alt="`${siteName} logo`"
+            class="block h-8 w-auto max-w-32 object-contain"
+        >
+        <img
+            v-else-if="adminLogoDarkUrl"
+            :src="adminLogoDarkUrl"
+            :alt="`${siteName} logo`"
+            class="block h-8 w-auto max-w-32 object-contain"
+        >
+    </template>
+    <div
+        v-else
+        class="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
+    >
+        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">
         <span class="mb-0.5 truncate leading-tight font-semibold"

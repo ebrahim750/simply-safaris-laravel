@@ -8,7 +8,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const fallbackAppName = import.meta.env.VITE_APP_NAME || 'Laravel';
+let appName = fallbackAppName;
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -32,6 +33,7 @@ void createInertiaApp({
     setup({ el, App, props, plugin }) {
         const applyUserChosenTheme =
             props.initialPage.props.applyUserChosenTheme ?? true;
+        appName = props.initialPage.props.appBranding?.siteName ?? fallbackAppName;
 
         if (!el) {
             const app = createSSRApp({ render: () => h(App, props) });
@@ -43,6 +45,7 @@ void createInertiaApp({
         initializeTheme(applyUserChosenTheme);
 
         router.on('navigate', (event) => {
+            appName = event.detail.page.props.appBranding?.siteName ?? fallbackAppName;
             syncDocumentTheme(
                 event.detail.page.props.applyUserChosenTheme ?? true,
             );

@@ -34,8 +34,8 @@ test('dashboard receives site settings branding data', function () {
     $this->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('siteSettings.siteName', 'Simply Safaris HQ')
-            ->where('siteSettings.adminLogoLightUrl', Storage::disk('public')->url('site-settings/admin-light.png'))
-            ->where('siteSettings.adminLogoDarkUrl', Storage::disk('public')->url('site-settings/admin-dark.png'))
+            ->where('appBranding.siteName', 'Simply Safaris HQ')
+            ->where('appBranding.adminLogoLightUrl', Storage::disk('public')->url('site-settings/admin-light.png'))
+            ->where('appBranding.adminLogoDarkUrl', Storage::disk('public')->url('site-settings/admin-dark.png'))
         );
 });

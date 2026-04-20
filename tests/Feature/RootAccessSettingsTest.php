@@ -44,6 +44,7 @@ test('root users can view the general settings page', function () {
     $siteSettings = SiteSetting::query()->create([
         'site_name' => 'Example Site',
         'site_tagline' => 'Built for testing',
+        'currency' => 'KES',
         'primary_color' => '#112233',
     ]);
 
@@ -52,8 +53,11 @@ test('root users can view the general settings page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('root-access/site-settings/General')
+            ->where('appBranding.siteName', $siteSettings->site_name)
             ->where('siteSettings.site_name', $siteSettings->site_name)
-            ->where('siteSettings.site_tagline', $siteSettings->site_tagline),
+            ->where('siteSettings.site_tagline', $siteSettings->site_tagline)
+            ->where('siteSettings.currency', 'KES')
+            ->where('currencyOptions.0.value', 'USD'),
         );
 });
 
@@ -71,6 +75,7 @@ test('root users can view the logo settings page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('root-access/site-settings/Logo')
+            ->where('appBranding.siteName', 'Example Site')
             ->where('siteSettings.logo_path', 'logos/test.png'),
         );
 });
@@ -91,6 +96,7 @@ test('root users can view the colors settings page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('root-access/site-settings/Colors')
+            ->where('appBranding.siteName', 'Example Site')
             ->where('siteSettings.primary_color', '#112233')
             ->where('siteSettings.secondary_color', '#445566')
             ->where('siteSettings.accent_color', '#778899'),
@@ -109,6 +115,7 @@ test('root users can update general site settings', function () {
         ->put(route('root-access.site-settings.general.update'), [
             'site_name' => 'New Site',
             'site_tagline' => 'New tagline',
+            'currency' => 'EUR',
         ]);
 
     $response->assertRedirect(route('root-access.site-settings.general'));
@@ -116,6 +123,7 @@ test('root users can update general site settings', function () {
 
     expect($siteSettings->refresh()->site_name)->toBe('New Site');
     expect($siteSettings->site_tagline)->toBe('New tagline');
+    expect($siteSettings->currency)->toBe('EUR');
 });
 
 test('root users can update color settings', function () {
@@ -187,6 +195,59 @@ test('uploaded favicon is reflected in the app shell', function () {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee(Storage::disk('public')->url($siteSettings->favicon_path), false);
+});
+
+test('site name is reflected in the app shell title', function () {
+    SiteSetting::query()->create([
+        'site_name' => 'Simply Safaris HQ',
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Simply Safaris HQ</title>', false);
+});
+
+test('uploaded admin logo is reflected on the login page', function () {
+    Storage::fake('public');
+
+    $siteSettings = SiteSetting::query()->create([
+        'site_name' => 'Login Brand',
+        'admin_logo_path_light' => 'site-settings/admin-light.png',
+    ]);
+
+    Storage::disk('public')->put($siteSettings->admin_logo_path_light, 'logo');
+
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSee(Storage::disk('public')->url($siteSettings->admin_logo_path_light), false);
+});
+
+test('single uploaded admin dark logo is still reflected on the login page', function () {
+    Storage::fake('public');
+
+    $siteSettings = SiteSetting::query()->create([
+        'site_name' => 'Login Brand',
+        'admin_logo_path_dark' => 'site-settings/admin-dark.png',
+    ]);
+
+    Storage::disk('public')->put($siteSettings->admin_logo_path_dark, 'logo');
+
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSee(Storage::disk('public')->url($siteSettings->admin_logo_path_dark), false);
+});
+
+test('blank site name falls back to the app name', function () {
+    SiteSetting::query()->create([
+        'site_name' => '   ',
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Simply Safaris</title>', false)
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('appBranding.siteName', 'Simply Safaris')
+        );
 });
 
 test('non root users cannot update general site settings', function () {

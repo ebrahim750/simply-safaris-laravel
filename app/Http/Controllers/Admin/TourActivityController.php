@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreTourActivityRequest;
+use App\Http\Requests\Admin\UpdateTourActivityRequest;
 use App\Models\TourActivity;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TourActivityController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         return Inertia::render('admin/tours/Activities', [
             'activities' => TourActivity::query()
@@ -23,5 +25,27 @@ class TourActivityController extends Controller
                     'created_at_display' => $activity->created_at?->format('M j, Y g:i A') ?? 'N/A',
                 ]),
         ]);
+    }
+
+    public function store(StoreTourActivityRequest $request): RedirectResponse
+    {
+        TourActivity::query()->create($request->validated());
+
+        return to_route('admin.tours.activities');
+    }
+
+    public function update(UpdateTourActivityRequest $request, TourActivity $activity): RedirectResponse
+    {
+        $activity->update($request->validated());
+
+        return to_route('admin.tours.activities');
+    }
+
+    public function destroy(TourActivity $activity): RedirectResponse
+    {
+        $activity->tours()->detach();
+        $activity->delete();
+
+        return to_route('admin.tours.activities');
     }
 }

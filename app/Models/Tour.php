@@ -65,6 +65,9 @@ class Tour extends Model
         return [
             'price' => 'decimal:2',
             'gallery_images' => 'array',
+            'is_hidden' => 'boolean',
+            'is_featured_on_home' => 'boolean',
+            'is_featured_as_seasonal_recommendation' => 'boolean',
         ];
     }
 }

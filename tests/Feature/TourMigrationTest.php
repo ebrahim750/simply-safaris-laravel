@@ -102,6 +102,7 @@ test('site settings table has the expected columns', function () {
         'id',
         'site_name',
         'site_tagline',
+        'currency',
         'primary_color',
         'secondary_color',
         'accent_color',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -13,8 +13,9 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Pencil } from 'lucide-vue-next';
-import { computed, h, ref } from 'vue';
+import { ArrowUpDown, Eye, EyeOff, Pencil, Trash2 } from 'lucide-vue-next';
+import { computed, defineComponent, h, ref } from 'vue';
+import { toggleHidden as toggleTourHidden } from '@/actions/App/Http/Controllers/Admin/TourController';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { tours as adminTours } from '@/routes/admin';
 
 defineOptions({
@@ -42,6 +49,8 @@ defineOptions({
 type AdminTour = {
     id: number;
     name: string;
+    main_image: string | null;
+    price_amount: number;
     price: string;
     is_hidden: boolean;
     is_featured_on_home: boolean;
@@ -82,7 +91,64 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
             : updaterOrValue;
 }
 
+function toggleTourVisibility(tour: AdminTour): void {
+    router.patch(
+        toggleTourHidden.url({ tour: tour.id }),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+        },
+    );
+}
+
+const TourImageThumbnail = defineComponent({
+    name: 'TourImageThumbnail',
+    props: {
+        imageUrl: {
+            type: String,
+            default: null,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+    },
+    setup(componentProps) {
+        const hasImageError = ref(false);
+
+        return () =>
+            componentProps.imageUrl && !hasImageError.value
+                ? h('img', {
+                      src: componentProps.imageUrl,
+                      alt: `${componentProps.name} main image`,
+                      class: 'h-12 w-16 rounded-md border border-border bg-muted object-cover',
+                      loading: 'lazy',
+                      onError: () => {
+                          hasImageError.value = true;
+                      },
+                  })
+                : h(
+                      'div',
+                      {
+                          class: 'flex h-12 w-16 items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-[11px] font-medium uppercase tracking-wide text-muted-foreground',
+                      },
+                      'No image',
+                  );
+    },
+});
+
 const columns: ColumnDef<AdminTour>[] = [
+    {
+        id: 'main_image',
+        header: 'Main image',
+        enableSorting: false,
+        cell: ({ row }) =>
+            h(TourImageThumbnail, {
+                imageUrl: row.original.main_image,
+                name: row.original.name,
+            }),
+    },
     {
         accessorKey: 'name',
         header: ({ column }) =>
@@ -98,10 +164,25 @@ const columns: ColumnDef<AdminTour>[] = [
                 },
             ),
         cell: ({ row }) =>
-            h('div', { class: 'font-medium text-foreground' }, row.original.name),
+            h('div', { class: 'flex flex-col items-start gap-1' }, [
+                h('span', { class: 'font-medium text-foreground' }, row.original.name),
+                row.original.is_hidden
+                    ? h(
+                          Badge,
+                          {
+                              variant: 'outline',
+                              class: 'border-orange-200/80 bg-orange-50 px-1.5 py-0 text-[10px] text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300',
+                          },
+                          {
+                              default: () => 'Hidden',
+                          },
+                      )
+                    : null,
+            ]),
     },
     {
-        accessorKey: 'price',
+        id: 'price',
+        accessorFn: (row) => row.price_amount,
         header: ({ column }) =>
             h(
                 Button,
@@ -130,18 +211,6 @@ const columns: ColumnDef<AdminTour>[] = [
             ),
     },
     {
-        accessorKey: 'is_hidden',
-        header: 'Hidden',
-        cell: ({ row }) =>
-            h(
-                Badge,
-                { variant: row.original.is_hidden ? 'destructive' : 'secondary' },
-                {
-                    default: () => row.original.is_hidden ? 'Yes' : 'No',
-                },
-            ),
-    },
-    {
         accessorKey: 'created_at',
         header: ({ column }) =>
             h(
@@ -166,24 +235,136 @@ const columns: ColumnDef<AdminTour>[] = [
         id: 'actions',
         enableSorting: false,
         header: () => h('div', { class: 'text-right' }, 'Actions'),
-        cell: () =>
+        cell: ({ row }) =>
             h(
-                'div',
-                { class: 'flex justify-end gap-2' },
-                [
-                    h(
-                        Button,
-                        {
-                            variant: 'outline',
-                            size: 'sm',
-                            class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
-                            type: 'button',
-                        },
-                        {
-                            default: () => h(Pencil, { class: 'size-3 mr-1' }),
-                        },
-                    ),
-                ],
+                TooltipProvider,
+                { delayDuration: 0 },
+                {
+                    default: () =>
+                        h('div', { class: 'flex justify-end gap-2' }, [
+                            h(
+                                Tooltip,
+                                {},
+                                {
+                                    default: () => [
+                                        h(
+                                            TooltipTrigger,
+                                            { asChild: true },
+                                            {
+                                                default: () =>
+                                                    h(
+                                                        Button,
+                                                        {
+                                                            variant: 'outline',
+                                                            size: 'icon',
+                                                            class: 'size-8 cursor-pointer text-muted-foreground',
+                                                            type: 'button',
+                                                            'aria-label': 'Edit tour',
+                                                        },
+                                                        {
+                                                            default: () => h(Pencil, { class: 'size-4' }),
+                                                        },
+                                                    ),
+                                            },
+                                        ),
+                                        h(
+                                            TooltipContent,
+                                            {},
+                                            {
+                                                default: () => h('p', 'Edit tour'),
+                                            },
+                                        ),
+                                    ],
+                                },
+                            ),
+                            h(
+                                Tooltip,
+                                {},
+                                {
+                                    default: () => [
+                                        h(
+                                            TooltipTrigger,
+                                            { asChild: true },
+                                            {
+                                                default: () =>
+                                                    h(
+                                                        Button,
+                                                        {
+                                                            variant: 'outline',
+                                                            size: 'icon',
+                                                            class: 'size-8 cursor-pointer text-muted-foreground',
+                                                            type: 'button',
+                                                            'aria-label': row.original.is_hidden
+                                                                ? 'Unhide tour'
+                                                                : 'Hide tour',
+                                                            onClick: () =>
+                                                                toggleTourVisibility(row.original),
+                                                        },
+                                                        {
+                                                            default: () =>
+                                                                h(
+                                                                    row.original.is_hidden
+                                                                        ? Eye
+                                                                        : EyeOff,
+                                                                    { class: 'size-4' },
+                                                                ),
+                                                        },
+                                                    ),
+                                            },
+                                        ),
+                                        h(
+                                            TooltipContent,
+                                            {},
+                                            {
+                                                default: () =>
+                                                    h(
+                                                        'p',
+                                                        row.original.is_hidden
+                                                            ? 'Unhide tour'
+                                                            : 'Hide tour',
+                                                    ),
+                                            },
+                                        ),
+                                    ],
+                                },
+                            ),
+                            h(
+                                Tooltip,
+                                {},
+                                {
+                                    default: () => [
+                                        h(
+                                            TooltipTrigger,
+                                            { asChild: true },
+                                            {
+                                                default: () =>
+                                                    h(
+                                                        Button,
+                                                        {
+                                                            variant: 'outline',
+                                                            size: 'icon',
+                                                            class: 'size-8 cursor-pointer text-destructive hover:text-destructive',
+                                                            type: 'button',
+                                                            'aria-label': 'Delete tour',
+                                                        },
+                                                        {
+                                                            default: () => h(Trash2, { class: 'size-4' }),
+                                                        },
+                                                    ),
+                                            },
+                                        ),
+                                        h(
+                                            TooltipContent,
+                                            {},
+                                            {
+                                                default: () => h('p', 'Delete tour'),
+                                            },
+                                        ),
+                                    ],
+                                },
+                            ),
+                        ]),
+                },
             ),
     },
 ];
