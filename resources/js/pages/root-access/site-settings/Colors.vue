@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
+import 'vue3-colorpicker/style.css';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -14,8 +15,15 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
+
+const ColorPicker = defineAsyncComponent(() => import('vue3-colorpicker').then((m) => m.ColorPicker));
+
+const isMounted = ref(false);
+onMounted(() => {
+    isMounted.value = true;
+});
 
 type SiteSettings = {
     primary_color: string | null;
@@ -84,7 +92,7 @@ function isActive(href: string): boolean {
             description="Configure site color palette."
         />
 
-        <div class="flex gap-1 rounded-lg border border-border p-1">
+        <div class="flex gap-3 rounded-lg border border-border p-1 max-w-4xl">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"
@@ -116,32 +124,57 @@ function isActive(href: string): boolean {
                 <form class="space-y-8" @submit.prevent="submit">
                     <div class="grid gap-6 md:grid-cols-2">
                         <div class="grid gap-2">
-                            <Label for="primary_color">Primary color</Label>
-                            <Input
-                                id="primary_color"
-                                v-model="form.primary_color"
-                                placeholder="#1f2937"
-                            />
+                            <Label>Primary color</Label>
+                            <div class="flex items-center gap-3">
+                                <ClientOnly>
+                                    <ColorPicker
+                                        v-model:pureColor="form.primary_color"
+                                        format="hex"
+                                        class="h-32 w-32"
+                                    />
+                                </ClientOnly>
+                                <Input
+                                    v-model="form.primary_color"
+                                    placeholder="Select color"
+                                    class="w-28"
+                                />
+                            </div>
                             <InputError :message="form.errors.primary_color" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="secondary_color">Secondary color</Label>
-                            <Input
-                                id="secondary_color"
-                                v-model="form.secondary_color"
-                                placeholder="#6b7280"
-                            />
+                            <Label>Secondary color</Label>
+                            <div class="flex items-center gap-3">
+                                <ColorPicker
+                                    v-if="isMounted"
+                                    v-model:pureColor="form.secondary_color"
+                                    format="hex"
+                                    class="h-32 w-32"
+                                />
+                                <Input
+                                    v-model="form.secondary_color"
+                                    placeholder="Select color"
+                                    class="w-28"
+                                />
+                            </div>
                             <InputError :message="form.errors.secondary_color" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="accent_color">Accent color</Label>
-                            <Input
-                                id="accent_color"
-                                v-model="form.accent_color"
-                                placeholder="#f59e0b"
-                            />
+                            <Label>Accent color</Label>
+                            <div class="flex items-center gap-3">
+                                <ColorPicker
+                                    v-if="isMounted"
+                                    v-model:pureColor="form.accent_color"
+                                    format="hex"
+                                    class="h-32 w-32"
+                                />
+                                <Input
+                                    v-model="form.accent_color"
+                                    placeholder="Select color"
+                                    class="w-28"
+                                />
+                            </div>
                             <InputError :message="form.errors.accent_color" />
                         </div>
                     </div>

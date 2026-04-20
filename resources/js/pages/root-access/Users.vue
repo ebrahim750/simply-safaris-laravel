@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Head, router, useForm } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
     SortingState,
     Updater,
 } from '@tanstack/vue-table';
-import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     FlexRender,
     getCoreRowModel,
@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -39,6 +38,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,

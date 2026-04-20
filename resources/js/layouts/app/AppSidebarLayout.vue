@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import AppContent from '@/components/AppContent.vue';
-import FlashToaster from '@/components/FlashToaster.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import FlashToaster from '@/components/FlashToaster.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {

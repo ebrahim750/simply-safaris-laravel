@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 type SiteSettings = {
     site_name: string;
@@ -82,7 +82,7 @@ function isActive(href: string): boolean {
             description="Manage the singleton site settings record from the root access area."
         />
 
-        <div class="flex gap-1 rounded-lg border border-border p-1">
+        <div class="flex gap-3 rounded-lg border border-border p-1 max-w-4xl">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\TourActivityController;
+use App\Http\Controllers\Admin\TourCategoryController;
+use App\Http\Controllers\Admin\TourController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
 use App\Http\Controllers\RootAccess\GeneralSiteSettingsController;
@@ -20,6 +23,11 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'password.change.required', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::middleware('admin')->group(function () {
+        Route::get('admin/tours', [TourController::class, 'index'])->name('admin.tours');
+        Route::get('admin/tours/categories', [TourCategoryController::class, 'index'])->name('admin.tours.categories');
+        Route::get('admin/tours/activities', [TourActivityController::class, 'index'])->name('admin.tours.activities');
+    });
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
         Route::post('root-access/prod-test/email-test', [ProdTestController::class, 'sendEmailTest'])->name('root-access.prod-test.email-test.store');
@@ -28,6 +36,7 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::put('root-access/site-settings/general', [GeneralSiteSettingsController::class, 'update'])->name('root-access.site-settings.general.update');
         Route::get('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'index'])->name('root-access.site-settings.logo');
         Route::put('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'update'])->name('root-access.site-settings.logo.update');
+        Route::delete('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'remove'])->name('root-access.site-settings.logo.remove');
         Route::get('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'index'])->name('root-access.site-settings.colors');
         Route::put('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'update'])->name('root-access.site-settings.colors.update');
         Route::get('root-access/users', [UserController::class, 'index'])->name('root-access.users');
