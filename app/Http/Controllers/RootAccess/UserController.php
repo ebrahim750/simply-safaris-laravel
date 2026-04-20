@@ -45,6 +45,8 @@ class UserController extends Controller
         $plainTextPassword = $validated['password'];
 
         $user = User::create(Arr::except($validated, ['send_credentials_email']));
+        $user->force_password_change = true;
+        $user->save();
 
         if ($request->boolean('send_credentials_email')) {
             Mail::to($user->email)->queue(new UserCredentialsEmail(
