@@ -5,7 +5,7 @@ import type {
     SortingState,
     Updater,
 } from '@tanstack/vue-table';
-import { Form, Head, router } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     FlexRender,
     getCoreRowModel,
@@ -73,12 +73,17 @@ const props = defineProps<{
     users: RootUser[];
 }>();
 const isCreateUserDialogOpen = ref(false);
-const createUserAccountType = ref('admin');
-const createUserPassword = ref('');
-const sendCredentialsEmail = ref(false);
 const deletingUserId = ref<number | null>(null);
 const isDeleteDialogOpen = ref(false);
 const userPendingDeletion = ref<RootUser | null>(null);
+const createUserForm = useForm({
+    name: '',
+    email: '',
+    account_type: 'admin',
+    password: '',
+    password_confirmation: '',
+    send_credentials_email: false,
+});
 
 defineOptions({
     layout: {
@@ -128,9 +133,33 @@ function generatePassword(length: number = 16): void {
         'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
     const randomValues = crypto.getRandomValues(new Uint32Array(length));
 
-    createUserPassword.value = Array.from(randomValues, (value) => {
+    createUserForm.password = Array.from(randomValues, (value) => {
         return characters[value % characters.length];
     }).join('');
+    createUserForm.password_confirmation = createUserForm.password;
+}
+
+function resetCreateUserForm(): void {
+    createUserForm.reset();
+    createUserForm.clearErrors();
+    createUserForm.account_type = 'admin';
+    createUserForm.send_credentials_email = false;
+}
+
+function submitCreateUser(): void {
+    createUserForm
+        .transform((data) => ({
+            ...data,
+            password_confirmation: data.password,
+            send_credentials_email: data.send_credentials_email ? '1' : '0',
+        }))
+        .post(RootAccessUserController.store.url(), {
+            preserveScroll: true,
+            onSuccess: () => {
+                isCreateUserDialogOpen.value = false;
+                resetCreateUserForm();
+            },
+        });
 }
 
 function openDeleteDialog(user: RootUser): void {
@@ -399,7 +428,15 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
 
                     <Dialog
                         :open="isCreateUserDialogOpen"
-                        @update:open="isCreateUserDialogOpen = $event"
+                        @update:open="
+                            (open) => {
+                                isCreateUserDialogOpen = open;
+
+                                if (!open) {
+                                    resetCreateUserForm();
+                                }
+                            }
+                        "
                     >
                         <DialogTrigger as-child>
                             <Button data-test="open-create-user-dialog-button">
@@ -407,28 +444,7 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             </Button>
                         </DialogTrigger>
                         <DialogContent class="sm:max-w-lg">
-                            <Form
-                                v-bind="RootAccessUserController.store.form()"
-                                :reset-on-success="[
-                                    'name',
-                                    'email',
-                                    'account_type',
-                                    'send_credentials_email',
-                                    'password',
-                                    'password_confirmation',
-                                ]"
-                                :options="{ preserveScroll: true }"
-                                class="space-y-6"
-                                @success="
-                                    () => {
-                                        isCreateUserDialogOpen = false;
-                                        createUserAccountType = 'admin';
-                                        createUserPassword = '';
-                                        sendCredentialsEmail = false;
-                                    }
-                                "
-                                v-slot="{ errors, processing }"
-                            >
+                            <form class="space-y-6" @submit.prevent="submitCreateUser">
                                 <DialogHeader class="space-y-3">
                                     <DialogTitle>Create user</DialogTitle>
                                 </DialogHeader>
@@ -438,33 +454,28 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         <Label for="name">Name</Label>
                                         <Input
                                             id="name"
-                                            name="name"
+                                            v-model="createUserForm.name"
                                             placeholder="Full name"
                                             required
                                         />
-                                        <InputError :message="errors.name" />
+                                        <InputError :message="createUserForm.errors.name" />
                                     </div>
 
                                     <div class="grid gap-2">
                                         <Label for="email">Email address</Label>
                                         <Input
                                             id="email"
-                                            name="email"
+                                            v-model="createUserForm.email"
                                             type="email"
                                             placeholder="email@example.com"
                                             required
                                         />
-                                        <InputError :message="errors.email" />
+                                        <InputError :message="createUserForm.errors.email" />
                                     </div>
 
                                     <div class="grid gap-2">
                                         <Label for="account_type">Account type</Label>
-                                        <input
-                                            type="hidden"
-                                            name="account_type"
-                                            :value="createUserAccountType"
-                                        />
-                                        <Select v-model="createUserAccountType">
+                                        <Select v-model="createUserForm.account_type">
                                             <SelectTrigger id="account_type" class="w-full">
                                                 <SelectValue placeholder="Select account type" />
                                             </SelectTrigger>
@@ -473,25 +484,23 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                                 <SelectItem value="root">Root</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <InputError :message="errors.account_type" />
+                                        <InputError :message="createUserForm.errors.account_type" />
                                     </div>
 
                                     <div class="grid gap-2">
                                         <Label for="password">Password</Label>
-                                        <input
-                                            type="hidden"
-                                            name="password_confirmation"
-                                            :value="createUserPassword"
-                                        />
                                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                                             <PasswordInput
                                                 id="password"
-                                                v-model="createUserPassword"
-                                                name="password"
+                                                v-model="createUserForm.password"
                                                 autocomplete="new-password"
                                                 placeholder="Password"
                                                 class="w-full"
                                                 required
+                                                @update:model-value="
+                                                    createUserForm.password_confirmation =
+                                                        String($event)
+                                                "
                                             />
                                             <Button
                                                 type="button"
@@ -502,10 +511,8 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                                 Generate
                                             </Button>
                                         </div>
-                                        <InputError :message="errors.password" />
-                                        <InputError
-                                            :message="errors.password_confirmation"
-                                        />
+                                        <InputError :message="createUserForm.errors.password" />
+                                        <InputError :message="createUserForm.errors.password_confirmation" />
                                     </div>
 
                                     <div class="flex items-start justify-between">
@@ -513,14 +520,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                             for="send_credentials_email"
                                             class="flex items-center gap-2"
                                         >
-                                            <input
-                                                type="hidden"
-                                                name="send_credentials_email"
-                                                :value="sendCredentialsEmail ? '1' : '0'"
-                                            />
                                             <Checkbox
                                                 id="send_credentials_email"
-                                                v-model:checked="sendCredentialsEmail"
+                                                v-model="createUserForm.send_credentials_email"
                                             />
                                             <span class="leading-5">
                                                 Send credentials to user via email
@@ -532,14 +534,14 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                 <DialogFooter class="justify-start gap-2 sm:justify-start">
                                     <Button
                                         type="submit"
-                                        :disabled="processing"
+                                        :disabled="createUserForm.processing"
                                         data-test="create-user-button"
                                     >
-                                        <Spinner v-if="processing" />
+                                        <Spinner v-if="createUserForm.processing" />
                                         Create user
                                     </Button>
                                 </DialogFooter>
-                            </Form>
+                            </form>
                         </DialogContent>
                     </Dialog>
                 </div>
