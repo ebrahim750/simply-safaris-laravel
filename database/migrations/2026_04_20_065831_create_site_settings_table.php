@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('secondary_color', 20)->nullable();
             $table->string('accent_color', 20)->nullable();
             $table->string('logo_path')->nullable();
+            $table->string('admin_logo_path_light')->nullable();
+            $table->string('admin_logo_path_dark')->nullable();
             $table->string('favicon_path')->nullable();
             $table->timestamps();
         });
