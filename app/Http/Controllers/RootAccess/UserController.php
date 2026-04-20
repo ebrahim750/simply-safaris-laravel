@@ -4,8 +4,12 @@ namespace App\Http\Controllers\RootAccess;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RootAccess\StoreUserRequest;
+use App\Mail\UserCredentialsEmail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,7 +18,7 @@ class UserController extends Controller
     /**
      * Display the root access users page.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('root-access/Users', [
             'users' => User::query()
@@ -27,6 +31,7 @@ class UserController extends Controller
                     'account_type' => $user->account_type,
                     'created_at' => $user->created_at?->toIso8601String(),
                     'created_at_display' => $user->created_at?->format('M j, Y g:i A') ?? 'N/A',
+                    'can_delete' => $request->user()?->id !== $user->id,
                 ]),
         ]);
     }
@@ -36,8 +41,37 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        User::create($request->validated());
+        $validated = $request->validated();
+        $plainTextPassword = $validated['password'];
 
-        return to_route('root-access.users');
+        $user = User::create(Arr::except($validated, ['send_credentials_email']));
+
+        if ($request->boolean('send_credentials_email')) {
+            Mail::to($user->email)->queue(new UserCredentialsEmail(
+                recipientName: $user->name,
+                recipientEmail: $user->email,
+                accountType: $user->account_type,
+                plainTextPassword: $plainTextPassword,
+                triggeredByName: $request->user()->name,
+            ));
+        }
+
+        return to_route('root-access.users')
+            ->with('status', "Created user {$user->email}.");
+    }
+
+    /**
+     * Remove the specified user.
+     */
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        abort_if($request->user()?->is($user), 403);
+
+        $deletedUserEmail = $user->email;
+
+        $user->delete();
+
+        return to_route('root-access.users')
+            ->with('status', "Deleted user {$deletedUserEmail}.");
     }
 }

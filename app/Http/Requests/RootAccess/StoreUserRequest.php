@@ -30,6 +30,7 @@ class StoreUserRequest extends FormRequest
         return [
             ...$this->profileRules(),
             'account_type' => ['required', 'string', Rule::in(['admin', 'root'])],
+            'send_credentials_email' => ['sometimes', 'boolean'],
             'password' => $this->passwordRules(),
         ];
     }

@@ -5,7 +5,7 @@ import type {
     SortingState,
     Updater,
 } from '@tanstack/vue-table';
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, router } from '@inertiajs/vue3';
 import {
     FlexRender,
     getCoreRowModel,
@@ -19,8 +19,19 @@ import RootAccessUserController from '@/actions/App/Http/Controllers/RootAccess/
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -55,6 +66,7 @@ type RootUser = {
     account_type: string;
     created_at: string | null;
     created_at_display: string;
+    can_delete: boolean;
 };
 
 const props = defineProps<{
@@ -63,6 +75,10 @@ const props = defineProps<{
 const isCreateUserDialogOpen = ref(false);
 const createUserAccountType = ref('admin');
 const createUserPassword = ref('');
+const sendCredentialsEmail = ref(false);
+const deletingUserId = ref<number | null>(null);
+const isDeleteDialogOpen = ref(false);
+const userPendingDeletion = ref<RootUser | null>(null);
 
 defineOptions({
     layout: {
@@ -115,6 +131,48 @@ function generatePassword(length: number = 16): void {
     createUserPassword.value = Array.from(randomValues, (value) => {
         return characters[value % characters.length];
     }).join('');
+}
+
+function openDeleteDialog(user: RootUser): void {
+    if (!user.can_delete || deletingUserId.value !== null) {
+        return;
+    }
+
+    userPendingDeletion.value = user;
+    isDeleteDialogOpen.value = true;
+}
+
+function handleDeleteDialogOpenChange(open: boolean): void {
+    isDeleteDialogOpen.value = open;
+}
+
+function cancelDeleteDialog(): void {
+    if (deletingUserId.value !== null) {
+        return;
+    }
+
+    isDeleteDialogOpen.value = false;
+    userPendingDeletion.value = null;
+}
+
+function deleteUser(): void {
+    if (deletingUserId.value !== null || userPendingDeletion.value === null) {
+        return;
+    }
+
+    deletingUserId.value = userPendingDeletion.value.id;
+
+    router.delete(
+        RootAccessUserController.destroy.url(userPendingDeletion.value.id),
+        {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingUserId.value = null;
+            isDeleteDialogOpen.value = false;
+            userPendingDeletion.value = null;
+        },
+        },
+    );
 }
 
 const columns: ColumnDef<RootUser>[] = [
@@ -199,6 +257,56 @@ const columns: ColumnDef<RootUser>[] = [
                 row.original.created_at_display,
             ),
     },
+    {
+        id: 'actions',
+        enableSorting: false,
+        header: () => h('div', { class: 'text-right' }, 'Actions'),
+        cell: ({ row }) =>
+            row.original.can_delete
+                ? h(
+                      'div',
+                      { class: 'flex justify-end gap-2' },
+                      [
+                          h(
+                              Button,
+                              {
+                                  variant: 'outline',
+                                  size: 'sm',
+                                  class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
+                                  type: 'button',
+                              },
+                              {
+                                  default: () => 'Edit',
+                              },
+                          ),
+                          h(
+                              Button,
+                              {
+                                  variant: 'outline',
+                                  size: 'sm',
+                                  class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
+                                  disabled: deletingUserId.value === row.original.id,
+                                  type: 'button',
+                                  onClick: () => openDeleteDialog(row.original),
+                              },
+                              {
+                                  default: () =>
+                                      deletingUserId.value === row.original.id
+                                          ? [
+                                                h(Spinner, { class: 'size-3.5' }),
+                                                'Deleting',
+                                            ]
+                                          : 'Delete',
+                              },
+                          ),
+                      ],
+                  )
+                : h(
+                      'div',
+                      { class: 'text-right text-xs text-muted-foreground' },
+                      'Current user',
+                  ),
+    },
 ];
 
 const table = useVueTable({
@@ -230,6 +338,47 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
     <Head title="Users" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+        <AlertDialog
+            :open="isDeleteDialogOpen"
+            @update:open="handleDeleteDialogOpenChange"
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete user</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        <template v-if="userPendingDeletion">
+                            Delete {{ userPendingDeletion.email }}? This action cannot
+                            be undone.
+                        </template>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel as-child>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="cursor-pointer"
+                            :disabled="deletingUserId !== null"
+                            @click="cancelDeleteDialog"
+                        >
+                            Cancel
+                        </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction as-child>
+                        <Button
+                            type="button"
+                            class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+                            :disabled="deletingUserId !== null"
+                            @click="deleteUser"
+                        >
+                            <Spinner v-if="deletingUserId !== null" class="size-4" />
+                            Delete user
+                        </Button>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
         <Heading
             title="Users"
             description="Manage visibility into every account from the root access area."
@@ -264,6 +413,7 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                     'name',
                                     'email',
                                     'account_type',
+                                    'send_credentials_email',
                                     'password',
                                     'password_confirmation',
                                 ]"
@@ -274,6 +424,7 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         isCreateUserDialogOpen = false;
                                         createUserAccountType = 'admin';
                                         createUserPassword = '';
+                                        sendCredentialsEmail = false;
                                     }
                                 "
                                 v-slot="{ errors, processing }"
@@ -355,6 +506,26 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         <InputError
                                             :message="errors.password_confirmation"
                                         />
+                                    </div>
+
+                                    <div class="flex items-start justify-between">
+                                        <Label
+                                            for="send_credentials_email"
+                                            class="flex items-center gap-2"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="send_credentials_email"
+                                                :value="sendCredentialsEmail ? '1' : '0'"
+                                            />
+                                            <Checkbox
+                                                id="send_credentials_email"
+                                                v-model:checked="sendCredentialsEmail"
+                                            />
+                                            <span class="leading-5">
+                                                Send credentials to user via email
+                                            </span>
+                                        </Label>
                                     </div>
                                 </div>
 

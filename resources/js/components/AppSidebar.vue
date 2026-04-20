@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Users } from 'lucide-vue-next';
+import { LayoutGrid, TestTubeDiagonal, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -16,7 +16,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { users as rootAccessUsers } from '@/routes/root-access';
+import { prodTest as rootAccessProdTest, users as rootAccessUsers } from '@/routes/root-access';
 import type { NavItem } from '@/types';
 
 const page = usePage();
@@ -35,6 +35,11 @@ const rootAccessNavItems: NavItem[] = [
         title: 'Users',
         href: rootAccessUsers(),
         icon: Users,
+    },
+    {
+        title: 'Prod test',
+        href: rootAccessProdTest(),
+        icon: TestTubeDiagonal,
     },
 ];
 
