@@ -23,6 +23,7 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
     turnstileSiteKey: string;
+    isLocal: boolean;
 }>();
 
 onMounted(() => {
@@ -96,7 +97,7 @@ onMounted(() => {
                 </Label>
             </div>
 
-            <div class="grid gap-2">
+            <div v-if="!isLocal" class="grid gap-2">
                 <div
                     class="cf-turnstile"
                     :data-sitekey="turnstileSiteKey"

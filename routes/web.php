@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
+use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
+use App\Http\Controllers\RootAccess\GeneralSiteSettingsController;
+use App\Http\Controllers\RootAccess\LogoSiteSettingsController;
 use App\Http\Controllers\RootAccess\ProdTestController;
 use App\Http\Controllers\RootAccess\SiteSettingsController;
 use App\Http\Controllers\RootAccess\UserController;
@@ -21,7 +24,12 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
         Route::post('root-access/prod-test/email-test', [ProdTestController::class, 'sendEmailTest'])->name('root-access.prod-test.email-test.store');
         Route::get('root-access/site-settings', [SiteSettingsController::class, 'index'])->name('root-access.site-settings');
-        Route::put('root-access/site-settings', [SiteSettingsController::class, 'update'])->name('root-access.site-settings.update');
+        Route::get('root-access/site-settings/general', [GeneralSiteSettingsController::class, 'index'])->name('root-access.site-settings.general');
+        Route::put('root-access/site-settings/general', [GeneralSiteSettingsController::class, 'update'])->name('root-access.site-settings.general.update');
+        Route::get('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'index'])->name('root-access.site-settings.logo');
+        Route::put('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'update'])->name('root-access.site-settings.logo.update');
+        Route::get('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'index'])->name('root-access.site-settings.colors');
+        Route::put('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'update'])->name('root-access.site-settings.colors.update');
         Route::get('root-access/users', [UserController::class, 'index'])->name('root-access.users');
         Route::post('root-access/users', [UserController::class, 'store'])->name('root-access.users.store');
         Route::patch('root-access/users/{user}', [UserController::class, 'update'])->name('root-access.users.update');
