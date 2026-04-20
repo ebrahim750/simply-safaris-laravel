@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\RootAccess\ProdTestController;
+use App\Http\Controllers\RootAccess\SiteSettingsController;
 use App\Http\Controllers\RootAccess\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
         Route::post('root-access/prod-test/email-test', [ProdTestController::class, 'sendEmailTest'])->name('root-access.prod-test.email-test.store');
+        Route::get('root-access/site-settings', [SiteSettingsController::class, 'index'])->name('root-access.site-settings');
+        Route::put('root-access/site-settings', [SiteSettingsController::class, 'update'])->name('root-access.site-settings.update');
         Route::get('root-access/users', [UserController::class, 'index'])->name('root-access.users');
         Route::post('root-access/users', [UserController::class, 'store'])->name('root-access.users.store');
         Route::patch('root-access/users/{user}', [UserController::class, 'update'])->name('root-access.users.update');
