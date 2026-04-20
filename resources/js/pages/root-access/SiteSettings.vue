@@ -46,7 +46,7 @@ defineOptions({
                 href: rootAccessSiteSettings(),
             },
             {
-                title: 'Site settings',
+                title: 'Settings',
                 href: rootAccessSiteSettings(),
             },
         ],
@@ -78,11 +78,11 @@ function submit(): void {
 </script>
 
 <template>
-    <Head title="Site settings" />
+    <Head title="Settings" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
         <Heading
-            title="Site settings"
+            title="Settings"
             description="Manage the singleton site settings record from the root access area."
         />
 

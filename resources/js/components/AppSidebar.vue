@@ -41,7 +41,7 @@ const rootAccessNavItems: NavItem[] = [
         icon: Users,
     },
     {
-        title: 'Site settings',
+        title: 'Settings',
         href: rootAccessSiteSettings(),
         icon: Settings,
     },
