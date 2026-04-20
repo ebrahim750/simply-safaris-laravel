@@ -1,12 +1,20 @@
 <?php
 
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\RootAccess\ProdTestController;
 use App\Http\Controllers\RootAccess\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
+    Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');
+    Route::put('force-password', [ForcePasswordChangeController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('force-password.update');
+});
+
+Route::middleware(['auth', 'password.change.required', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
