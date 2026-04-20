@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Destination;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
@@ -66,6 +67,46 @@ test('tour category pivot table has the expected columns', function () {
         'tour_id',
         'tour_category_id',
         'position',
+        'created_at',
+        'updated_at',
+    ]))->toBeTrue();
+});
+
+test('destinations and destinationables tables have the expected columns', function () {
+    expect(Schema::hasTable('destinations'))->toBeTrue();
+    expect(Schema::hasColumns('destinations', [
+        'id',
+        'name',
+        'slug',
+        'type',
+        'parent_id',
+        'created_at',
+        'updated_at',
+    ]))->toBeTrue();
+
+    expect(Schema::hasTable('destinationables'))->toBeTrue();
+    expect(Schema::hasColumns('destinationables', [
+        'id',
+        'destination_id',
+        'destinationable_type',
+        'destinationable_id',
+        'position',
+        'created_at',
+        'updated_at',
+    ]))->toBeTrue();
+});
+
+test('site settings table has the expected columns', function () {
+    expect(Schema::hasTable('site_settings'))->toBeTrue();
+    expect(Schema::hasColumns('site_settings', [
+        'id',
+        'site_name',
+        'site_tagline',
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'logo_path',
+        'favicon_path',
         'created_at',
         'updated_at',
     ]))->toBeTrue();
@@ -183,4 +224,15 @@ test('tour categories and activities are ordered by pivot position', function ()
 
     expect($tour->categories->pluck('name')->all())->toBe(['Adventure', 'Relaxation'])
         ->and($tour->activities->pluck('name')->all())->toBe(['Hiking', 'Kayaking']);
+});
+
+test('tour destinations are ordered by pivot position', function () {
+    $tour = Tour::factory()->create();
+    $destinationTwo = Destination::factory()->create(['name' => 'Zanzibar', 'slug' => 'zanzibar', 'type' => 'place']);
+    $destinationOne = Destination::factory()->create(['name' => 'Tanzania', 'slug' => 'tanzania', 'type' => 'country']);
+
+    $tour->destinations()->attach($destinationTwo->id, ['position' => 2]);
+    $tour->destinations()->attach($destinationOne->id, ['position' => 1]);
+
+    expect($tour->destinations->pluck('name')->all())->toBe(['Tanzania', 'Zanzibar']);
 });

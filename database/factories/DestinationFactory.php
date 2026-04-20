@@ -18,7 +18,10 @@ class DestinationFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->unique()->city(),
+            'slug' => fake()->unique()->slug(),
+            'type' => fake()->randomElement(['country', 'place']),
+            'parent_id' => null,
         ];
     }
 }
