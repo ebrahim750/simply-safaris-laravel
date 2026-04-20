@@ -1,19 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 
 const page = usePage();
 const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
-
-withDefaults(
-    defineProps<{
-        canRegister: boolean;
-    }>(),
-    {
-        canRegister: true,
-    },
-);
 </script>
 
 <template>
@@ -67,13 +58,6 @@ withDefaults(
                             >
                                 Log in
                             </Link>
-                            <Link
-                                v-if="canRegister"
-                                :href="register()"
-                                class="rounded-md bg-linear-to-br from-wh-primary to-wh-primary-container px-4 py-2 text-sm font-medium text-wh-on-primary"
-                            >
-                                Sign up
-                            </Link>
                         </template>
                     </div>
                 </div>
@@ -121,7 +105,7 @@ withDefaults(
                             Log in
                         </Link>
                         <Link
-                            :href="canRegister ? register() : login()"
+                            :href="login()"
                             class="rounded-md bg-linear-to-br from-wh-primary to-wh-primary-container px-6 py-2.5 font-medium text-wh-on-primary transition-all hover:opacity-90"
                         >
                             Book Now
@@ -168,14 +152,6 @@ withDefaults(
                 </p>
                 <div class="flex flex-wrap gap-6">
                     <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="rounded-md bg-wh-secondary px-8 py-4 text-lg font-medium text-wh-on-secondary transition-all hover:brightness-110"
-                    >
-                        Start Your Journey
-                    </Link>
-                    <Link
-                        v-else
                         :href="login()"
                         class="rounded-md bg-wh-secondary px-8 py-4 text-lg font-medium text-wh-on-secondary transition-all hover:brightness-110"
                     >
