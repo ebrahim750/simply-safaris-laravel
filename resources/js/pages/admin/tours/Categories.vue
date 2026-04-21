@@ -24,7 +24,6 @@ import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -205,7 +204,7 @@ function deleteCategory(): void {
     deletingCategoryId.value = categoryPendingDeletion.value.id;
 
     router.delete(
-        destroyTourCategory.url({ category: categoryPendingDeletion.value.id }),
+        destroyTourCategory.url(categoryPendingDeletion.value.id),
         {
             preserveScroll: true,
             onFinish: () => {
@@ -431,17 +430,15 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             Cancel
                         </Button>
                     </AlertDialogCancel>
-                    <AlertDialogAction as-child>
-                        <Button
-                            type="button"
-                            class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
-                            :disabled="deletingCategoryId !== null"
-                            @click="deleteCategory"
-                        >
-                            <Spinner v-if="deletingCategoryId !== null" />
-                            Delete category
-                        </Button>
-                    </AlertDialogAction>
+                    <Button
+                        type="button"
+                        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+                        :disabled="deletingCategoryId !== null"
+                        @click="deleteCategory"
+                    >
+                        <Spinner v-if="deletingCategoryId !== null" />
+                        Delete category
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

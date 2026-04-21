@@ -24,7 +24,6 @@ import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -205,7 +204,7 @@ function deleteActivity(): void {
     deletingActivityId.value = activityPendingDeletion.value.id;
 
     router.delete(
-        destroyTourActivity.url({ activity: activityPendingDeletion.value.id }),
+        destroyTourActivity.url(activityPendingDeletion.value.id),
         {
             preserveScroll: true,
             onFinish: () => {
@@ -431,17 +430,15 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             Cancel
                         </Button>
                     </AlertDialogCancel>
-                    <AlertDialogAction as-child>
-                        <Button
-                            type="button"
-                            class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
-                            :disabled="deletingActivityId !== null"
-                            @click="deleteActivity"
-                        >
-                            <Spinner v-if="deletingActivityId !== null" />
-                            Delete activity
-                        </Button>
-                    </AlertDialogAction>
+                    <Button
+                        type="button"
+                        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+                        :disabled="deletingActivityId !== null"
+                        @click="deleteActivity"
+                    >
+                        <Spinner v-if="deletingActivityId !== null" />
+                        Delete activity
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
