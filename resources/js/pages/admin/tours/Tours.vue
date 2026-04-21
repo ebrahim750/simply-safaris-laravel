@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -13,10 +13,14 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Eye, EyeOff, Pencil, Trash2 } from 'lucide-vue-next';
+import { ArrowUpDown, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import { computed, defineComponent, h, ref } from 'vue';
-import { toggleHidden as toggleTourHidden } from '@/actions/App/Http/Controllers/Admin/TourController';
+import {
+    create as createTour,
+    toggleHidden as toggleTourHidden,
+} from '@/actions/App/Http/Controllers/Admin/TourController';
 import Heading from '@/components/Heading.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +66,8 @@ type AdminTour = {
 const props = defineProps<{
     tours: AdminTour[];
 }>();
+const page = usePage();
+const status = computed(() => page.props.flash.status as string | undefined);
 
 const sorting = ref<SortingState>([
     {
@@ -403,6 +409,11 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
             description="Manage tours available for booking."
         />
 
+        <Alert v-if="status">
+            <AlertTitle>Tours updated</AlertTitle>
+            <AlertDescription>{{ status }}</AlertDescription>
+        </Alert>
+
         <Card>
             <CardHeader>
                 <div
@@ -414,6 +425,12 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             View and manage tour listings.
                         </CardDescription>
                     </div>
+                    <Button as-child class="cursor-pointer">
+                        <Link :href="createTour()">
+                            <Plus class="size-4" />
+                            New tour
+                        </Link>
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent class="space-y-4">

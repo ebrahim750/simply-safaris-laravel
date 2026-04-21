@@ -10,7 +10,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-#[Fillable(['name', 'price', 'main_image', 'gallery_images'])]
+#[Fillable([
+    'name',
+    'price',
+    'main_image',
+    'gallery_images',
+    'external_url',
+    'external_link_button_text',
+    'duration_days',
+    'overview',
+    'pricing_detailed',
+    'is_hidden',
+    'is_featured_on_home',
+    'is_featured_as_seasonal_recommendation',
+])]
 class Tour extends Model
 {
     /** @use HasFactory<TourFactory> */
