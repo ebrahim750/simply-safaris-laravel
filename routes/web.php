@@ -30,6 +30,7 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::get('admin/tours/create', [TourController::class, 'create'])->name('admin.tours.create');
         Route::post('admin/tours', [TourController::class, 'store'])->name('admin.tours.store');
         Route::patch('admin/tours/{tour}/hidden', [TourController::class, 'toggleHidden'])->name('admin.tours.hidden.toggle');
+        Route::delete('admin/tours/{tour}', [TourController::class, 'destroy'])->name('admin.tours.destroy');
         Route::get('admin/tours/categories', [TourCategoryController::class, 'index'])->name('admin.tours.categories');
         Route::post('admin/tours/categories', [TourCategoryController::class, 'store'])->name('admin.tours.categories.store');
         Route::patch('admin/tours/categories/{category}', [TourCategoryController::class, 'update'])->name('admin.tours.categories.update');

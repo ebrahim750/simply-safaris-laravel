@@ -17,10 +17,20 @@ import { ArrowUpDown, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import { computed, defineComponent, h, ref } from 'vue';
 import {
     create as createTour,
+    destroy as destroyTour,
     toggleHidden as toggleTourHidden,
 } from '@/actions/App/Http/Controllers/Admin/TourController';
 import Heading from '@/components/Heading.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +41,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Tooltip,
     TooltipContent,
@@ -76,6 +87,9 @@ const sorting = ref<SortingState>([
     },
 ]);
 const globalFilter = ref('');
+const deletingTourId = ref<number | null>(null);
+const isDeleteDialogOpen = ref(false);
+const tourPendingDeletion = ref<AdminTour | null>(null);
 
 const globalTourFilter: FilterFn<AdminTour> = (row, _, filterValue) => {
     const searchValue = String(filterValue).trim().toLowerCase();
@@ -104,6 +118,53 @@ function toggleTourVisibility(tour: AdminTour): void {
         {
             preserveScroll: true,
             preserveState: true,
+        },
+    );
+}
+
+function openDeleteDialog(tour: AdminTour): void {
+    if (deletingTourId.value !== null) {
+        return;
+    }
+
+    (document.activeElement as HTMLElement | null)?.blur();
+    tourPendingDeletion.value = tour;
+    isDeleteDialogOpen.value = true;
+}
+
+function handleDeleteDialogOpenChange(open: boolean): void {
+    isDeleteDialogOpen.value = open;
+
+    if (!open && deletingTourId.value === null) {
+        tourPendingDeletion.value = null;
+    }
+}
+
+function cancelDeleteDialog(): void {
+    if (deletingTourId.value !== null) {
+        return;
+    }
+
+    isDeleteDialogOpen.value = false;
+    tourPendingDeletion.value = null;
+}
+
+function deleteTour(): void {
+    if (tourPendingDeletion.value === null || deletingTourId.value !== null) {
+        return;
+    }
+
+    deletingTourId.value = tourPendingDeletion.value.id;
+
+    router.delete(
+        destroyTour.url({ tour: tourPendingDeletion.value.id }),
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                deletingTourId.value = null;
+                isDeleteDialogOpen.value = false;
+                tourPendingDeletion.value = null;
+            },
         },
     );
 }
@@ -352,6 +413,9 @@ const columns: ColumnDef<AdminTour>[] = [
                                                             class: 'size-8 cursor-pointer text-destructive hover:text-destructive',
                                                             type: 'button',
                                                             'aria-label': 'Delete tour',
+                                                            disabled: deletingTourId.value === row.original.id,
+                                                            onClick: () =>
+                                                                openDeleteDialog(row.original),
                                                         },
                                                         {
                                                             default: () => h(Trash2, { class: 'size-4' }),
@@ -404,6 +468,44 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
     <Head title="Tours" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+        <AlertDialog
+            :open="isDeleteDialogOpen"
+            @update:open="handleDeleteDialogOpenChange"
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle class="text-center">Delete tour</AlertDialogTitle>
+                    <AlertDialogDescription class="text-center">
+                        <template v-if="tourPendingDeletion">
+                            Delete {{ tourPendingDeletion.name }}? This action cannot be undone.
+                        </template>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel as-child>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="cursor-pointer"
+                            :disabled="deletingTourId !== null"
+                            @click="cancelDeleteDialog"
+                        >
+                            Cancel
+                        </Button>
+                    </AlertDialogCancel>
+                    <Button
+                        type="button"
+                        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+                        :disabled="deletingTourId !== null"
+                        @click="deleteTour"
+                    >
+                        <Spinner v-if="deletingTourId !== null" class="size-4" />
+                        Delete tour
+                    </Button>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
         <Heading
             title="Tours"
             description="Manage tours available for booking."

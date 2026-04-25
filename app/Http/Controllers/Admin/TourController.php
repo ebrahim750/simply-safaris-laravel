@@ -119,10 +119,15 @@ class TourController extends Controller
             'is_hidden' => ! $tour->is_hidden,
         ])->save();
 
-        return back()->with(
-            'status',
-            $tour->is_hidden ? 'Tour hidden.' : 'Tour unhidden.',
-        );
+        return back();
+    }
+
+    public function destroy(Tour $tour): RedirectResponse
+    {
+        $tour->delete();
+
+        return to_route('admin.tours')
+            ->with('status', 'Tour deleted.');
     }
 
     /**
