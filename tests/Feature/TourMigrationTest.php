@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\Destination;
+use App\Models\Country;
+use App\Models\Place;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
@@ -72,24 +73,45 @@ test('tour category pivot table has the expected columns', function () {
     ]))->toBeTrue();
 });
 
-test('destinations and destinationables tables have the expected columns', function () {
-    expect(Schema::hasTable('destinations'))->toBeTrue();
-    expect(Schema::hasColumns('destinations', [
+test('countries places and tour place tables have the expected columns', function () {
+    expect(Schema::hasTable('countries'))->toBeTrue();
+    expect(Schema::hasColumns('countries', [
         'id',
         'name',
         'slug',
-        'type',
-        'parent_id',
+        'country_code',
+        'flag_svg',
+        'flag_png',
+        'overview',
+        'rates',
+        'best_time_to_go',
+        'high_season',
+        'time_difference',
+        'language',
+        'electrical',
+        'currency',
+        'driving_side',
+        'tourist_info',
         'created_at',
         'updated_at',
     ]))->toBeTrue();
 
-    expect(Schema::hasTable('destinationables'))->toBeTrue();
-    expect(Schema::hasColumns('destinationables', [
+    expect(Schema::hasTable('places'))->toBeTrue();
+    expect(Schema::hasColumns('places', [
         'id',
-        'destination_id',
-        'destinationable_type',
-        'destinationable_id',
+        'country_id',
+        'name',
+        'slug',
+        'overview',
+        'created_at',
+        'updated_at',
+    ]))->toBeTrue();
+
+    expect(Schema::hasTable('tour_place'))->toBeTrue();
+    expect(Schema::hasColumns('tour_place', [
+        'id',
+        'tour_id',
+        'place_id',
         'position',
         'created_at',
         'updated_at',
@@ -210,7 +232,7 @@ test('tour inclusions and exclusions are ordered by position', function () {
         ->and($tour->exclusions->pluck('text')->all())->toBe(['Excluded first', 'Excluded second']);
 });
 
-test('tour categories and activities are ordered by pivot position', function () {
+test('tour categories activities and places are ordered by pivot position', function () {
     $tour = Tour::factory()->create();
     $categoryTwo = TourCategory::factory()->create(['name' => 'Relaxation']);
     $categoryOne = TourCategory::factory()->create(['name' => 'Adventure']);
@@ -218,22 +240,18 @@ test('tour categories and activities are ordered by pivot position', function ()
     $activityTwo = TourActivity::factory()->create(['name' => 'Kayaking']);
     $activityOne = TourActivity::factory()->create(['name' => 'Hiking']);
 
+    $country = Country::factory()->create(['name' => 'Tanzania']);
+    $placeTwo = Place::factory()->create(['country_id' => $country->id, 'name' => 'Zanzibar', 'slug' => 'zanzibar']);
+    $placeOne = Place::factory()->create(['country_id' => $country->id, 'name' => 'Serengeti', 'slug' => 'serengeti']);
+
     $tour->categories()->attach($categoryTwo->id, ['position' => 2]);
     $tour->categories()->attach($categoryOne->id, ['position' => 1]);
     $tour->activities()->attach($activityTwo->id, ['position' => 2]);
     $tour->activities()->attach($activityOne->id, ['position' => 1]);
+    $tour->places()->attach($placeTwo->id, ['position' => 2]);
+    $tour->places()->attach($placeOne->id, ['position' => 1]);
 
     expect($tour->categories->pluck('name')->all())->toBe(['Adventure', 'Relaxation'])
-        ->and($tour->activities->pluck('name')->all())->toBe(['Hiking', 'Kayaking']);
-});
-
-test('tour destinations are ordered by pivot position', function () {
-    $tour = Tour::factory()->create();
-    $destinationTwo = Destination::factory()->create(['name' => 'Zanzibar', 'slug' => 'zanzibar', 'type' => 'place']);
-    $destinationOne = Destination::factory()->create(['name' => 'Tanzania', 'slug' => 'tanzania', 'type' => 'country']);
-
-    $tour->destinations()->attach($destinationTwo->id, ['position' => 2]);
-    $tour->destinations()->attach($destinationOne->id, ['position' => 1]);
-
-    expect($tour->destinations->pluck('name')->all())->toBe(['Tanzania', 'Zanzibar']);
+        ->and($tour->activities->pluck('name')->all())->toBe(['Hiking', 'Kayaking'])
+        ->and($tour->places->pluck('name')->all())->toBe(['Serengeti', 'Zanzibar']);
 });

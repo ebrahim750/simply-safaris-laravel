@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\DestinationCountryController;
+use App\Http\Controllers\Admin\DestinationPlaceController;
 use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
 use App\Http\Controllers\Admin\TourController;
@@ -36,6 +38,18 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::post('admin/tours/activities', [TourActivityController::class, 'store'])->name('admin.tours.activities.store');
         Route::patch('admin/tours/activities/{activity}', [TourActivityController::class, 'update'])->name('admin.tours.activities.update');
         Route::delete('admin/tours/activities/{activity}', [TourActivityController::class, 'destroy'])->name('admin.tours.activities.destroy');
+        Route::get('admin/destinations/countries', [DestinationCountryController::class, 'index'])->name('admin.destinations.countries');
+        Route::get('admin/destinations/countries/create', [DestinationCountryController::class, 'create'])->name('admin.destinations.countries.create');
+        Route::post('admin/destinations/countries', [DestinationCountryController::class, 'store'])->name('admin.destinations.countries.store');
+        Route::get('admin/destinations/countries/{country}/edit', [DestinationCountryController::class, 'edit'])->name('admin.destinations.countries.edit');
+        Route::patch('admin/destinations/countries/{country}', [DestinationCountryController::class, 'update'])->name('admin.destinations.countries.update');
+        Route::delete('admin/destinations/countries/{country}', [DestinationCountryController::class, 'destroy'])->name('admin.destinations.countries.destroy');
+        Route::get('admin/destinations/places', [DestinationPlaceController::class, 'index'])->name('admin.destinations.places');
+        Route::get('admin/destinations/places/create', [DestinationPlaceController::class, 'create'])->name('admin.destinations.places.create');
+        Route::post('admin/destinations/places', [DestinationPlaceController::class, 'store'])->name('admin.destinations.places.store');
+        Route::get('admin/destinations/places/{place}/edit', [DestinationPlaceController::class, 'edit'])->name('admin.destinations.places.edit');
+        Route::patch('admin/destinations/places/{place}', [DestinationPlaceController::class, 'update'])->name('admin.destinations.places.update');
+        Route::delete('admin/destinations/places/{place}', [DestinationPlaceController::class, 'destroy'])->name('admin.destinations.places.destroy');
     });
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');

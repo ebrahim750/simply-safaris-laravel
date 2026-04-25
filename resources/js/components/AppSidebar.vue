@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     LayoutGrid,
     Map,
+    MapPin,
     Settings,
     TestTubeDiagonal,
     Users,
@@ -28,6 +29,7 @@ import {
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard } from '@/routes';
 import { tours as adminTours } from '@/routes/admin';
+import adminDestinationsRoutes from '@/routes/admin/destinations';
 import adminToursRoutes from '@/routes/admin/tours';
 import {
     prodTest as rootAccessProdTest,
@@ -38,6 +40,8 @@ import type { NavItem } from '@/types';
 
 const adminToursCategories = adminToursRoutes.categories;
 const adminToursActivities = adminToursRoutes.activities;
+const adminDestinationsCountries = adminDestinationsRoutes.countries;
+const adminDestinationsPlaces = adminDestinationsRoutes.places;
 
 const page = usePage();
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
@@ -46,6 +50,10 @@ const isAdminOrRoot = computed(() =>
     ['root', 'admin'].includes(page.props.auth.user.account_type)
 );
 const isToursExpanded = computed(() => isCurrentOrParentUrl(adminTours().url));
+const isDestinationsExpanded = computed(() =>
+    isCurrentOrParentUrl(adminDestinationsCountries().url)
+    || isCurrentOrParentUrl(adminDestinationsPlaces().url)
+);
 
 const mainNavItems: NavItem[] = [
     {
@@ -107,7 +115,7 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentUrl(adminToursCategories().url)"
+                                    :is-active="isCurrentOrParentUrl(adminToursCategories().url)"
                                     tooltip="Categories"
                                 >
                                     <Link :href="adminToursCategories()">
@@ -118,11 +126,50 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentUrl(adminToursActivities().url)"
+                                    :is-active="isCurrentOrParentUrl(adminToursActivities().url)"
                                     tooltip="Activities"
                                 >
                                     <Link :href="adminToursActivities()">
                                         Activities
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            as-child
+                            :is-active="
+                                isCurrentOrParentUrl(adminDestinationsCountries().url)
+                                || isCurrentOrParentUrl(adminDestinationsPlaces().url)
+                            "
+                            tooltip="Destinations"
+                        >
+                            <Link :href="adminDestinationsCountries()">
+                                <MapPin />
+                                <span>Destinations</span>
+                            </Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuSub v-if="isDestinationsExpanded">
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                    as-child
+                                    :is-active="isCurrentOrParentUrl(adminDestinationsCountries().url)"
+                                    tooltip="Countries"
+                                >
+                                    <Link :href="adminDestinationsCountries()">
+                                        Countries
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                    as-child
+                                    :is-active="isCurrentOrParentUrl(adminDestinationsPlaces().url)"
+                                    tooltip="Places"
+                                >
+                                    <Link :href="adminDestinationsPlaces()">
+                                        Places
                                     </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>

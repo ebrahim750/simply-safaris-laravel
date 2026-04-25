@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTourRequest;
-use App\Models\Destination;
+use App\Models\Place;
 use App\Models\SiteSetting;
 use App\Models\Tour;
 use App\Models\TourActivity;
@@ -50,15 +50,15 @@ class TourController extends Controller
                     'id' => $activity->id,
                     'name' => $activity->name,
                 ]),
-            'destinations' => Destination::query()
-                ->orderBy('type')
+            'places' => Place::query()
+                ->with('country:id,name')
                 ->orderBy('name')
-                ->get(['id', 'name', 'type', 'parent_id'])
-                ->map(fn (Destination $destination): array => [
-                    'id' => $destination->id,
-                    'name' => $destination->name,
-                    'type' => $destination->type,
-                    'parent_id' => $destination->parent_id,
+                ->get(['id', 'country_id', 'name'])
+                ->map(fn (Place $place): array => [
+                    'id' => $place->id,
+                    'name' => $place->name,
+                    'country_id' => $place->country_id,
+                    'country_name' => $place->country?->name ?? 'N/A',
                 ]),
         ]);
     }
@@ -92,7 +92,7 @@ class TourController extends Controller
 
             $tour->categories()->sync($this->buildPivotPayload($validated['category_ids'] ?? []));
             $tour->activities()->sync($this->buildPivotPayload($validated['activity_ids'] ?? []));
-            $tour->destinations()->sync($this->buildPivotPayload($validated['destination_ids'] ?? []));
+            $tour->places()->sync($this->buildPivotPayload($validated['place_ids'] ?? []));
 
             $tour->itineraryItems()->createMany($this->buildPositionedRecords(
                 $validated['itinerary_items'] ?? [],

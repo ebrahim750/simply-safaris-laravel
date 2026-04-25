@@ -27,9 +27,9 @@ type TourOption = {
     name: string;
 };
 
-type DestinationOption = TourOption & {
-    type: string;
-    parent_id: number | null;
+type PlaceOption = TourOption & {
+    country_id: number;
+    country_name: string;
 };
 
 type ItineraryItemForm = {
@@ -44,7 +44,7 @@ type TextRowForm = {
 const props = defineProps<{
     categories: TourOption[];
     activities: TourOption[];
-    destinations: DestinationOption[];
+    places: PlaceOption[];
 }>();
 
 defineOptions({
@@ -77,7 +77,7 @@ const form = useForm({
     is_featured_as_seasonal_recommendation: false,
     category_ids: [] as number[],
     activity_ids: [] as number[],
-    destination_ids: [] as number[],
+    place_ids: [] as number[],
     itinerary_items: [] as ItineraryItemForm[],
     inclusions: [] as TextRowForm[],
     exclusions: [] as TextRowForm[],
@@ -106,7 +106,7 @@ function setBooleanField(
 }
 
 function toggleSelection(
-    field: 'category_ids' | 'activity_ids' | 'destination_ids',
+    field: 'category_ids' | 'activity_ids' | 'place_ids',
     id: number,
     value: boolean | 'indeterminate',
 ): void {
@@ -201,7 +201,7 @@ function submit(): void {
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <Heading
                 title="New Tour"
-                description="Create a new tour with media, flags, destinations, and structured trip details."
+                description="Create a new tour with media, flags, places, and structured trip details."
             />
 
             <div class="flex gap-2">
@@ -516,29 +516,29 @@ function submit(): void {
 
                         <Card class="border-dashed">
                             <CardHeader>
-                                <CardTitle class="text-base">Destinations</CardTitle>
-                                <CardDescription>Attach destinations in the order travelers should see them.</CardDescription>
-                            </CardHeader>
-                            <CardContent class="space-y-3">
+                            <CardTitle class="text-base">Places</CardTitle>
+                            <CardDescription>Attach places in the order travelers should see them.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-3">
                                 <div
-                                    v-if="props.destinations.length"
+                                    v-if="props.places.length"
                                     class="space-y-2"
                                 >
                                     <label
-                                        v-for="destination in props.destinations"
-                                        :key="destination.id"
+                                        v-for="place in props.places"
+                                        :key="place.id"
                                         class="flex items-start gap-3 rounded-md border border-border p-3"
                                     >
                                         <Checkbox
-                                            :model-value="form.destination_ids.includes(destination.id)"
+                                            :model-value="form.place_ids.includes(place.id)"
                                             @update:model-value="
-                                                toggleSelection('destination_ids', destination.id, $event)
+                                                toggleSelection('place_ids', place.id, $event)
                                             "
                                         />
                                         <div class="space-y-1">
-                                            <p class="text-sm font-medium">{{ destination.name }}</p>
+                                            <p class="text-sm font-medium">{{ place.name }}</p>
                                             <p class="text-xs uppercase tracking-wide text-muted-foreground">
-                                                {{ destination.type }}
+                                                {{ place.country_name }}
                                             </p>
                                         </div>
                                     </label>
@@ -547,10 +547,10 @@ function submit(): void {
                                     v-else
                                     class="text-sm text-muted-foreground"
                                 >
-                                    No destinations are available yet.
+                                    No places are available yet.
                                 </p>
-                                <InputError :message="fieldError('destination_ids')" />
-                                <InputError :message="fieldError('destination_ids.0')" />
+                                <InputError :message="fieldError('place_ids')" />
+                                <InputError :message="fieldError('place_ids.0')" />
                             </CardContent>
                         </Card>
                     </div>

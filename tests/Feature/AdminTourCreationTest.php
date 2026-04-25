@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\Destination;
+use App\Models\Country;
+use App\Models\Place;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
@@ -22,10 +23,12 @@ test('admin users can view the new tour page', function () {
     $activity = TourActivity::factory()->create([
         'name' => 'Game Drives',
     ]);
-    $destination = Destination::factory()->create([
+    $country = Country::factory()->create([
         'name' => 'Tanzania',
-        'slug' => 'tanzania',
-        'type' => 'country',
+    ]);
+    $place = Place::factory()->create([
+        'country_id' => $country->id,
+        'name' => 'Serengeti',
     ]);
 
     $this->actingAs($adminUser)
@@ -37,10 +40,10 @@ test('admin users can view the new tour page', function () {
             ->where('categories.0.name', $category->name)
             ->where('activities.0.id', $activity->id)
             ->where('activities.0.name', $activity->name)
-            ->where('destinations.0.id', $destination->id)
-            ->where('destinations.0.name', $destination->name)
-            ->where('destinations.0.type', $destination->type)
-            ->where('destinations.0.parent_id', $destination->parent_id)
+            ->where('places.0.id', $place->id)
+            ->where('places.0.name', $place->name)
+            ->where('places.0.country_id', $country->id)
+            ->where('places.0.country_name', $country->name)
         );
 });
 
@@ -62,15 +65,17 @@ test('admin users can create a tour with uploaded images and related content', f
     $activityTwo = TourActivity::factory()->create([
         'name' => 'Bush Walks',
     ]);
-    $destinationOne = Destination::factory()->create([
-        'name' => 'Kenya',
-        'slug' => 'kenya',
-        'type' => 'country',
-    ]);
-    $destinationTwo = Destination::factory()->create([
+    $countryOne = Country::factory()->create(['name' => 'Kenya']);
+    $countryTwo = Country::factory()->create(['name' => 'Tanzania']);
+    $placeOne = Place::factory()->create([
+        'country_id' => $countryOne->id,
         'name' => 'Masai Mara',
         'slug' => 'masai-mara',
-        'type' => 'place',
+    ]);
+    $placeTwo = Place::factory()->create([
+        'country_id' => $countryTwo->id,
+        'name' => 'Serengeti',
+        'slug' => 'serengeti',
     ]);
 
     $response = $this->actingAs($adminUser)
@@ -92,7 +97,7 @@ test('admin users can create a tour with uploaded images and related content', f
             'is_featured_as_seasonal_recommendation' => '1',
             'category_ids' => [$categoryTwo->id, $categoryOne->id],
             'activity_ids' => [$activityTwo->id, $activityOne->id],
-            'destination_ids' => [$destinationTwo->id, $destinationOne->id],
+            'place_ids' => [$placeTwo->id, $placeOne->id],
             'itinerary_items' => [
                 ['title' => 'Arrival in Nairobi', 'content' => 'Airport meet and transfer.'],
                 ['title' => '', 'content' => ''],
@@ -116,7 +121,7 @@ test('admin users can create a tour with uploaded images and related content', f
     $tour = Tour::query()->with([
         'categories',
         'activities',
-        'destinations',
+        'places.country',
         'itineraryItems',
         'inclusions',
         'exclusions',
@@ -135,7 +140,8 @@ test('admin users can create a tour with uploaded images and related content', f
         ->and($tour->gallery_images)->toHaveCount(2)
         ->and($tour->categories->pluck('id')->all())->toBe([$categoryTwo->id, $categoryOne->id])
         ->and($tour->activities->pluck('id')->all())->toBe([$activityTwo->id, $activityOne->id])
-        ->and($tour->destinations->pluck('id')->all())->toBe([$destinationTwo->id, $destinationOne->id])
+        ->and($tour->places->pluck('id')->all())->toBe([$placeTwo->id, $placeOne->id])
+        ->and($tour->places->pluck('country.name')->all())->toBe([$countryTwo->name, $countryOne->name])
         ->and($tour->itineraryItems->pluck('position')->all())->toBe([1, 2])
         ->and($tour->itineraryItems->pluck('title')->all())->toBe(['Arrival in Nairobi', 'Fly to camp'])
         ->and($tour->inclusions->pluck('position')->all())->toBe([1, 2])
@@ -172,7 +178,7 @@ test('admin tour creation validates required fields, uploads, and related ids', 
             'duration_days' => '0',
             'category_ids' => [999999],
             'activity_ids' => [999999],
-            'destination_ids' => [999999],
+            'place_ids' => [999999],
             'itinerary_items' => [
                 ['title' => '', 'content' => 'Content without a title'],
             ],
@@ -194,7 +200,7 @@ test('admin tour creation validates required fields, uploads, and related ids', 
         'duration_days',
         'category_ids.0',
         'activity_ids.0',
-        'destination_ids.0',
+        'place_ids.0',
         'itinerary_items.0.title',
     ]);
 

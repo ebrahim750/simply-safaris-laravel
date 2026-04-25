@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\Destination;
+use App\Models\Place;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -37,7 +37,7 @@ class StoreTourRequest extends FormRequest
             'is_featured_as_seasonal_recommendation' => $this->boolean('is_featured_as_seasonal_recommendation'),
             'category_ids' => $this->normalizeIdentifierArray('category_ids'),
             'activity_ids' => $this->normalizeIdentifierArray('activity_ids'),
-            'destination_ids' => $this->normalizeIdentifierArray('destination_ids'),
+            'place_ids' => $this->normalizeIdentifierArray('place_ids'),
             'itinerary_items' => $this->normalizeItineraryItems(),
             'inclusions' => $this->normalizeTextRows('inclusions'),
             'exclusions' => $this->normalizeTextRows('exclusions'),
@@ -69,8 +69,8 @@ class StoreTourRequest extends FormRequest
             'category_ids.*' => ['required', 'integer', 'distinct', 'exists:'.(new TourCategory)->getTable().',id'],
             'activity_ids' => ['nullable', 'array'],
             'activity_ids.*' => ['required', 'integer', 'distinct', 'exists:'.(new TourActivity)->getTable().',id'],
-            'destination_ids' => ['nullable', 'array'],
-            'destination_ids.*' => ['required', 'integer', 'distinct', 'exists:'.(new Destination)->getTable().',id'],
+            'place_ids' => ['nullable', 'array'],
+            'place_ids.*' => ['required', 'integer', 'distinct', 'exists:'.(new Place)->getTable().',id'],
             'itinerary_items' => ['nullable', 'array'],
             'itinerary_items.*.title' => ['required', 'string', 'max:255'],
             'itinerary_items.*.content' => ['nullable', 'string'],
