@@ -1129,7 +1129,7 @@ function submit(): void {
     </div>
 
     <Dialog v-model:open="pricingDialogOpen">
-        <DialogContent class="sm:max-w-lg">
+        <DialogContent class="sm:max-w-4xl" :hide-overlay="true">
             <DialogHeader>
                 <DialogTitle>Detailed pricing</DialogTitle>
                 <DialogDescription>
@@ -1137,10 +1137,9 @@ function submit(): void {
                 </DialogDescription>
             </DialogHeader>
             <div class="grid gap-4 py-4">
-                <textarea
-                    id="pricing_detailed"
+                <Editor
                     v-model="form.pricing_detailed"
-                    :class="textAreaClass('pricing_detailed')"
+                    :error="!!form.errors.pricing_detailed"
                     placeholder="Break down seasonal pricing, occupancy, or package notes."
                 />
                 <InputError :message="form.errors.pricing_detailed" />
