@@ -309,11 +309,20 @@ function submit(): void {
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-6">
-                                    <div class="grid gap-2">
+                                <div class="grid gap-2">
+                                    <div class="flex items-center justify-between">
                                         <Label for="price">Price</Label>
-                                        <div
-                                            class="flex rounded-md border border-input shadow-xs"
+                                        <button
+                                            type="button"
+                                            class="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+                                            @click="pricingDialogOpen = true"
                                         >
+                                            Add detailed pricing
+                                        </button>
+                                    </div>
+                                    <div
+                                        class="flex rounded-md border border-input shadow-xs"
+                                    >
                                             <div
                                                 class="flex items-center justify-center border-r border-input bg-muted px-3 text-sm text-muted-foreground"
                                             >
@@ -331,13 +340,6 @@ function submit(): void {
                                         <InputError
                                             :message="form.errors.price"
                                         />
-                                        <button
-                                            type="button"
-                                            class="text-left text-xs text-muted-foreground underline hover:text-foreground"
-                                            @click="pricingDialogOpen = true"
-                                        >
-                                            Add detailed pricing
-                                        </button>
                                     </div>
 
                                     <div class="grid gap-2">
