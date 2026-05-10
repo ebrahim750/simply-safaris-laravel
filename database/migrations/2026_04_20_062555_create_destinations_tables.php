@@ -16,17 +16,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('country_code', 2)->nullable();
-            $table->string('flag_svg')->nullable();
-            $table->string('flag_png')->nullable();
             $table->text('overview')->nullable();
-            $table->string('rates')->nullable();
+            $table->string('main_image')->nullable();
             $table->text('best_time_to_go')->nullable();
             $table->text('high_season')->nullable();
-            $table->string('time_difference')->nullable();
-            $table->text('language')->nullable();
             $table->text('electrical')->nullable();
-            $table->text('currency')->nullable();
-            $table->string('driving_side')->nullable();
             $table->string('tourist_info')->nullable();
             $table->timestamps();
         });
@@ -37,6 +31,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('overview')->nullable();
+            $table->string('main_image')->nullable();
             $table->timestamps();
 
             $table->index(['country_id', 'name']);

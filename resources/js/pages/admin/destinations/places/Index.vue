@@ -10,13 +10,13 @@ import {
 } from '@tanstack/vue-table';
 import { ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
+import { index as countriesIndex } from '@/actions/App/Http/Controllers/Admin/DestinationCountryController';
 import {
     create as createPlace,
     destroy as destroyPlace,
     edit as editPlace,
     index as placesIndex,
 } from '@/actions/App/Http/Controllers/Admin/DestinationPlaceController';
-import { index as countriesIndex } from '@/actions/App/Http/Controllers/Admin/DestinationCountryController';
 import Heading from '@/components/Heading.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ type AdminPlace = {
     country_name: string;
     name: string;
     slug: string;
+    main_image: string | null;
     created_at: string | null;
     created_at_display: string;
 };
@@ -113,6 +114,18 @@ const columns: ColumnDef<AdminPlace>[] = [
                     default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
                 },
             ),
+    },
+    {
+        accessorKey: 'main_image',
+        header: 'Image',
+        cell: ({ row }) =>
+            row.original.main_image
+                ? h('img', {
+                    src: row.original.main_image,
+                    alt: row.original.name,
+                    class: 'h-10 w-10 rounded-md object-cover',
+                })
+                : h('div', { class: 'h-10 w-10 rounded-md bg-muted' }),
     },
     {
         accessorKey: 'country_name',

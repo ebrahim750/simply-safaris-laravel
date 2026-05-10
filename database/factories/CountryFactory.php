@@ -24,17 +24,11 @@ class CountryFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'country_code' => fake()->countryCode(),
-            'flag_svg' => null,
-            'flag_png' => null,
             'overview' => null,
-            'rates' => null,
+            'main_image' => null,
             'best_time_to_go' => null,
             'high_season' => null,
-            'time_difference' => null,
-            'language' => null,
             'electrical' => null,
-            'currency' => null,
-            'driving_side' => null,
             'tourist_info' => null,
         ];
     }

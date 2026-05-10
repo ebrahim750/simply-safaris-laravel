@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     'name',
     'slug',
     'overview',
+    'main_image',
 ])]
 class Place extends Model
 {

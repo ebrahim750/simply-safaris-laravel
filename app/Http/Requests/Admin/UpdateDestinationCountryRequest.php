@@ -44,6 +44,12 @@ class UpdateDestinationCountryRequest extends FormRequest
                 Rule::unique(Country::class, 'name')
                     ->ignore($country),
             ],
+            'overview' => ['nullable', 'string'],
+            'main_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'best_time_to_go' => ['nullable', 'string'],
+            'high_season' => ['nullable', 'string'],
+            'electrical' => ['nullable', 'string'],
+            'tourist_info' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

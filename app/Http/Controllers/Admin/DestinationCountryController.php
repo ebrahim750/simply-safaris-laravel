@@ -7,9 +7,11 @@ use App\Http\Requests\Admin\StoreDestinationCountryRequest;
 use App\Http\Requests\Admin\UpdateDestinationCountryRequest;
 use App\Models\Country;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,11 +24,9 @@ class DestinationCountryController extends Controller
         return Inertia::render('admin/destinations/countries/Countries', [
             'countries' => Country::query()
                 ->latest('id')
-                ->get(['id', 'name', 'slug', 'country_code', 'flag_svg', 'flag_png', 'created_at'])
+                ->get(['id', 'name', 'slug', 'country_code', 'created_at'])
                 ->map(fn (Country $country): array => [
                     'country_code' => $country->country_code,
-                    'flag_svg' => $country->flag_svg,
-                    'flag_png' => $country->flag_png,
                     'id' => $country->id,
                     'name' => $country->name,
                     'slug' => $country->slug,
@@ -48,13 +48,22 @@ class DestinationCountryController extends Controller
         $validated = $request->validated();
         $countryOption = $this->findCountryOptionByName($validated['name']);
 
-        Country::query()->create([
+        $country = Country::query()->create([
             'name' => $validated['name'],
             'slug' => $this->generateUniqueSlug($validated['name']),
             'country_code' => $countryOption['code'] ?? null,
-            'flag_svg' => $countryOption['flag_svg'] ?? null,
-            'flag_png' => $countryOption['flag_png'] ?? null,
+            'overview' => $validated['overview'] ?? null,
+            'best_time_to_go' => $validated['best_time_to_go'] ?? null,
+            'high_season' => $validated['high_season'] ?? null,
+            'electrical' => $validated['electrical'] ?? null,
+            'tourist_info' => $validated['tourist_info'] ?? null,
         ]);
+
+        if ($request->hasFile('main_image')) {
+            $country->forceFill([
+                'main_image' => $this->storeImage($request->file('main_image'), 'countries/'.$country->id),
+            ])->save();
+        }
 
         return to_route('admin.destinations.countries')
             ->with('status', 'Country created.');
@@ -67,6 +76,12 @@ class DestinationCountryController extends Controller
                 'id' => $country->id,
                 'name' => $country->name,
                 'slug' => $country->slug,
+                'overview' => $country->overview,
+                'main_image' => $this->resolveImageUrl($country->main_image),
+                'best_time_to_go' => $country->best_time_to_go,
+                'high_season' => $country->high_season,
+                'electrical' => $country->electrical,
+                'tourist_info' => $country->tourist_info,
             ],
         ]);
     }
@@ -80,9 +95,22 @@ class DestinationCountryController extends Controller
             'name' => $validated['name'],
             'slug' => $this->generateUniqueSlug($validated['name'], $country),
             'country_code' => $countryOption['code'] ?? $country->country_code,
-            'flag_svg' => $countryOption['flag_svg'] ?? $country->flag_svg,
-            'flag_png' => $countryOption['flag_png'] ?? $country->flag_png,
+            'overview' => $validated['overview'] ?? null,
+            'best_time_to_go' => $validated['best_time_to_go'] ?? null,
+            'high_season' => $validated['high_season'] ?? null,
+            'electrical' => $validated['electrical'] ?? null,
+            'tourist_info' => $validated['tourist_info'] ?? null,
         ]);
+
+        if ($request->hasFile('main_image')) {
+            if ($country->main_image) {
+                Storage::disk('public')->delete($country->main_image);
+            }
+
+            $country->forceFill([
+                'main_image' => $this->storeImage($request->file('main_image'), 'countries/'.$country->id),
+            ])->save();
+        }
 
         return to_route('admin.destinations.countries')
             ->with('status', 'Country updated.');
@@ -90,6 +118,10 @@ class DestinationCountryController extends Controller
 
     public function destroy(Country $country): RedirectResponse
     {
+        if ($country->main_image) {
+            Storage::disk('public')->delete($country->main_image);
+        }
+
         $country->delete();
 
         return to_route('admin.destinations.countries')
@@ -182,5 +214,21 @@ class DestinationCountryController extends Controller
     {
         return $this->getCountryCatalog()
             ->first(fn (array $country): bool => Str::lower($country['name']) === Str::lower($name));
+    }
+
+    private function storeImage(UploadedFile $file, string $directory): string
+    {
+        return $file->store($directory, 'public');
+    }
+
+    private function resolveImageUrl(?string $path): ?string
+    {
+        if (blank($path)) {
+            return null;
+        }
+
+        return Str::startsWith($path, ['http://', 'https://', '/'])
+            ? $path
+            : Storage::disk('public')->url($path);
     }
 }

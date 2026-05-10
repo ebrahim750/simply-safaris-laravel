@@ -9,7 +9,7 @@ import {
     useVueTable,
 } from '@tanstack/vue-table';
 import { ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-vue-next';
-import { computed, defineComponent, h, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import {
     create as createCountry,
     destroy as destroyCountry,
@@ -30,8 +30,6 @@ import { Input } from '@/components/ui/input';
 
 type AdminCountry = {
     country_code: string | null;
-    flag_png: string | null;
-    flag_svg: string | null;
     id: number;
     name: string;
     slug: string;
@@ -99,53 +97,7 @@ function removeCountry(country: AdminCountry): void {
     });
 }
 
-const CountryFlagThumbnail = defineComponent({
-    name: 'CountryFlagThumbnail',
-    props: {
-        imageUrl: {
-            type: String,
-            default: null,
-        },
-        countryName: {
-            type: String,
-            required: true,
-        },
-    },
-    setup(componentProps) {
-        const hasImageError = ref(false);
-
-        return () =>
-            componentProps.imageUrl && !hasImageError.value
-                ? h('img', {
-                      src: componentProps.imageUrl,
-                      alt: `${componentProps.countryName} flag`,
-                      class: 'h-8 w-12 rounded-sm border border-border object-cover',
-                      loading: 'lazy',
-                      onError: () => {
-                          hasImageError.value = true;
-                      },
-                  })
-                : h(
-                      'div',
-                      {
-                          class: 'flex h-8 w-12 items-center justify-center rounded-sm border border-dashed border-border bg-muted/40 text-[10px] font-medium uppercase tracking-wide text-muted-foreground',
-                      },
-                      'N/A',
-                  );
-    },
-});
-
 const columns: ColumnDef<AdminCountry>[] = [
-    {
-        id: 'flag',
-        header: 'Flag',
-        enableSorting: false,
-        cell: ({ row }) =>
-            h(CountryFlagThumbnail, {
-                imageUrl: row.original.flag_svg ?? row.original.flag_png,
-                countryName: row.original.name,
-            }),
-    },
     {
         accessorKey: 'name',
         header: ({ column }) =>

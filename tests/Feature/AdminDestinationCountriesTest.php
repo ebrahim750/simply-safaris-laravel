@@ -70,7 +70,6 @@ test('admin users can view the countries page', function () {
         'name' => 'Kenya',
         'slug' => 'kenya',
         'country_code' => 'ke',
-        'flag_svg' => 'https://flagcdn.com/ke.svg',
     ]);
 
     $this->actingAs($adminUser)
@@ -82,7 +81,6 @@ test('admin users can view the countries page', function () {
             ->where('countries.0.id', $country->id)
             ->where('countries.0.name', 'Kenya')
             ->where('countries.0.country_code', 'ke')
-            ->where('countries.0.flag_svg', 'https://flagcdn.com/ke.svg')
         );
 });
 
@@ -103,6 +101,11 @@ test('admin users can open create country page and store a country', function ()
     $response = $this->actingAs($adminUser)
         ->post(route('admin.destinations.countries.store'), [
             'name' => 'Tanzania',
+            'overview' => 'A beautiful country in East Africa.',
+            'best_time_to_go' => 'June to October',
+            'high_season' => 'July to September',
+            'electrical' => '230V, Type D/G plugs',
+            'tourist_info' => 'https://www.tanzaniatourism.go.tz',
         ]);
 
     $response->assertRedirect(route('admin.destinations.countries'));
@@ -112,7 +115,11 @@ test('admin users can open create country page and store a country', function ()
         'name' => 'Tanzania',
         'slug' => 'tanzania',
         'country_code' => 'tz',
-        'flag_svg' => 'https://flagcdn.com/tz.svg',
+        'overview' => 'A beautiful country in East Africa.',
+        'best_time_to_go' => 'June to October',
+        'high_season' => 'July to September',
+        'electrical' => '230V, Type D/G plugs',
+        'tourist_info' => 'https://www.tanzaniatourism.go.tz',
     ]);
 });
 
@@ -163,6 +170,11 @@ test('admin users can open edit page and update a country with regenerated uniqu
     $response = $this->actingAs($adminUser)
         ->patch(route('admin.destinations.countries.update', ['country' => $country->id]), [
             'name' => 'Uganda',
+            'overview' => 'The Pearl of Africa.',
+            'best_time_to_go' => 'December to February',
+            'high_season' => 'June to August',
+            'electrical' => '240V, Type G plugs',
+            'tourist_info' => 'https://www.visituganda.com',
         ]);
 
     $response->assertRedirect(route('admin.destinations.countries'));
@@ -173,7 +185,11 @@ test('admin users can open edit page and update a country with regenerated uniqu
         'name' => 'Uganda',
         'slug' => 'uganda-2',
         'country_code' => 'ug',
-        'flag_svg' => 'https://flagcdn.com/ug.svg',
+        'overview' => 'The Pearl of Africa.',
+        'best_time_to_go' => 'December to February',
+        'high_season' => 'June to August',
+        'electrical' => '240V, Type G plugs',
+        'tourist_info' => 'https://www.visituganda.com',
     ]);
 });
 

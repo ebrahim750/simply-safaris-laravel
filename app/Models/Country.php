@@ -12,17 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name',
     'slug',
     'country_code',
-    'flag_svg',
-    'flag_png',
     'overview',
-    'rates',
+    'main_image',
     'best_time_to_go',
     'high_season',
-    'time_difference',
-    'language',
     'electrical',
-    'currency',
-    'driving_side',
     'tourist_info',
 ])]
 class Country extends Model

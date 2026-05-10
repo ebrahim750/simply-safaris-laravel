@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\UpdateDestinationPlaceRequest;
 use App\Models\Country;
 use App\Models\Place;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,13 +22,14 @@ class DestinationPlaceController extends Controller
             'places' => Place::query()
                 ->with('country:id,name')
                 ->latest('id')
-                ->get(['id', 'country_id', 'name', 'slug', 'created_at'])
+                ->get(['id', 'country_id', 'name', 'slug', 'main_image', 'created_at'])
                 ->map(fn (Place $place): array => [
                     'id' => $place->id,
                     'country_id' => $place->country_id,
                     'country_name' => $place->country?->name ?? 'N/A',
                     'name' => $place->name,
                     'slug' => $place->slug,
+                    'main_image' => $this->resolveImageUrl($place->main_image),
                     'created_at' => $place->created_at?->toIso8601String(),
                     'created_at_display' => $place->created_at?->format('M j, Y g:i A') ?? 'N/A',
                 ]),
@@ -52,12 +55,18 @@ class DestinationPlaceController extends Controller
     {
         $validated = $request->validated();
 
-        Place::query()->create([
+        $place = Place::query()->create([
             'country_id' => (int) $validated['country_id'],
             'name' => $validated['name'],
             'slug' => $this->generateUniqueSlug($validated['name']),
             'overview' => $validated['overview'] ?? null,
         ]);
+
+        if ($request->hasFile('main_image')) {
+            $place->forceFill([
+                'main_image' => $this->storeImage($request->file('main_image'), 'places/'.$place->id),
+            ])->save();
+        }
 
         return to_route('admin.destinations.places')
             ->with('status', 'Place created.');
@@ -72,6 +81,7 @@ class DestinationPlaceController extends Controller
                 'name' => $place->name,
                 'slug' => $place->slug,
                 'overview' => $place->overview,
+                'main_image' => $this->resolveImageUrl($place->main_image),
             ],
             'countries' => Country::query()
                 ->orderBy('name')
@@ -96,12 +106,26 @@ class DestinationPlaceController extends Controller
             'overview' => $validated['overview'] ?? null,
         ]);
 
+        if ($request->hasFile('main_image')) {
+            if ($place->main_image) {
+                Storage::disk('public')->delete($place->main_image);
+            }
+
+            $place->forceFill([
+                'main_image' => $this->storeImage($request->file('main_image'), 'places/'.$place->id),
+            ])->save();
+        }
+
         return to_route('admin.destinations.places')
             ->with('status', 'Place updated.');
     }
 
     public function destroy(Place $place): RedirectResponse
     {
+        if ($place->main_image) {
+            Storage::disk('public')->delete($place->main_image);
+        }
+
         $place->delete();
 
         return to_route('admin.destinations.places')
@@ -129,5 +153,21 @@ class DestinationPlaceController extends Controller
             ->when($ignorePlace, fn ($query) => $query->whereKeyNot($ignorePlace->id))
             ->where('slug', $slug)
             ->exists();
+    }
+
+    private function storeImage(UploadedFile $file, string $directory): string
+    {
+        return $file->store($directory, 'public');
+    }
+
+    private function resolveImageUrl(?string $path): ?string
+    {
+        if (blank($path)) {
+            return null;
+        }
+
+        return Str::startsWith($path, ['http://', 'https://', '/'])
+            ? $path
+            : Storage::disk('public')->url($path);
     }
 }

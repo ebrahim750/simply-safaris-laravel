@@ -50,6 +50,7 @@ class UpdateDestinationPlaceRequest extends FormRequest
             ],
             'country_id' => ['required', 'integer', 'exists:'.(new Country)->getTable().',id'],
             'overview' => ['nullable', 'string'],
+            'main_image' => ['nullable', 'image', 'max:2048'],
         ];
     }
 

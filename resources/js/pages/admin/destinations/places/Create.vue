@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { UploadCloudIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { index as countriesIndex } from '@/actions/App/Http/Controllers/Admin/DestinationCountryController';
 import {
     create as createPlace,
     index as placesIndex,
     store as storePlace,
 } from '@/actions/App/Http/Controllers/Admin/DestinationPlaceController';
-import { index as countriesIndex } from '@/actions/App/Http/Controllers/Admin/DestinationCountryController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 type CountryOption = {
     id: number;
@@ -65,11 +67,29 @@ const form = useForm({
     country_id: '',
     name: '',
     overview: '',
+    main_image: null as File | null,
 });
+
+const mainImagePreview = ref<string | null>(null);
+
+function handleMainImageChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    form.main_image = file;
+
+    if (mainImagePreview.value) {
+        URL.revokeObjectURL(mainImagePreview.value);
+        mainImagePreview.value = null;
+    }
+
+    if (file) {
+        mainImagePreview.value = URL.createObjectURL(file);
+    }
+}
 
 function submit(): void {
     form.post(storePlace.url(), {
         preserveScroll: true,
+        forceFormData: true,
     });
 }
 </script>
@@ -170,7 +190,39 @@ function submit(): void {
                         <InputError :message="form.errors.overview" />
                     </div>
 
-
+                    <div class="grid gap-2">
+                        <Label for="main_image">Main image</Label>
+                        <div
+                            :class="cn(
+                                'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
+                                form.errors.main_image && 'border-destructive',
+                            )"
+                        >
+                            <Input
+                                id="main_image"
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.webp"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                @change="handleMainImageChange"
+                            />
+                            <img
+                                v-if="mainImagePreview"
+                                :src="mainImagePreview"
+                                alt="Main image preview"
+                                class="max-h-56 w-full rounded-md border border-border object-cover"
+                            />
+                            <template v-else>
+                                <UploadCloudIcon class="h-10 w-10 text-muted-foreground" />
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium">Choose main image</p>
+                                    <p class="text-xs text-muted-foreground">
+                                        PNG, JPG, JPEG, or WEBP
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                        <InputError :message="form.errors.main_image" />
+                    </div>
                 </form>
             </CardContent>
         </Card>

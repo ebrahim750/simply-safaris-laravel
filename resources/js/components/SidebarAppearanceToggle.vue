@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import {
     SidebarGroup,
     SidebarGroupContent,
@@ -9,6 +10,11 @@ import {
 import { useAppearanceCycle } from '@/composables/useAppearanceCycle';
 
 const { cycle, label, actionIcon } = useAppearanceCycle();
+
+const isMounted = ref(false);
+onMounted(() => {
+    isMounted.value = true;
+});
 </script>
 
 <template>
@@ -21,8 +27,10 @@ const { cycle, label, actionIcon } = useAppearanceCycle();
                         :tooltip="label"
                         @click="cycle"
                     >
-                        <component :is="actionIcon" />
-                        <span>{{ label }}</span>
+                        <template v-if="isMounted">
+                            <component :is="actionIcon" />
+                            <span>{{ label }}</span>
+                        </template>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
