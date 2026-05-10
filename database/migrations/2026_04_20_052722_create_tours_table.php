@@ -31,6 +31,7 @@ return new class extends Migration
             $table->json('gallery_images')->nullable();
             $table->string('external_url')->nullable();
             $table->string('external_link_button_text')->nullable();
+            $table->boolean('show_external_booking')->default(false);
             $table->integer('duration_days')->nullable();
             $table->longText('overview')->nullable();
             $table->longText('pricing_detailed')->nullable();

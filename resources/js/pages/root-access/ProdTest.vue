@@ -52,7 +52,9 @@ const status = computed(() => page.props.flash.status);
             description="Run targeted production checks from the root access area."
         />
 
-        <div class="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+        <div
+            class="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800"
+        >
             <button
                 @click="activeTab = 'email-test'"
                 :class="[
@@ -99,7 +101,11 @@ const status = computed(() => page.props.flash.status);
                         <InputError :message="errors.receiver_email" />
                     </div>
 
-                    <Button type="submit" :disabled="processing" data-test="send-prod-test-email-button">
+                    <Button
+                        type="submit"
+                        :disabled="processing"
+                        data-test="send-prod-test-email-button"
+                    >
                         <Spinner v-if="processing" />
                         Send test email
                     </Button>

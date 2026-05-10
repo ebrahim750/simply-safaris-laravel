@@ -97,17 +97,19 @@ function isActive(href: string): boolean {
             description="Manage the singleton site settings record from the root access area."
         />
 
-        <div class="flex gap-3 rounded-lg border border-border p-1 max-w-4xl">
+        <div class="flex max-w-4xl gap-3 rounded-lg border border-border p-1">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"
                 :href="tab.href"
-                :class="cn(
-                    'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                    isActive(tab.href)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )"
+                :class="
+                    cn(
+                        'rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                        isActive(tab.href)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )
+                "
             >
                 {{ tab.label }}
             </Link>
@@ -153,7 +155,9 @@ function isActive(href: string): boolean {
                             <Label for="currency">Currency</Label>
                             <Select v-model="form.currency">
                                 <SelectTrigger id="currency" class="w-full">
-                                    <SelectValue placeholder="Select currency" />
+                                    <SelectValue
+                                        placeholder="Select currency"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem

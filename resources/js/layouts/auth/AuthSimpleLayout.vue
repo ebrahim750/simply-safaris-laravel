@@ -14,8 +14,8 @@ const appBranding = computed(() => page.props.appBranding);
 const siteName = computed(() => appBranding.value.siteName ?? page.props.name);
 const adminLogoLightUrl = computed(() => appBranding.value.adminLogoLightUrl);
 const adminLogoDarkUrl = computed(() => appBranding.value.adminLogoDarkUrl);
-const hasCustomAdminLogo = computed(
-    () => Boolean(adminLogoLightUrl.value || adminLogoDarkUrl.value),
+const hasCustomAdminLogo = computed(() =>
+    Boolean(adminLogoLightUrl.value || adminLogoDarkUrl.value),
 );
 </script>
 
@@ -38,25 +38,25 @@ const hasCustomAdminLogo = computed(
                                     :src="adminLogoLightUrl"
                                     :alt="`${siteName} logo`"
                                     class="block h-20 w-auto max-w-60 object-contain dark:hidden"
-                                >
+                                />
                                 <img
                                     :src="adminLogoDarkUrl"
                                     :alt="`${siteName} logo`"
                                     class="hidden h-20 w-auto max-w-60 object-contain dark:block"
-                                >
+                                />
                             </template>
                             <img
                                 v-else-if="adminLogoLightUrl"
                                 :src="adminLogoLightUrl"
                                 :alt="`${siteName} logo`"
                                 class="block h-20 w-auto max-w-60 object-contain"
-                            >
+                            />
                             <img
                                 v-else-if="adminLogoDarkUrl"
                                 :src="adminLogoDarkUrl"
                                 :alt="`${siteName} logo`"
                                 class="block h-20 w-auto max-w-60 object-contain"
-                            >
+                            />
                         </template>
                         <div
                             v-else

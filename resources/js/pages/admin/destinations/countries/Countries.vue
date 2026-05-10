@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import type { ColumnDef, FilterFn, SortingState, Updater } from '@tanstack/vue-table';
+import type {
+    ColumnDef,
+    FilterFn,
+    SortingState,
+    Updater,
+} from '@tanstack/vue-table';
 import {
     FlexRender,
     getCoreRowModel,
@@ -88,7 +93,7 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
 }
 
 function removeCountry(country: AdminCountry): void {
-    if (! window.confirm(`Delete ${country.name}?`)) {
+    if (!window.confirm(`Delete ${country.name}?`)) {
         return;
     }
 
@@ -106,10 +111,14 @@ const columns: ColumnDef<AdminCountry>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Name',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
     },
@@ -117,7 +126,11 @@ const columns: ColumnDef<AdminCountry>[] = [
         accessorKey: 'slug',
         header: 'Slug',
         cell: ({ row }) =>
-            h('span', { class: 'font-mono text-xs text-muted-foreground' }, row.original.slug),
+            h(
+                'span',
+                { class: 'font-mono text-xs text-muted-foreground' },
+                row.original.slug,
+            ),
     },
     {
         accessorKey: 'created_at',
@@ -127,14 +140,22 @@ const columns: ColumnDef<AdminCountry>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Created', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Created',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
-            h('div', { class: 'text-muted-foreground' }, row.original.created_at_display),
+            h(
+                'div',
+                { class: 'text-muted-foreground' },
+                row.original.created_at_display,
+            ),
     },
     {
         id: 'actions',
@@ -192,7 +213,9 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
 });
 
-const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length);
+const filteredRowCount = computed(
+    () => table.getFilteredRowModel().rows.length,
+);
 </script>
 
 <template>
@@ -211,10 +234,15 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
 
         <Card>
             <CardHeader>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div
+                    class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+                >
                     <div class="space-y-1">
                         <CardTitle>All countries</CardTitle>
-                        <CardDescription>View and manage destination countries.</CardDescription>
+                        <CardDescription
+                            >View and manage destination
+                            countries.</CardDescription
+                        >
                     </div>
                     <Button as-child class="cursor-pointer">
                         <Link :href="createCountry()">
@@ -225,7 +253,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                 </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
@@ -233,7 +263,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
-                        {{ filteredRowCount }} countr{{ filteredRowCount === 1 ? 'y' : 'ies' }}
+                        {{ filteredRowCount }} countr{{
+                            filteredRowCount === 1 ? 'y' : 'ies'
+                        }}
                     </p>
                 </div>
 

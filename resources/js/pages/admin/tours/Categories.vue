@@ -96,9 +96,7 @@ const globalCategoryFilter: FilterFn<AdminCategory> = (row, _, filterValue) => {
         return true;
     }
 
-    return row.original.name
-        .toLowerCase()
-        .includes(searchValue);
+    return row.original.name.toLowerCase().includes(searchValue);
 };
 
 function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
@@ -197,23 +195,23 @@ function cancelDeleteDialog(): void {
 }
 
 function deleteCategory(): void {
-    if (categoryPendingDeletion.value === null || deletingCategoryId.value !== null) {
+    if (
+        categoryPendingDeletion.value === null ||
+        deletingCategoryId.value !== null
+    ) {
         return;
     }
 
     deletingCategoryId.value = categoryPendingDeletion.value.id;
 
-    router.delete(
-        destroyTourCategory.url(categoryPendingDeletion.value.id),
-        {
-            preserveScroll: true,
-            onFinish: () => {
-                deletingCategoryId.value = null;
-                isDeleteDialogOpen.value = false;
-                categoryPendingDeletion.value = null;
-            },
+    router.delete(destroyTourCategory.url(categoryPendingDeletion.value.id), {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingCategoryId.value = null;
+            isDeleteDialogOpen.value = false;
+            categoryPendingDeletion.value = null;
         },
-    );
+    });
 }
 
 const columns: ColumnDef<AdminCategory>[] = [
@@ -225,10 +223,14 @@ const columns: ColumnDef<AdminCategory>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Name',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) => {
@@ -249,7 +251,11 @@ const columns: ColumnDef<AdminCategory>[] = [
                 ]);
             }
 
-            return h('div', { class: 'font-medium text-foreground' }, row.original.name);
+            return h(
+                'div',
+                { class: 'font-medium text-foreground' },
+                row.original.name,
+            );
         },
     },
     {
@@ -260,10 +266,14 @@ const columns: ColumnDef<AdminCategory>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Created', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Created',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -279,57 +289,26 @@ const columns: ColumnDef<AdminCategory>[] = [
         header: () => h('div', { class: 'text-right' }, 'Actions'),
         cell: ({ row }) => {
             if (editingCategoryId.value === row.original.id) {
-                return h(
-                    'div',
-                    { class: 'flex justify-end gap-2' },
-                    [
-                        h(
-                            Button,
-                            {
-                                size: 'sm',
-                                class: 'h-8 cursor-pointer px-3',
-                                type: 'button',
-                                disabled: editCategoryForm.processing,
-                                onClick: submitEditCategory,
-                            },
-                            {
-                                default: () =>
-                                    editCategoryForm.processing
-                                        ? [
-                                              h(Spinner, { class: 'size-3.5' }),
-                                              'Saving',
-                                          ]
-                                        : [
-                                              h(Check, { class: 'size-3.5' }),
-                                              'Save',
-                                          ],
-                            },
-                        ),
-                        h(
-                            Button,
-                            {
-                                variant: 'outline',
-                                size: 'sm',
-                                class: 'h-8 cursor-pointer px-3 text-muted-foreground',
-                                type: 'button',
-                                disabled: editCategoryForm.processing,
-                                onClick: cancelEditingCategory,
-                            },
-                            {
-                                default: () => [
-                                    h(X, { class: 'size-3.5' }),
-                                    'Cancel',
-                                ],
-                            },
-                        ),
-                    ],
-                );
-            }
-
-            return h(
-                'div',
-                { class: 'flex justify-end gap-2' },
-                [
+                return h('div', { class: 'flex justify-end gap-2' }, [
+                    h(
+                        Button,
+                        {
+                            size: 'sm',
+                            class: 'h-8 cursor-pointer px-3',
+                            type: 'button',
+                            disabled: editCategoryForm.processing,
+                            onClick: submitEditCategory,
+                        },
+                        {
+                            default: () =>
+                                editCategoryForm.processing
+                                    ? [
+                                          h(Spinner, { class: 'size-3.5' }),
+                                          'Saving',
+                                      ]
+                                    : [h(Check, { class: 'size-3.5' }), 'Save'],
+                        },
+                    ),
                     h(
                         Button,
                         {
@@ -337,40 +316,57 @@ const columns: ColumnDef<AdminCategory>[] = [
                             size: 'sm',
                             class: 'h-8 cursor-pointer px-3 text-muted-foreground',
                             type: 'button',
-                            onClick: () => startEditingCategory(row.original),
+                            disabled: editCategoryForm.processing,
+                            onClick: cancelEditingCategory,
                         },
                         {
                             default: () => [
-                                h(Pencil, { class: 'size-3.5' }),
-                                'Edit',
+                                h(X, { class: 'size-3.5' }),
+                                'Cancel',
                             ],
                         },
                     ),
-                    h(
-                        Button,
-                        {
-                            variant: 'outline',
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3 text-destructive hover:text-destructive',
-                            type: 'button',
-                            disabled: deletingCategoryId.value === row.original.id,
-                            onClick: () => openDeleteDialog(row.original),
-                        },
-                        {
-                            default: () =>
-                                deletingCategoryId.value === row.original.id
-                                    ? [
-                                          h(Spinner, { class: 'size-3.5' }),
-                                          'Deleting',
-                                      ]
-                                    : [
-                                          h(Trash2, { class: 'size-3.5' }),
-                                          'Delete',
-                                      ],
-                        },
-                    ),
-                ],
-            );
+                ]);
+            }
+
+            return h('div', { class: 'flex justify-end gap-2' }, [
+                h(
+                    Button,
+                    {
+                        variant: 'outline',
+                        size: 'sm',
+                        class: 'h-8 cursor-pointer px-3 text-muted-foreground',
+                        type: 'button',
+                        onClick: () => startEditingCategory(row.original),
+                    },
+                    {
+                        default: () => [
+                            h(Pencil, { class: 'size-3.5' }),
+                            'Edit',
+                        ],
+                    },
+                ),
+                h(
+                    Button,
+                    {
+                        variant: 'outline',
+                        size: 'sm',
+                        class: 'h-8 cursor-pointer px-3 text-destructive hover:text-destructive',
+                        type: 'button',
+                        disabled: deletingCategoryId.value === row.original.id,
+                        onClick: () => openDeleteDialog(row.original),
+                    },
+                    {
+                        default: () =>
+                            deletingCategoryId.value === row.original.id
+                                ? [
+                                      h(Spinner, { class: 'size-3.5' }),
+                                      'Deleting',
+                                  ]
+                                : [h(Trash2, { class: 'size-3.5' }), 'Delete'],
+                    },
+                ),
+            ]);
         },
     },
 ];
@@ -397,7 +393,9 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
 });
 
-const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length);
+const filteredRowCount = computed(
+    () => table.getFilteredRowModel().rows.length,
+);
 </script>
 
 <template>
@@ -410,11 +408,14 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle class="text-center">Delete category</AlertDialogTitle>
+                    <AlertDialogTitle class="text-center"
+                        >Delete category</AlertDialogTitle
+                    >
                     <AlertDialogDescription class="text-center">
                         <template v-if="categoryPendingDeletion">
-                            Delete {{ categoryPendingDeletion.name }}? This will also remove it from
-                            all associated tours. This action cannot be undone.
+                            Delete {{ categoryPendingDeletion.name }}? This will
+                            also remove it from all associated tours. This
+                            action cannot be undone.
                         </template>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -463,7 +464,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                     <Button
                         type="button"
                         class="cursor-pointer"
-                        :variant="isCreateCategoryOpen ? 'secondary' : 'default'"
+                        :variant="
+                            isCreateCategoryOpen ? 'secondary' : 'default'
+                        "
                         @click="toggleCreateCategoryPanel"
                     >
                         <Plus class="size-4" />
@@ -484,25 +487,39 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         <Input
                                             v-model="createCategoryForm.name"
                                             placeholder="Add a new category"
-                                            :disabled="createCategoryForm.processing"
+                                            :disabled="
+                                                createCategoryForm.processing
+                                            "
                                         />
-                                        <InputError :message="createCategoryForm.errors.name" />
+                                        <InputError
+                                            :message="
+                                                createCategoryForm.errors.name
+                                            "
+                                        />
                                     </div>
 
                                     <div class="flex gap-2">
                                         <Button
                                             type="submit"
                                             class="cursor-pointer"
-                                            :disabled="createCategoryForm.processing"
+                                            :disabled="
+                                                createCategoryForm.processing
+                                            "
                                         >
-                                            <Spinner v-if="createCategoryForm.processing" />
+                                            <Spinner
+                                                v-if="
+                                                    createCategoryForm.processing
+                                                "
+                                            />
                                             Add
                                         </Button>
                                         <Button
                                             type="button"
                                             variant="outline"
                                             class="cursor-pointer"
-                                            :disabled="createCategoryForm.processing"
+                                            :disabled="
+                                                createCategoryForm.processing
+                                            "
                                             @click="closeCreateCategoryPanel"
                                         >
                                             Cancel
@@ -524,7 +541,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
-                        {{ filteredRowCount }} categor{{ filteredRowCount === 1 ? 'y' : 'ies' }}
+                        {{ filteredRowCount }} categor{{
+                            filteredRowCount === 1 ? 'y' : 'ies'
+                        }}
                     </p>
                 </div>
 

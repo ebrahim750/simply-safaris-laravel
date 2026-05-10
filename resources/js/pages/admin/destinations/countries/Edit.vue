@@ -87,7 +87,9 @@ function handleMainImageChange(event: Event): void {
         URL.revokeObjectURL(mainImagePreview.value);
     }
 
-    mainImagePreview.value = file ? URL.createObjectURL(file) : props.country.main_image;
+    mainImagePreview.value = file
+        ? URL.createObjectURL(file)
+        : props.country.main_image;
 }
 
 function submit(): void {
@@ -102,7 +104,9 @@ function submit(): void {
     <Head :title="`Edit ${props.country.name}`" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+        >
             <Heading
                 :title="`Edit ${props.country.name}`"
                 description="Update destination country details."
@@ -181,7 +185,9 @@ function submit(): void {
                                 :class="textAreaClass('best_time_to_go')"
                                 placeholder="When is the best time to visit..."
                             />
-                            <InputError :message="form.errors.best_time_to_go" />
+                            <InputError
+                                :message="form.errors.best_time_to_go"
+                            />
                         </div>
 
                         <div class="grid gap-2">
@@ -232,10 +238,13 @@ function submit(): void {
                     <div class="grid gap-3">
                         <Label for="main_image">Main image</Label>
                         <div
-                            :class="cn(
-                                'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
-                                form.errors.main_image && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
+                                    form.errors.main_image &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <Input
                                 id="main_image"
@@ -251,9 +260,13 @@ function submit(): void {
                                 class="max-h-56 w-full rounded-md border border-border object-cover"
                             />
                             <template v-else>
-                                <UploadCloudIcon class="h-10 w-10 text-muted-foreground" />
+                                <UploadCloudIcon
+                                    class="h-10 w-10 text-muted-foreground"
+                                />
                                 <div class="space-y-1">
-                                    <p class="text-sm font-medium">Choose main image</p>
+                                    <p class="text-sm font-medium">
+                                        Choose main image
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         PNG, JPG, JPEG, or WEBP
                                     </p>
@@ -265,7 +278,9 @@ function submit(): void {
                 </CardContent>
             </Card>
 
-            <div class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end">
+            <div
+                class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end"
+            >
                 <Button as-child type="button" variant="outline">
                     <Link :href="countriesIndex()">Cancel</Link>
                 </Button>

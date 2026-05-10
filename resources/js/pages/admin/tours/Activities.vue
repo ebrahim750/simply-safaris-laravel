@@ -96,9 +96,7 @@ const globalActivityFilter: FilterFn<AdminActivity> = (row, _, filterValue) => {
         return true;
     }
 
-    return row.original.name
-        .toLowerCase()
-        .includes(searchValue);
+    return row.original.name.toLowerCase().includes(searchValue);
 };
 
 function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
@@ -197,23 +195,23 @@ function cancelDeleteDialog(): void {
 }
 
 function deleteActivity(): void {
-    if (activityPendingDeletion.value === null || deletingActivityId.value !== null) {
+    if (
+        activityPendingDeletion.value === null ||
+        deletingActivityId.value !== null
+    ) {
         return;
     }
 
     deletingActivityId.value = activityPendingDeletion.value.id;
 
-    router.delete(
-        destroyTourActivity.url(activityPendingDeletion.value.id),
-        {
-            preserveScroll: true,
-            onFinish: () => {
-                deletingActivityId.value = null;
-                isDeleteDialogOpen.value = false;
-                activityPendingDeletion.value = null;
-            },
+    router.delete(destroyTourActivity.url(activityPendingDeletion.value.id), {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingActivityId.value = null;
+            isDeleteDialogOpen.value = false;
+            activityPendingDeletion.value = null;
         },
-    );
+    });
 }
 
 const columns: ColumnDef<AdminActivity>[] = [
@@ -225,10 +223,14 @@ const columns: ColumnDef<AdminActivity>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Name',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) => {
@@ -249,7 +251,11 @@ const columns: ColumnDef<AdminActivity>[] = [
                 ]);
             }
 
-            return h('div', { class: 'font-medium text-foreground' }, row.original.name);
+            return h(
+                'div',
+                { class: 'font-medium text-foreground' },
+                row.original.name,
+            );
         },
     },
     {
@@ -260,10 +266,14 @@ const columns: ColumnDef<AdminActivity>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Created', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Created',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -279,57 +289,26 @@ const columns: ColumnDef<AdminActivity>[] = [
         header: () => h('div', { class: 'text-right' }, 'Actions'),
         cell: ({ row }) => {
             if (editingActivityId.value === row.original.id) {
-                return h(
-                    'div',
-                    { class: 'flex justify-end gap-2' },
-                    [
-                        h(
-                            Button,
-                            {
-                                size: 'sm',
-                                class: 'h-8 cursor-pointer px-3',
-                                type: 'button',
-                                disabled: editActivityForm.processing,
-                                onClick: submitEditActivity,
-                            },
-                            {
-                                default: () =>
-                                    editActivityForm.processing
-                                        ? [
-                                              h(Spinner, { class: 'size-3.5' }),
-                                              'Saving',
-                                          ]
-                                        : [
-                                              h(Check, { class: 'size-3.5' }),
-                                              'Save',
-                                          ],
-                            },
-                        ),
-                        h(
-                            Button,
-                            {
-                                variant: 'outline',
-                                size: 'sm',
-                                class: 'h-8 cursor-pointer px-3 text-muted-foreground',
-                                type: 'button',
-                                disabled: editActivityForm.processing,
-                                onClick: cancelEditingActivity,
-                            },
-                            {
-                                default: () => [
-                                    h(X, { class: 'size-3.5' }),
-                                    'Cancel',
-                                ],
-                            },
-                        ),
-                    ],
-                );
-            }
-
-            return h(
-                'div',
-                { class: 'flex justify-end gap-2' },
-                [
+                return h('div', { class: 'flex justify-end gap-2' }, [
+                    h(
+                        Button,
+                        {
+                            size: 'sm',
+                            class: 'h-8 cursor-pointer px-3',
+                            type: 'button',
+                            disabled: editActivityForm.processing,
+                            onClick: submitEditActivity,
+                        },
+                        {
+                            default: () =>
+                                editActivityForm.processing
+                                    ? [
+                                          h(Spinner, { class: 'size-3.5' }),
+                                          'Saving',
+                                      ]
+                                    : [h(Check, { class: 'size-3.5' }), 'Save'],
+                        },
+                    ),
                     h(
                         Button,
                         {
@@ -337,40 +316,57 @@ const columns: ColumnDef<AdminActivity>[] = [
                             size: 'sm',
                             class: 'h-8 cursor-pointer px-3 text-muted-foreground',
                             type: 'button',
-                            onClick: () => startEditingActivity(row.original),
+                            disabled: editActivityForm.processing,
+                            onClick: cancelEditingActivity,
                         },
                         {
                             default: () => [
-                                h(Pencil, { class: 'size-3.5' }),
-                                'Edit',
+                                h(X, { class: 'size-3.5' }),
+                                'Cancel',
                             ],
                         },
                     ),
-                    h(
-                        Button,
-                        {
-                            variant: 'outline',
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3 text-destructive hover:text-destructive',
-                            type: 'button',
-                            disabled: deletingActivityId.value === row.original.id,
-                            onClick: () => openDeleteDialog(row.original),
-                        },
-                        {
-                            default: () =>
-                                deletingActivityId.value === row.original.id
-                                    ? [
-                                          h(Spinner, { class: 'size-3.5' }),
-                                          'Deleting',
-                                      ]
-                                    : [
-                                          h(Trash2, { class: 'size-3.5' }),
-                                          'Delete',
-                                      ],
-                        },
-                    ),
-                ],
-            );
+                ]);
+            }
+
+            return h('div', { class: 'flex justify-end gap-2' }, [
+                h(
+                    Button,
+                    {
+                        variant: 'outline',
+                        size: 'sm',
+                        class: 'h-8 cursor-pointer px-3 text-muted-foreground',
+                        type: 'button',
+                        onClick: () => startEditingActivity(row.original),
+                    },
+                    {
+                        default: () => [
+                            h(Pencil, { class: 'size-3.5' }),
+                            'Edit',
+                        ],
+                    },
+                ),
+                h(
+                    Button,
+                    {
+                        variant: 'outline',
+                        size: 'sm',
+                        class: 'h-8 cursor-pointer px-3 text-destructive hover:text-destructive',
+                        type: 'button',
+                        disabled: deletingActivityId.value === row.original.id,
+                        onClick: () => openDeleteDialog(row.original),
+                    },
+                    {
+                        default: () =>
+                            deletingActivityId.value === row.original.id
+                                ? [
+                                      h(Spinner, { class: 'size-3.5' }),
+                                      'Deleting',
+                                  ]
+                                : [h(Trash2, { class: 'size-3.5' }), 'Delete'],
+                    },
+                ),
+            ]);
         },
     },
 ];
@@ -397,7 +393,9 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
 });
 
-const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length);
+const filteredRowCount = computed(
+    () => table.getFilteredRowModel().rows.length,
+);
 </script>
 
 <template>
@@ -410,11 +408,14 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle class="text-center">Delete activity</AlertDialogTitle>
+                    <AlertDialogTitle class="text-center"
+                        >Delete activity</AlertDialogTitle
+                    >
                     <AlertDialogDescription class="text-center">
                         <template v-if="activityPendingDeletion">
-                            Delete {{ activityPendingDeletion.name }}? This will also remove it from
-                            all associated tours. This action cannot be undone.
+                            Delete {{ activityPendingDeletion.name }}? This will
+                            also remove it from all associated tours. This
+                            action cannot be undone.
                         </template>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -463,7 +464,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                     <Button
                         type="button"
                         class="cursor-pointer"
-                        :variant="isCreateActivityOpen ? 'secondary' : 'default'"
+                        :variant="
+                            isCreateActivityOpen ? 'secondary' : 'default'
+                        "
                         @click="toggleCreateActivityPanel"
                     >
                         <Plus class="size-4" />
@@ -484,25 +487,39 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         <Input
                                             v-model="createActivityForm.name"
                                             placeholder="Add a new activity"
-                                            :disabled="createActivityForm.processing"
+                                            :disabled="
+                                                createActivityForm.processing
+                                            "
                                         />
-                                        <InputError :message="createActivityForm.errors.name" />
+                                        <InputError
+                                            :message="
+                                                createActivityForm.errors.name
+                                            "
+                                        />
                                     </div>
 
                                     <div class="flex gap-2">
                                         <Button
                                             type="submit"
                                             class="cursor-pointer"
-                                            :disabled="createActivityForm.processing"
+                                            :disabled="
+                                                createActivityForm.processing
+                                            "
                                         >
-                                            <Spinner v-if="createActivityForm.processing" />
+                                            <Spinner
+                                                v-if="
+                                                    createActivityForm.processing
+                                                "
+                                            />
                                             Add
                                         </Button>
                                         <Button
                                             type="button"
                                             variant="outline"
                                             class="cursor-pointer"
-                                            :disabled="createActivityForm.processing"
+                                            :disabled="
+                                                createActivityForm.processing
+                                            "
                                             @click="closeCreateActivityPanel"
                                         >
                                             Cancel
@@ -524,7 +541,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
-                        {{ filteredRowCount }} activit{{ filteredRowCount === 1 ? 'y' : 'ies' }}
+                        {{ filteredRowCount }} activit{{
+                            filteredRowCount === 1 ? 'y' : 'ies'
+                        }}
                     </p>
                 </div>
 

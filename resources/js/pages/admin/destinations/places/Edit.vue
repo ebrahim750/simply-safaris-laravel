@@ -85,7 +85,9 @@ function handleMainImageChange(event: Event): void {
         URL.revokeObjectURL(mainImagePreview.value);
     }
 
-    mainImagePreview.value = file ? URL.createObjectURL(file) : props.place.main_image;
+    mainImagePreview.value = file
+        ? URL.createObjectURL(file)
+        : props.place.main_image;
 }
 
 function submit(): void {
@@ -100,7 +102,9 @@ function submit(): void {
     <Head :title="`Edit ${props.place.name}`" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+        >
             <Heading
                 :title="`Edit ${props.place.name}`"
                 description="Update place details and country assignment."
@@ -150,14 +154,23 @@ function submit(): void {
                                         class="flex items-center gap-2"
                                     >
                                         <img
-                                            v-if="selectedCountry.flag_svg || selectedCountry.flag_png"
-                                            :src="selectedCountry.flag_svg ?? selectedCountry.flag_png ?? undefined"
+                                            v-if="
+                                                selectedCountry.flag_svg ||
+                                                selectedCountry.flag_png
+                                            "
+                                            :src="
+                                                selectedCountry.flag_svg ??
+                                                selectedCountry.flag_png ??
+                                                undefined
+                                            "
                                             :alt="`${selectedCountry.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
                                         <span>{{ selectedCountry.name }}</span>
                                     </div>
-                                    <span v-else class="text-muted-foreground">Select country</span>
+                                    <span v-else class="text-muted-foreground"
+                                        >Select country</span
+                                    >
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem
@@ -167,8 +180,15 @@ function submit(): void {
                                     >
                                         <div class="flex items-center gap-2">
                                             <img
-                                                v-if="country.flag_svg || country.flag_png"
-                                                :src="country.flag_svg ?? country.flag_png ?? undefined"
+                                                v-if="
+                                                    country.flag_svg ||
+                                                    country.flag_png
+                                                "
+                                                :src="
+                                                    country.flag_svg ??
+                                                    country.flag_png ??
+                                                    undefined
+                                                "
                                                 :alt="`${country.name} flag`"
                                                 class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                             />
@@ -204,10 +224,13 @@ function submit(): void {
                     <div class="grid gap-2">
                         <Label for="main_image">Main image</Label>
                         <div
-                            :class="cn(
-                                'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
-                                form.errors.main_image && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
+                                    form.errors.main_image &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <Input
                                 id="main_image"
@@ -223,9 +246,13 @@ function submit(): void {
                                 class="max-h-56 w-full rounded-md border border-border object-cover"
                             />
                             <template v-else>
-                                <UploadCloudIcon class="h-10 w-10 text-muted-foreground" />
+                                <UploadCloudIcon
+                                    class="h-10 w-10 text-muted-foreground"
+                                />
                                 <div class="space-y-1">
-                                    <p class="text-sm font-medium">Choose main image</p>
+                                    <p class="text-sm font-medium">
+                                        Choose main image
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         PNG, JPG, JPEG, or WEBP
                                     </p>

@@ -9,8 +9,8 @@ const appBranding = computed(() => page.props.appBranding);
 const siteName = computed(() => appBranding.value.siteName ?? page.props.name);
 const adminLogoLightUrl = computed(() => appBranding.value.adminLogoLightUrl);
 const adminLogoDarkUrl = computed(() => appBranding.value.adminLogoDarkUrl);
-const hasCustomAdminLogo = computed(
-    () => Boolean(adminLogoLightUrl.value || adminLogoDarkUrl.value),
+const hasCustomAdminLogo = computed(() =>
+    Boolean(adminLogoLightUrl.value || adminLogoDarkUrl.value),
 );
 </script>
 
@@ -21,25 +21,25 @@ const hasCustomAdminLogo = computed(
                 :src="adminLogoLightUrl"
                 :alt="`${siteName} logo`"
                 class="block h-8 w-auto max-w-32 object-contain dark:hidden"
-            >
+            />
             <img
                 :src="adminLogoDarkUrl"
                 :alt="`${siteName} logo`"
                 class="hidden h-8 w-auto max-w-32 object-contain dark:block"
-            >
+            />
         </template>
         <img
             v-else-if="adminLogoLightUrl"
             :src="adminLogoLightUrl"
             :alt="`${siteName} logo`"
             class="block h-8 w-auto max-w-32 object-contain"
-        >
+        />
         <img
             v-else-if="adminLogoDarkUrl"
             :src="adminLogoDarkUrl"
             :alt="`${siteName} logo`"
             class="block h-8 w-auto max-w-32 object-contain"
-        >
+        />
     </template>
     <div
         v-else
@@ -48,8 +48,8 @@ const hasCustomAdminLogo = computed(
         <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >{{ siteName }}</span
-        >
+        <span class="mb-0.5 truncate leading-tight font-semibold">{{
+            siteName
+        }}</span>
     </div>
 </template>

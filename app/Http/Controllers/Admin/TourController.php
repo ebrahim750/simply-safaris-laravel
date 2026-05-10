@@ -28,14 +28,17 @@ class TourController extends Controller
         return Inertia::render('admin/tours/Tours', [
             'tours' => Tour::query()
                 ->latest('id')
-                ->get(['id', 'name', 'main_image', 'price', 'is_hidden', 'is_featured_on_home', 'is_featured_as_seasonal_recommendation', 'created_at'])
+                ->get(['id', 'name', 'main_image', 'price', 'is_hidden', 'is_featured_on_home', 'is_featured_as_seasonal_recommendation', 'show_external_booking', 'created_at'])
                 ->map(fn (Tour $tour): array => $this->mapIndexTour($tour, $currency)),
         ]);
     }
 
     public function create(): Response
     {
+        $currency = SiteSetting::query()->value('currency') ?: 'USD';
+
         return Inertia::render('admin/tours/Create', [
+            'currency' => $currency,
             'categories' => TourCategory::query()
                 ->orderBy('name')
                 ->get(['id', 'name'])
@@ -75,6 +78,7 @@ class TourController extends Controller
                 'gallery_images' => null,
                 'external_url' => $validated['external_url'] ?? null,
                 'external_link_button_text' => $validated['external_link_button_text'] ?? null,
+                'show_external_booking' => $validated['show_external_booking'],
                 'duration_days' => $validated['duration_days'] ?? null,
                 'overview' => $validated['overview'] ?? null,
                 'pricing_detailed' => $validated['pricing_detailed'] ?? null,
@@ -148,6 +152,7 @@ class TourController extends Controller
             'is_hidden' => $tour->is_hidden,
             'is_featured_on_home' => $tour->is_featured_on_home,
             'is_featured_as_seasonal_recommendation' => $tour->is_featured_as_seasonal_recommendation,
+            'show_external_booking' => $tour->show_external_booking,
             'created_at' => $tour->created_at?->toIso8601String(),
             'created_at_display' => $tour->created_at?->format('M j, Y g:i A') ?? 'N/A',
         ];

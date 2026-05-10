@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'gallery_images',
     'external_url',
     'external_link_button_text',
+    'show_external_booking',
     'duration_days',
     'overview',
     'pricing_detailed',
@@ -80,6 +81,7 @@ class Tour extends Model
             'is_hidden' => 'boolean',
             'is_featured_on_home' => 'boolean',
             'is_featured_as_seasonal_recommendation' => 'boolean',
+            'show_external_booking' => 'boolean',
         ];
     }
 }

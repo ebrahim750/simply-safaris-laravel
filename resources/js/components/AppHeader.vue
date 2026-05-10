@@ -49,8 +49,11 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
-const { cycle, label: themeLabel, actionIcon: themeIcon } =
-    useAppearanceCycle();
+const {
+    cycle,
+    label: themeLabel,
+    actionIcon: themeIcon,
+} = useAppearanceCycle();
 
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
@@ -62,7 +65,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
 ];
-
 </script>
 
 <template>

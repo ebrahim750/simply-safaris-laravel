@@ -258,7 +258,9 @@ function submitEditPassword(): void {
             password_confirmation: data.password,
         }))
         .put(
-            RootAccessUserController.updatePassword.url(userBeingEdited.value.id),
+            RootAccessUserController.updatePassword.url(
+                userBeingEdited.value.id,
+            ),
             {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -279,7 +281,9 @@ function sendPasswordResetLink(): void {
     sendingResetLinkUserId.value = userBeingEdited.value.id;
 
     router.post(
-        RootAccessUserController.sendPasswordResetLink.url(userBeingEdited.value.id),
+        RootAccessUserController.sendPasswordResetLink.url(
+            userBeingEdited.value.id,
+        ),
         {},
         {
             preserveScroll: true,
@@ -325,12 +329,12 @@ function deleteUser(): void {
     router.delete(
         RootAccessUserController.destroy.url(userPendingDeletion.value.id),
         {
-        preserveScroll: true,
-        onFinish: () => {
-            deletingUserId.value = null;
-            isDeleteDialogOpen.value = false;
-            userPendingDeletion.value = null;
-        },
+            preserveScroll: true,
+            onFinish: () => {
+                deletingUserId.value = null;
+                isDeleteDialogOpen.value = false;
+                userPendingDeletion.value = null;
+            },
         },
     );
 }
@@ -344,14 +348,22 @@ const columns: ColumnDef<RootUser>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Name',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
-            h('div', { class: 'font-medium text-foreground' }, row.original.name),
+            h(
+                'div',
+                { class: 'font-medium text-foreground' },
+                row.original.name,
+            ),
     },
     {
         accessorKey: 'email',
@@ -361,10 +373,14 @@ const columns: ColumnDef<RootUser>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Email', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Email',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -378,7 +394,8 @@ const columns: ColumnDef<RootUser>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
                     default: () => [
@@ -404,10 +421,14 @@ const columns: ColumnDef<RootUser>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Created', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Created',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -423,45 +444,42 @@ const columns: ColumnDef<RootUser>[] = [
         header: () => h('div', { class: 'text-right' }, 'Actions'),
         cell: ({ row }) =>
             row.original.can_delete
-                ? h(
-                      'div',
-                      { class: 'flex justify-end gap-2' },
-                      [
-                          h(
-                              Button,
-                              {
-                                  variant: 'outline',
-                                  size: 'sm',
-                                  class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
-                                  type: 'button',
-                                  onClick: () => openEditDialog(row.original),
-                              },
-                              {
-                                  default: () => 'Edit',
-                              },
-                          ),
-                          h(
-                              Button,
-                              {
-                                  variant: 'outline',
-                                  size: 'sm',
-                                  class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
-                                  disabled: deletingUserId.value === row.original.id,
-                                  type: 'button',
-                                  onClick: () => openDeleteDialog(row.original),
-                              },
-                              {
-                                  default: () =>
-                                      deletingUserId.value === row.original.id
-                                          ? [
-                                                h(Spinner, { class: 'size-3.5' }),
-                                                'Deleting',
-                                            ]
-                                          : 'Delete',
-                              },
-                          ),
-                      ],
-                  )
+                ? h('div', { class: 'flex justify-end gap-2' }, [
+                      h(
+                          Button,
+                          {
+                              variant: 'outline',
+                              size: 'sm',
+                              class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
+                              type: 'button',
+                              onClick: () => openEditDialog(row.original),
+                          },
+                          {
+                              default: () => 'Edit',
+                          },
+                      ),
+                      h(
+                          Button,
+                          {
+                              variant: 'outline',
+                              size: 'sm',
+                              class: 'h-7 cursor-pointer px-2 text-xs text-muted-foreground',
+                              disabled:
+                                  deletingUserId.value === row.original.id,
+                              type: 'button',
+                              onClick: () => openDeleteDialog(row.original),
+                          },
+                          {
+                              default: () =>
+                                  deletingUserId.value === row.original.id
+                                      ? [
+                                            h(Spinner, { class: 'size-3.5' }),
+                                            'Deleting',
+                                        ]
+                                      : 'Delete',
+                          },
+                      ),
+                  ])
                 : h(
                       'div',
                       { class: 'text-right text-xs text-muted-foreground' },
@@ -492,7 +510,9 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
 });
 
-const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length);
+const filteredRowCount = computed(
+    () => table.getFilteredRowModel().rows.length,
+);
 </script>
 
 <template>
@@ -508,8 +528,8 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                     <AlertDialogTitle>Delete user</AlertDialogTitle>
                     <AlertDialogDescription>
                         <template v-if="userPendingDeletion">
-                            Delete {{ userPendingDeletion.email }}? This action cannot
-                            be undone.
+                            Delete {{ userPendingDeletion.email }}? This action
+                            cannot be undone.
                         </template>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -532,7 +552,10 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             :disabled="deletingUserId !== null"
                             @click="deleteUser"
                         >
-                            <Spinner v-if="deletingUserId !== null" class="size-4" />
+                            <Spinner
+                                v-if="deletingUserId !== null"
+                                class="size-4"
+                            />
                             Delete user
                         </Button>
                     </AlertDialogAction>
@@ -556,10 +579,16 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                     </DialogHeader>
 
                     <div class="space-y-6">
-                        <div class="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                        <div
+                            class="inline-flex rounded-lg border border-border bg-muted/40 p-1"
+                        >
                             <Button
                                 type="button"
-                                :variant="activeEditTab === 'details' ? 'secondary' : 'ghost'"
+                                :variant="
+                                    activeEditTab === 'details'
+                                        ? 'secondary'
+                                        : 'ghost'
+                                "
                                 class="h-9"
                                 @click="activeEditTab = 'details'"
                             >
@@ -567,7 +596,11 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             </Button>
                             <Button
                                 type="button"
-                                :variant="activeEditTab === 'password' ? 'secondary' : 'ghost'"
+                                :variant="
+                                    activeEditTab === 'password'
+                                        ? 'secondary'
+                                        : 'ghost'
+                                "
                                 class="h-9"
                                 @click="activeEditTab = 'password'"
                             >
@@ -589,11 +622,15 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         placeholder="Full name"
                                         required
                                     />
-                                    <InputError :message="editDetailsForm.errors.name" />
+                                    <InputError
+                                        :message="editDetailsForm.errors.name"
+                                    />
                                 </div>
 
                                 <div class="grid gap-2">
-                                    <Label for="edit_email">Email address</Label>
+                                    <Label for="edit_email"
+                                        >Email address</Label
+                                    >
                                     <Input
                                         id="edit_email"
                                         v-model="editDetailsForm.email"
@@ -601,32 +638,57 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                         placeholder="email@example.com"
                                         required
                                     />
-                                    <InputError :message="editDetailsForm.errors.email" />
+                                    <InputError
+                                        :message="editDetailsForm.errors.email"
+                                    />
                                 </div>
 
                                 <div class="grid gap-2">
-                                    <Label for="edit_account_type">Account type</Label>
-                                    <Select v-model="editDetailsForm.account_type">
-                                        <SelectTrigger id="edit_account_type" class="w-full">
-                                            <SelectValue placeholder="Select account type" />
+                                    <Label for="edit_account_type"
+                                        >Account type</Label
+                                    >
+                                    <Select
+                                        v-model="editDetailsForm.account_type"
+                                    >
+                                        <SelectTrigger
+                                            id="edit_account_type"
+                                            class="w-full"
+                                        >
+                                            <SelectValue
+                                                placeholder="Select account type"
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="root">Root</SelectItem>
+                                            <SelectItem value="admin"
+                                                >Admin</SelectItem
+                                            >
+                                            <SelectItem value="root"
+                                                >Root</SelectItem
+                                            >
                                         </SelectContent>
                                     </Select>
-                                    <InputError :message="editDetailsForm.errors.account_type" />
+                                    <InputError
+                                        :message="
+                                            editDetailsForm.errors.account_type
+                                        "
+                                    />
                                 </div>
                             </div>
 
-                            <DialogFooter class="justify-start gap-2 sm:justify-start">
+                            <DialogFooter
+                                class="justify-start gap-2 sm:justify-start"
+                            >
                                 <Button
                                     type="submit"
-                                    :disabled="editingUserId === userBeingEdited.id"
+                                    :disabled="
+                                        editingUserId === userBeingEdited.id
+                                    "
                                     data-test="save-user-details-button"
                                 >
                                     <Spinner
-                                        v-if="editingUserId === userBeingEdited.id"
+                                        v-if="
+                                            editingUserId === userBeingEdited.id
+                                        "
                                     />
                                     Save details
                                 </Button>
@@ -634,18 +696,30 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         </form>
 
                         <div v-else class="space-y-6">
-                            <div class="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                                Setting a password here marks the user to change it on their next login.
+                            <div
+                                class="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground"
+                            >
+                                Setting a password here marks the user to change
+                                it on their next login.
                             </div>
 
-                            <form class="space-y-6" @submit.prevent="submitEditPassword">
+                            <form
+                                class="space-y-6"
+                                @submit.prevent="submitEditPassword"
+                            >
                                 <div class="grid gap-4">
                                     <div class="grid gap-2">
-                                        <Label for="edit_password">New password</Label>
-                                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                                        <Label for="edit_password"
+                                            >New password</Label
+                                        >
+                                        <div
+                                            class="grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+                                        >
                                             <PasswordInput
                                                 id="edit_password"
-                                                v-model="editPasswordForm.password"
+                                                v-model="
+                                                    editPasswordForm.password
+                                                "
                                                 autocomplete="new-password"
                                                 placeholder="New password"
                                                 class="w-full"
@@ -664,34 +738,52 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                                 Generate
                                             </Button>
                                         </div>
-                                        <InputError :message="editPasswordForm.errors.password" />
                                         <InputError
-                                            :message="editPasswordForm.errors.password_confirmation"
+                                            :message="
+                                                editPasswordForm.errors.password
+                                            "
+                                        />
+                                        <InputError
+                                            :message="
+                                                editPasswordForm.errors
+                                                    .password_confirmation
+                                            "
                                         />
                                     </div>
                                 </div>
 
-                                <DialogFooter class="justify-start gap-2 sm:justify-start">
+                                <DialogFooter
+                                    class="justify-start gap-2 sm:justify-start"
+                                >
                                     <Button
                                         type="submit"
-                                        :disabled="editingUserId === userBeingEdited.id"
+                                        :disabled="
+                                            editingUserId === userBeingEdited.id
+                                        "
                                         data-test="save-user-password-button"
                                     >
                                         <Spinner
-                                            v-if="editingUserId === userBeingEdited.id"
+                                            v-if="
+                                                editingUserId ===
+                                                userBeingEdited.id
+                                            "
                                         />
                                         Save password
                                     </Button>
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        :disabled="sendingResetLinkUserId === userBeingEdited.id"
+                                        :disabled="
+                                            sendingResetLinkUserId ===
+                                            userBeingEdited.id
+                                        "
                                         data-test="send-user-password-reset-link-button"
                                         @click="sendPasswordResetLink"
                                     >
                                         <Spinner
                                             v-if="
-                                                sendingResetLinkUserId === userBeingEdited.id
+                                                sendingResetLinkUserId ===
+                                                userBeingEdited.id
                                             "
                                         />
                                         Send reset link
@@ -735,7 +827,10 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                             </Button>
                         </DialogTrigger>
                         <DialogContent class="sm:max-w-lg">
-                            <form class="space-y-6" @submit.prevent="submitCreateUser">
+                            <form
+                                class="space-y-6"
+                                @submit.prevent="submitCreateUser"
+                            >
                                 <DialogHeader class="space-y-3">
                                     <DialogTitle>Create user</DialogTitle>
                                 </DialogHeader>
@@ -749,7 +844,11 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                             placeholder="Full name"
                                             required
                                         />
-                                        <InputError :message="createUserForm.errors.name" />
+                                        <InputError
+                                            :message="
+                                                createUserForm.errors.name
+                                            "
+                                        />
                                     </div>
 
                                     <div class="grid gap-2">
@@ -761,29 +860,57 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                             placeholder="email@example.com"
                                             required
                                         />
-                                        <InputError :message="createUserForm.errors.email" />
+                                        <InputError
+                                            :message="
+                                                createUserForm.errors.email
+                                            "
+                                        />
                                     </div>
 
                                     <div class="grid gap-2">
-                                        <Label for="account_type">Account type</Label>
-                                        <Select v-model="createUserForm.account_type">
-                                            <SelectTrigger id="account_type" class="w-full">
-                                                <SelectValue placeholder="Select account type" />
+                                        <Label for="account_type"
+                                            >Account type</Label
+                                        >
+                                        <Select
+                                            v-model="
+                                                createUserForm.account_type
+                                            "
+                                        >
+                                            <SelectTrigger
+                                                id="account_type"
+                                                class="w-full"
+                                            >
+                                                <SelectValue
+                                                    placeholder="Select account type"
+                                                />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                                <SelectItem value="root">Root</SelectItem>
+                                                <SelectItem value="admin"
+                                                    >Admin</SelectItem
+                                                >
+                                                <SelectItem value="root"
+                                                    >Root</SelectItem
+                                                >
                                             </SelectContent>
                                         </Select>
-                                        <InputError :message="createUserForm.errors.account_type" />
+                                        <InputError
+                                            :message="
+                                                createUserForm.errors
+                                                    .account_type
+                                            "
+                                        />
                                     </div>
 
                                     <div class="grid gap-2">
                                         <Label for="password">Password</Label>
-                                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                                        <div
+                                            class="grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+                                        >
                                             <PasswordInput
                                                 id="password"
-                                                v-model="createUserForm.password"
+                                                v-model="
+                                                    createUserForm.password
+                                                "
                                                 autocomplete="new-password"
                                                 placeholder="Password"
                                                 class="w-full"
@@ -802,33 +929,51 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                                                 Generate
                                             </Button>
                                         </div>
-                                        <InputError :message="createUserForm.errors.password" />
-                                        <InputError :message="createUserForm.errors.password_confirmation" />
+                                        <InputError
+                                            :message="
+                                                createUserForm.errors.password
+                                            "
+                                        />
+                                        <InputError
+                                            :message="
+                                                createUserForm.errors
+                                                    .password_confirmation
+                                            "
+                                        />
                                     </div>
 
-                                    <div class="flex items-start justify-between">
+                                    <div
+                                        class="flex items-start justify-between"
+                                    >
                                         <Label
                                             for="send_credentials_email"
                                             class="flex items-center gap-2"
                                         >
                                             <Checkbox
                                                 id="send_credentials_email"
-                                                v-model="createUserForm.send_credentials_email"
+                                                v-model="
+                                                    createUserForm.send_credentials_email
+                                                "
                                             />
                                             <span class="leading-5">
-                                                Send credentials to user via email
+                                                Send credentials to user via
+                                                email
                                             </span>
                                         </Label>
                                     </div>
                                 </div>
 
-                                <DialogFooter class="justify-start gap-2 sm:justify-start">
+                                <DialogFooter
+                                    class="justify-start gap-2 sm:justify-start"
+                                >
                                     <Button
                                         type="submit"
                                         :disabled="createUserForm.processing"
                                         data-test="create-user-button"
                                     >
-                                        <Spinner v-if="createUserForm.processing" />
+                                        <Spinner
+                                            v-if="createUserForm.processing"
+                                        />
                                         Create user
                                     </Button>
                                 </DialogFooter>
@@ -848,7 +993,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
-                        {{ filteredRowCount }} user{{ filteredRowCount === 1 ? '' : 's' }}
+                        {{ filteredRowCount }} user{{
+                            filteredRowCount === 1 ? '' : 's'
+                        }}
                     </p>
                 </div>
 

@@ -54,12 +54,16 @@ defineOptions({
     },
 });
 
-
-
 const logoForm = useForm({ logo: null as File | null, _method: 'put' });
 const faviconForm = useForm({ favicon: null as File | null, _method: 'put' });
-const adminLogoLightForm = useForm({ admin_logo_light: null as File | null, _method: 'put' });
-const adminLogoDarkForm = useForm({ admin_logo_dark: null as File | null, _method: 'put' });
+const adminLogoLightForm = useForm({
+    admin_logo_light: null as File | null,
+    _method: 'put',
+});
+const adminLogoDarkForm = useForm({
+    admin_logo_dark: null as File | null,
+    _method: 'put',
+});
 
 const logoPreview = ref<string | null>(null);
 const faviconPreview = ref<string | null>(null);
@@ -72,8 +76,8 @@ function handleLogoFile(event: Event): void {
 
     if (file) {
         if (logoPreview.value) {
-URL.revokeObjectURL(logoPreview.value);
-}
+            URL.revokeObjectURL(logoPreview.value);
+        }
 
         logoPreview.value = URL.createObjectURL(file);
     }
@@ -85,8 +89,8 @@ function handleFaviconFile(event: Event): void {
 
     if (file) {
         if (faviconPreview.value) {
-URL.revokeObjectURL(faviconPreview.value);
-}
+            URL.revokeObjectURL(faviconPreview.value);
+        }
 
         faviconPreview.value = URL.createObjectURL(file);
     }
@@ -98,8 +102,8 @@ function handleAdminLightFile(event: Event): void {
 
     if (file) {
         if (adminLightPreview.value) {
-URL.revokeObjectURL(adminLightPreview.value);
-}
+            URL.revokeObjectURL(adminLightPreview.value);
+        }
 
         adminLightPreview.value = URL.createObjectURL(file);
     }
@@ -111,8 +115,8 @@ function handleAdminDarkFile(event: Event): void {
 
     if (file) {
         if (adminDarkPreview.value) {
-URL.revokeObjectURL(adminDarkPreview.value);
-}
+            URL.revokeObjectURL(adminDarkPreview.value);
+        }
 
         adminDarkPreview.value = URL.createObjectURL(file);
     }
@@ -174,14 +178,17 @@ function uploadAdminLight(): void {
 }
 
 function removeAdminLight(): void {
-    adminLogoLightForm.delete('/root-access/site-settings/logo?field=admin_logo_light', {
-        preserveScroll: true,
-        forceFormData: true,
-        onSuccess: () => {
-            adminLogoLightForm.reset();
-            adminLightPreview.value = null;
+    adminLogoLightForm.delete(
+        '/root-access/site-settings/logo?field=admin_logo_light',
+        {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                adminLogoLightForm.reset();
+                adminLightPreview.value = null;
+            },
         },
-    });
+    );
 }
 
 function uploadAdminDark(): void {
@@ -196,14 +203,17 @@ function uploadAdminDark(): void {
 }
 
 function removeAdminDark(): void {
-    adminLogoDarkForm.delete('/root-access/site-settings/logo?field=admin_logo_dark', {
-        preserveScroll: true,
-        forceFormData: true,
-        onSuccess: () => {
-            adminLogoDarkForm.reset();
-            adminDarkPreview.value = null;
+    adminLogoDarkForm.delete(
+        '/root-access/site-settings/logo?field=admin_logo_dark',
+        {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                adminLogoDarkForm.reset();
+                adminDarkPreview.value = null;
+            },
         },
-    });
+    );
 }
 
 const tabs = [
@@ -228,29 +238,30 @@ function isActive(href: string): boolean {
             description="Upload site logos and favicon."
         />
 
-        <div class="flex gap-3 rounded-lg border border-border p-1 max-w-4xl">
+        <div class="flex max-w-4xl gap-3 rounded-lg border border-border p-1">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"
                 :href="tab.href"
-                :class="cn(
-                    'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                    isActive(tab.href)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )"
+                :class="
+                    cn(
+                        'rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                        isActive(tab.href)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )
+                "
             >
                 {{ tab.label }}
             </Link>
         </div>
 
-
-
         <Card class="max-w-4xl">
             <CardHeader>
                 <CardTitle>Branding assets</CardTitle>
                 <CardDescription>
-                    Upload site logos and favicon. All images are stored publicly.
+                    Upload site logos and favicon. All images are stored
+                    publicly.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -281,18 +292,24 @@ function isActive(href: string): boolean {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove site logo?</AlertDialogTitle>
+                                        <AlertDialogTitle
+                                            >Remove site logo?</AlertDialogTitle
+                                        >
                                         <AlertDialogDescription>
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel
+                                            >Cancel</AlertDialogCancel
+                                        >
                                         <AlertDialogAction
                                             :disabled="logoForm.processing"
                                             @click="removeLogo"
                                         >
-                                            <Spinner v-if="logoForm.processing" />
+                                            <Spinner
+                                                v-if="logoForm.processing"
+                                            />
                                             Remove
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -300,10 +317,13 @@ function isActive(href: string): boolean {
                             </AlertDialog>
                         </div>
                         <div
-                            :class="cn(
-                                'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
-                                logoForm.errors.logo && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
+                                    logoForm.errors.logo &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <input
                                 id="logo"
@@ -317,15 +337,26 @@ function isActive(href: string): boolean {
                                 class="flex flex-col items-center gap-2"
                             >
                                 <img
-                                    :src="logoPreview ?? siteSettings.logo_url ?? undefined"
+                                    :src="
+                                        logoPreview ??
+                                        siteSettings.logo_url ??
+                                        undefined
+                                    "
                                     alt="Current site logo"
-                                    class="w-full rounded-md border border-border bg-background p-2 object-contain"
+                                    class="w-full rounded-md border border-border bg-background object-contain p-2"
                                 />
                             </div>
-                            <div v-else class="flex flex-col items-center gap-2 text-muted-foreground">
+                            <div
+                                v-else
+                                class="flex flex-col items-center gap-2 text-muted-foreground"
+                            >
                                 <UploadCloudIcon class="h-10 w-10" />
-                                <span class="text-sm">Click or drag to upload</span>
-                                <span class="text-xs">.png, .jpg, .jpeg, .webp, .svg</span>
+                                <span class="text-sm"
+                                    >Click or drag to upload</span
+                                >
+                                <span class="text-xs"
+                                    >.png, .jpg, .jpeg, .webp, .svg</span
+                                >
                             </div>
                         </div>
                         <InputError :message="logoForm.errors.logo" />
@@ -357,18 +388,24 @@ function isActive(href: string): boolean {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove favicon?</AlertDialogTitle>
+                                        <AlertDialogTitle
+                                            >Remove favicon?</AlertDialogTitle
+                                        >
                                         <AlertDialogDescription>
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel
+                                            >Cancel</AlertDialogCancel
+                                        >
                                         <AlertDialogAction
                                             :disabled="faviconForm.processing"
                                             @click="removeFavicon"
                                         >
-                                            <Spinner v-if="faviconForm.processing" />
+                                            <Spinner
+                                                v-if="faviconForm.processing"
+                                            />
                                             Remove
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -376,10 +413,13 @@ function isActive(href: string): boolean {
                             </AlertDialog>
                         </div>
                         <div
-                            :class="cn(
-                                'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
-                                faviconForm.errors.favicon && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
+                                    faviconForm.errors.favicon &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <input
                                 id="favicon"
@@ -389,27 +429,40 @@ function isActive(href: string): boolean {
                                 @change="handleFaviconFile"
                             />
                             <div
-                                v-if="faviconPreview || siteSettings.favicon_url"
+                                v-if="
+                                    faviconPreview || siteSettings.favicon_url
+                                "
                                 class="flex flex-col items-center gap-2"
                             >
                                 <img
-                                    :src="faviconPreview ?? siteSettings.favicon_url ?? undefined"
+                                    :src="
+                                        faviconPreview ??
+                                        siteSettings.favicon_url ??
+                                        undefined
+                                    "
                                     alt="Current favicon"
-                                    class="w-full rounded-md border border-border bg-background p-2 object-contain"
+                                    class="w-full rounded-md border border-border bg-background object-contain p-2"
                                 />
                             </div>
-                            <div v-else class="flex flex-col items-center gap-2 text-muted-foreground">
+                            <div
+                                v-else
+                                class="flex flex-col items-center gap-2 text-muted-foreground"
+                            >
                                 <UploadCloudIcon class="h-10 w-10" />
-                                <span class="text-sm">Click or drag to upload</span>
+                                <span class="text-sm"
+                                    >Click or drag to upload</span
+                                >
                                 <span class="text-xs">.ico, .png, .svg</span>
                             </div>
                         </div>
                         <InputError :message="faviconForm.errors.favicon" />
                     </div>
 
-                    <div class="grid gap-3 mt-6 md:mt-0">
+                    <div class="mt-6 grid gap-3 md:mt-0">
                         <div class="flex items-center justify-between">
-                            <Label for="admin_logo_light">Admin logo light</Label>
+                            <Label for="admin_logo_light"
+                                >Admin logo light</Label
+                            >
                             <Button
                                 v-if="adminLogoLightForm.admin_logo_light"
                                 variant="secondary"
@@ -421,7 +474,9 @@ function isActive(href: string): boolean {
                                 <Spinner v-if="adminLogoLightForm.processing" />
                                 Upload
                             </Button>
-                            <AlertDialog v-else-if="siteSettings.admin_logo_light_url">
+                            <AlertDialog
+                                v-else-if="siteSettings.admin_logo_light_url"
+                            >
                                 <AlertDialogTrigger as-child>
                                     <Button
                                         variant="secondary"
@@ -433,18 +488,29 @@ function isActive(href: string): boolean {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove admin logo light?</AlertDialogTitle>
+                                        <AlertDialogTitle
+                                            >Remove admin logo
+                                            light?</AlertDialogTitle
+                                        >
                                         <AlertDialogDescription>
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel
+                                            >Cancel</AlertDialogCancel
+                                        >
                                         <AlertDialogAction
-                                            :disabled="adminLogoLightForm.processing"
+                                            :disabled="
+                                                adminLogoLightForm.processing
+                                            "
                                             @click="removeAdminLight"
                                         >
-                                            <Spinner v-if="adminLogoLightForm.processing" />
+                                            <Spinner
+                                                v-if="
+                                                    adminLogoLightForm.processing
+                                                "
+                                            />
                                             Remove
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -452,10 +518,14 @@ function isActive(href: string): boolean {
                             </AlertDialog>
                         </div>
                         <div
-                            :class="cn(
-                                'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
-                                adminLogoLightForm.errors.admin_logo_light && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
+                                    adminLogoLightForm.errors
+                                        .admin_logo_light &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <input
                                 id="admin_logo_light"
@@ -465,25 +535,43 @@ function isActive(href: string): boolean {
                                 @change="handleAdminLightFile"
                             />
                             <div
-                                v-if="adminLightPreview || siteSettings.admin_logo_light_url"
+                                v-if="
+                                    adminLightPreview ||
+                                    siteSettings.admin_logo_light_url
+                                "
                                 class="flex flex-col items-center gap-2"
                             >
                                 <img
-                                    :src="adminLightPreview ?? siteSettings.admin_logo_light_url ?? undefined"
+                                    :src="
+                                        adminLightPreview ??
+                                        siteSettings.admin_logo_light_url ??
+                                        undefined
+                                    "
                                     alt="Current admin light logo"
-                                    class="w-full rounded-md border border-border bg-background p-2 object-contain"
+                                    class="w-full rounded-md border border-border bg-background object-contain p-2"
                                 />
                             </div>
-                            <div v-else class="flex flex-col items-center gap-2 text-muted-foreground">
+                            <div
+                                v-else
+                                class="flex flex-col items-center gap-2 text-muted-foreground"
+                            >
                                 <UploadCloudIcon class="h-10 w-10" />
-                                <span class="text-sm">Click or drag to upload</span>
-                                <span class="text-xs">.png, .jpg, .jpeg, .webp, .svg</span>
+                                <span class="text-sm"
+                                    >Click or drag to upload</span
+                                >
+                                <span class="text-xs"
+                                    >.png, .jpg, .jpeg, .webp, .svg</span
+                                >
                             </div>
                         </div>
-                        <InputError :message="adminLogoLightForm.errors.admin_logo_light" />
+                        <InputError
+                            :message="
+                                adminLogoLightForm.errors.admin_logo_light
+                            "
+                        />
                     </div>
 
-                    <div class="grid gap-3 mt-6 md:mt-0">
+                    <div class="mt-6 grid gap-3 md:mt-0">
                         <div class="flex items-center justify-between">
                             <Label for="admin_logo_dark">Admin logo dark</Label>
                             <Button
@@ -497,7 +585,9 @@ function isActive(href: string): boolean {
                                 <Spinner v-if="adminLogoDarkForm.processing" />
                                 Upload
                             </Button>
-                            <AlertDialog v-else-if="siteSettings.admin_logo_dark_url">
+                            <AlertDialog
+                                v-else-if="siteSettings.admin_logo_dark_url"
+                            >
                                 <AlertDialogTrigger as-child>
                                     <Button
                                         variant="secondary"
@@ -509,18 +599,29 @@ function isActive(href: string): boolean {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove admin logo dark?</AlertDialogTitle>
+                                        <AlertDialogTitle
+                                            >Remove admin logo
+                                            dark?</AlertDialogTitle
+                                        >
                                         <AlertDialogDescription>
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel
+                                            >Cancel</AlertDialogCancel
+                                        >
                                         <AlertDialogAction
-                                            :disabled="adminLogoDarkForm.processing"
+                                            :disabled="
+                                                adminLogoDarkForm.processing
+                                            "
                                             @click="removeAdminDark"
                                         >
-                                            <Spinner v-if="adminLogoDarkForm.processing" />
+                                            <Spinner
+                                                v-if="
+                                                    adminLogoDarkForm.processing
+                                                "
+                                            />
                                             Remove
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -528,10 +629,13 @@ function isActive(href: string): boolean {
                             </AlertDialog>
                         </div>
                         <div
-                            :class="cn(
-                                'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
-                                adminLogoDarkForm.errors.admin_logo_dark && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-muted-foreground/50',
+                                    adminLogoDarkForm.errors.admin_logo_dark &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <input
                                 id="admin_logo_dark"
@@ -541,22 +645,38 @@ function isActive(href: string): boolean {
                                 @change="handleAdminDarkFile"
                             />
                             <div
-                                v-if="adminDarkPreview || siteSettings.admin_logo_dark_url"
+                                v-if="
+                                    adminDarkPreview ||
+                                    siteSettings.admin_logo_dark_url
+                                "
                                 class="flex flex-col items-center gap-2"
                             >
                                 <img
-                                    :src="adminDarkPreview ?? siteSettings.admin_logo_dark_url ?? undefined"
+                                    :src="
+                                        adminDarkPreview ??
+                                        siteSettings.admin_logo_dark_url ??
+                                        undefined
+                                    "
                                     alt="Current admin dark logo"
-                                    class="w-full rounded-md border border-border bg-background p-2 object-contain"
+                                    class="w-full rounded-md border border-border bg-background object-contain p-2"
                                 />
                             </div>
-                            <div v-else class="flex flex-col items-center gap-2 text-muted-foreground">
+                            <div
+                                v-else
+                                class="flex flex-col items-center gap-2 text-muted-foreground"
+                            >
                                 <UploadCloudIcon class="h-10 w-10" />
-                                <span class="text-sm">Click or drag to upload</span>
-                                <span class="text-xs">.png, .jpg, .jpeg, .webp, .svg</span>
+                                <span class="text-sm"
+                                    >Click or drag to upload</span
+                                >
+                                <span class="text-xs"
+                                    >.png, .jpg, .jpeg, .webp, .svg</span
+                                >
                             </div>
                         </div>
-                        <InputError :message="adminLogoDarkForm.errors.admin_logo_dark" />
+                        <InputError
+                            :message="adminLogoDarkForm.errors.admin_logo_dark"
+                        />
                     </div>
                 </div>
             </CardContent>

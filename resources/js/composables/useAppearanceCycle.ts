@@ -3,7 +3,8 @@ import { computed } from 'vue';
 import { useAppearance } from '@/composables/useAppearance';
 
 export function useAppearanceCycle() {
-    const { appearance, resolvedAppearance, updateAppearance } = useAppearance();
+    const { appearance, resolvedAppearance, updateAppearance } =
+        useAppearance();
 
     function cycle() {
         updateAppearance(

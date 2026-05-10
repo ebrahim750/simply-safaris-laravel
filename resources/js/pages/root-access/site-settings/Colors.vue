@@ -18,7 +18,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
-const ColorPicker = defineAsyncComponent(() => import('vue3-colorpicker').then((m) => m.ColorPicker));
+const ColorPicker = defineAsyncComponent(() =>
+    import('vue3-colorpicker').then((m) => m.ColorPicker),
+);
 
 const isMounted = ref(false);
 onMounted(() => {
@@ -92,17 +94,19 @@ function isActive(href: string): boolean {
             description="Configure site color palette."
         />
 
-        <div class="flex gap-3 rounded-lg border border-border p-1 max-w-4xl">
+        <div class="flex max-w-4xl gap-3 rounded-lg border border-border p-1">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"
                 :href="tab.href"
-                :class="cn(
-                    'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                    isActive(tab.href)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )"
+                :class="
+                    cn(
+                        'rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                        isActive(tab.href)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )
+                "
             >
                 {{ tab.label }}
             </Link>
@@ -157,7 +161,9 @@ function isActive(href: string): boolean {
                                     class="w-28"
                                 />
                             </div>
-                            <InputError :message="form.errors.secondary_color" />
+                            <InputError
+                                :message="form.errors.secondary_color"
+                            />
                         </div>
 
                         <div class="grid gap-2">

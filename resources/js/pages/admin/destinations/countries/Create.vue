@@ -87,8 +87,10 @@ const filteredCountryOptions = computed(() => {
     );
 });
 
-const selectedCountryOption = computed(() =>
-    props.country_options.find((country) => country.name === form.name) ?? null,
+const selectedCountryOption = computed(
+    () =>
+        props.country_options.find((country) => country.name === form.name) ??
+        null,
 );
 
 function textAreaClass(errorKey?: string): string {
@@ -126,7 +128,9 @@ function submit(): void {
     <Head title="Add Country" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+        >
             <Heading
                 title="Add Country"
                 description="Create a new destination country."
@@ -151,7 +155,8 @@ function submit(): void {
                 <CardHeader>
                     <CardTitle>Country details</CardTitle>
                     <CardDescription>
-                        Provide the country name. Slug is generated automatically.
+                        Provide the country name. Slug is generated
+                        automatically.
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
@@ -165,12 +170,21 @@ function submit(): void {
                                         class="flex items-center gap-2"
                                     >
                                         <img
-                                            v-if="selectedCountryOption.flag_svg || selectedCountryOption.flag_png"
-                                            :src="selectedCountryOption.flag_svg ?? selectedCountryOption.flag_png ?? undefined"
+                                            v-if="
+                                                selectedCountryOption.flag_svg ||
+                                                selectedCountryOption.flag_png
+                                            "
+                                            :src="
+                                                selectedCountryOption.flag_svg ??
+                                                selectedCountryOption.flag_png ??
+                                                undefined
+                                            "
                                             :alt="`${selectedCountryOption.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
-                                        <span>{{ selectedCountryOption.name }}</span>
+                                        <span>{{
+                                            selectedCountryOption.name
+                                        }}</span>
                                     </div>
                                 </SelectValue>
                             </SelectTrigger>
@@ -189,8 +203,15 @@ function submit(): void {
                                 >
                                     <div class="flex items-center gap-2">
                                         <img
-                                            v-if="country.flag_svg || country.flag_png"
-                                            :src="country.flag_svg ?? country.flag_png ?? undefined"
+                                            v-if="
+                                                country.flag_svg ||
+                                                country.flag_png
+                                            "
+                                            :src="
+                                                country.flag_svg ??
+                                                country.flag_png ??
+                                                undefined
+                                            "
                                             :alt="`${country.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
@@ -238,7 +259,9 @@ function submit(): void {
                                 :class="textAreaClass('best_time_to_go')"
                                 placeholder="When is the best time to visit..."
                             />
-                            <InputError :message="form.errors.best_time_to_go" />
+                            <InputError
+                                :message="form.errors.best_time_to_go"
+                            />
                         </div>
 
                         <div class="grid gap-2">
@@ -289,10 +312,13 @@ function submit(): void {
                     <div class="grid gap-3">
                         <Label for="main_image">Main image</Label>
                         <div
-                            :class="cn(
-                                'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
-                                form.errors.main_image && 'border-destructive',
-                            )"
+                            :class="
+                                cn(
+                                    'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
+                                    form.errors.main_image &&
+                                        'border-destructive',
+                                )
+                            "
                         >
                             <Input
                                 id="main_image"
@@ -308,9 +334,13 @@ function submit(): void {
                                 class="max-h-56 w-full rounded-md border border-border object-cover"
                             />
                             <template v-else>
-                                <UploadCloudIcon class="h-10 w-10 text-muted-foreground" />
+                                <UploadCloudIcon
+                                    class="h-10 w-10 text-muted-foreground"
+                                />
                                 <div class="space-y-1">
-                                    <p class="text-sm font-medium">Choose main image</p>
+                                    <p class="text-sm font-medium">
+                                        Choose main image
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         PNG, JPG, JPEG, or WEBP
                                     </p>
@@ -322,7 +352,9 @@ function submit(): void {
                 </CardContent>
             </Card>
 
-            <div class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end">
+            <div
+                class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end"
+            >
                 <Button as-child type="button" variant="outline">
                     <Link :href="countriesIndex()">Cancel</Link>
                 </Button>

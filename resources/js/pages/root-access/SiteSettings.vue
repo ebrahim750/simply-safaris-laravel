@@ -52,13 +52,17 @@ const tabs = [
                 v-for="tab in tabs"
                 :key="tab.label"
                 :href="tab.href"
-                :class="cn(
-                    buttonVariants({ variant: 'outline' }),
-                    'h-32 flex-col justify-center gap-2 p-4 text-center',
-                )"
+                :class="
+                    cn(
+                        buttonVariants({ variant: 'outline' }),
+                        'h-32 flex-col justify-center gap-2 p-4 text-center',
+                    )
+                "
             >
                 <span class="text-lg font-semibold">{{ tab.label }}</span>
-                <span class="text-xs text-muted-foreground">{{ tab.description }}</span>
+                <span class="text-xs text-muted-foreground">{{
+                    tab.description
+                }}</span>
             </Link>
         </div>
     </div>

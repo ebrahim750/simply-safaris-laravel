@@ -47,12 +47,13 @@ const page = usePage();
 const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 const isRootUser = computed(() => page.props.auth.user.account_type === 'root');
 const isAdminOrRoot = computed(() =>
-    ['root', 'admin'].includes(page.props.auth.user.account_type)
+    ['root', 'admin'].includes(page.props.auth.user.account_type),
 );
 const isToursExpanded = computed(() => isCurrentOrParentUrl(adminTours().url));
-const isDestinationsExpanded = computed(() =>
-    isCurrentOrParentUrl(adminDestinationsCountries().url)
-    || isCurrentOrParentUrl(adminDestinationsPlaces().url)
+const isDestinationsExpanded = computed(
+    () =>
+        isCurrentOrParentUrl(adminDestinationsCountries().url) ||
+        isCurrentOrParentUrl(adminDestinationsPlaces().url),
 );
 
 const mainNavItems: NavItem[] = [
@@ -115,7 +116,11 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentOrParentUrl(adminToursCategories().url)"
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminToursCategories().url,
+                                        )
+                                    "
                                     tooltip="Categories"
                                 >
                                     <Link :href="adminToursCategories()">
@@ -126,7 +131,11 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentOrParentUrl(adminToursActivities().url)"
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminToursActivities().url,
+                                        )
+                                    "
                                     tooltip="Activities"
                                 >
                                     <Link :href="adminToursActivities()">
@@ -140,8 +149,12 @@ const rootAccessNavItems: NavItem[] = [
                         <SidebarMenuButton
                             as-child
                             :is-active="
-                                isCurrentOrParentUrl(adminDestinationsCountries().url)
-                                || isCurrentOrParentUrl(adminDestinationsPlaces().url)
+                                isCurrentOrParentUrl(
+                                    adminDestinationsCountries().url,
+                                ) ||
+                                isCurrentOrParentUrl(
+                                    adminDestinationsPlaces().url,
+                                )
                             "
                             tooltip="Destinations"
                         >
@@ -154,7 +167,11 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentOrParentUrl(adminDestinationsCountries().url)"
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminDestinationsCountries().url,
+                                        )
+                                    "
                                     tooltip="Countries"
                                 >
                                     <Link :href="adminDestinationsCountries()">
@@ -165,7 +182,11 @@ const rootAccessNavItems: NavItem[] = [
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton
                                     as-child
-                                    :is-active="isCurrentOrParentUrl(adminDestinationsPlaces().url)"
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminDestinationsPlaces().url,
+                                        )
+                                    "
                                     tooltip="Places"
                                 >
                                     <Link :href="adminDestinationsPlaces()">

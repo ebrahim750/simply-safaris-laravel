@@ -13,7 +13,14 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import {
+    ArrowUpDown,
+    Eye,
+    EyeOff,
+    Pencil,
+    Plus,
+    Trash2,
+} from 'lucide-vue-next';
 import { computed, defineComponent, h, ref } from 'vue';
 import {
     create as createTour,
@@ -156,17 +163,14 @@ function deleteTour(): void {
 
     deletingTourId.value = tourPendingDeletion.value.id;
 
-    router.delete(
-        destroyTour.url({ tour: tourPendingDeletion.value.id }),
-        {
-            preserveScroll: true,
-            onFinish: () => {
-                deletingTourId.value = null;
-                isDeleteDialogOpen.value = false;
-                tourPendingDeletion.value = null;
-            },
+    router.delete(destroyTour.url({ tour: tourPendingDeletion.value.id }), {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingTourId.value = null;
+            isDeleteDialogOpen.value = false;
+            tourPendingDeletion.value = null;
         },
-    );
+    });
 }
 
 const TourImageThumbnail = defineComponent({
@@ -224,15 +228,23 @@ const columns: ColumnDef<AdminTour>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Name', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Name',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
             h('div', { class: 'flex flex-col items-start gap-1' }, [
-                h('span', { class: 'font-medium text-foreground' }, row.original.name),
+                h(
+                    'span',
+                    { class: 'font-medium text-foreground' },
+                    row.original.name,
+                ),
                 row.original.is_hidden
                     ? h(
                           Badge,
@@ -256,10 +268,14 @@ const columns: ColumnDef<AdminTour>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Price', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Price',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -271,9 +287,14 @@ const columns: ColumnDef<AdminTour>[] = [
         cell: ({ row }) =>
             h(
                 Badge,
-                { variant: row.original.is_featured_on_home ? 'default' : 'secondary' },
                 {
-                    default: () => row.original.is_featured_on_home ? 'Yes' : 'No',
+                    variant: row.original.is_featured_on_home
+                        ? 'default'
+                        : 'secondary',
+                },
+                {
+                    default: () =>
+                        row.original.is_featured_on_home ? 'Yes' : 'No',
                 },
             ),
     },
@@ -285,10 +306,14 @@ const columns: ColumnDef<AdminTour>[] = [
                 {
                     variant: 'ghost',
                     class: '-ml-3 h-8 px-3 text-left font-medium',
-                    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                    onClick: () =>
+                        column.toggleSorting(column.getIsSorted() === 'asc'),
                 },
                 {
-                    default: () => ['Created', h(ArrowUpDown, { class: 'size-4' })],
+                    default: () => [
+                        'Created',
+                        h(ArrowUpDown, { class: 'size-4' }),
+                    ],
                 },
             ),
         cell: ({ row }) =>
@@ -326,10 +351,14 @@ const columns: ColumnDef<AdminTour>[] = [
                                                             size: 'icon',
                                                             class: 'size-8 cursor-pointer text-muted-foreground',
                                                             type: 'button',
-                                                            'aria-label': 'Edit tour',
+                                                            'aria-label':
+                                                                'Edit tour',
                                                         },
                                                         {
-                                                            default: () => h(Pencil, { class: 'size-4' }),
+                                                            default: () =>
+                                                                h(Pencil, {
+                                                                    class: 'size-4',
+                                                                }),
                                                         },
                                                     ),
                                             },
@@ -338,7 +367,8 @@ const columns: ColumnDef<AdminTour>[] = [
                                             TooltipContent,
                                             {},
                                             {
-                                                default: () => h('p', 'Edit tour'),
+                                                default: () =>
+                                                    h('p', 'Edit tour'),
                                             },
                                         ),
                                     ],
@@ -361,19 +391,26 @@ const columns: ColumnDef<AdminTour>[] = [
                                                             size: 'icon',
                                                             class: 'size-8 cursor-pointer text-muted-foreground',
                                                             type: 'button',
-                                                            'aria-label': row.original.is_hidden
+                                                            'aria-label': row
+                                                                .original
+                                                                .is_hidden
                                                                 ? 'Unhide tour'
                                                                 : 'Hide tour',
                                                             onClick: () =>
-                                                                toggleTourVisibility(row.original),
+                                                                toggleTourVisibility(
+                                                                    row.original,
+                                                                ),
                                                         },
                                                         {
                                                             default: () =>
                                                                 h(
-                                                                    row.original.is_hidden
+                                                                    row.original
+                                                                        .is_hidden
                                                                         ? Eye
                                                                         : EyeOff,
-                                                                    { class: 'size-4' },
+                                                                    {
+                                                                        class: 'size-4',
+                                                                    },
                                                                 ),
                                                         },
                                                     ),
@@ -412,13 +449,21 @@ const columns: ColumnDef<AdminTour>[] = [
                                                             size: 'icon',
                                                             class: 'size-8 cursor-pointer text-destructive hover:text-destructive',
                                                             type: 'button',
-                                                            'aria-label': 'Delete tour',
-                                                            disabled: deletingTourId.value === row.original.id,
+                                                            'aria-label':
+                                                                'Delete tour',
+                                                            disabled:
+                                                                deletingTourId.value ===
+                                                                row.original.id,
                                                             onClick: () =>
-                                                                openDeleteDialog(row.original),
+                                                                openDeleteDialog(
+                                                                    row.original,
+                                                                ),
                                                         },
                                                         {
-                                                            default: () => h(Trash2, { class: 'size-4' }),
+                                                            default: () =>
+                                                                h(Trash2, {
+                                                                    class: 'size-4',
+                                                                }),
                                                         },
                                                     ),
                                             },
@@ -427,7 +472,8 @@ const columns: ColumnDef<AdminTour>[] = [
                                             TooltipContent,
                                             {},
                                             {
-                                                default: () => h('p', 'Delete tour'),
+                                                default: () =>
+                                                    h('p', 'Delete tour'),
                                             },
                                         ),
                                     ],
@@ -461,7 +507,9 @@ const table = useVueTable({
     getSortedRowModel: getSortedRowModel(),
 });
 
-const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length);
+const filteredRowCount = computed(
+    () => table.getFilteredRowModel().rows.length,
+);
 </script>
 
 <template>
@@ -474,10 +522,13 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle class="text-center">Delete tour</AlertDialogTitle>
+                    <AlertDialogTitle class="text-center"
+                        >Delete tour</AlertDialogTitle
+                    >
                     <AlertDialogDescription class="text-center">
                         <template v-if="tourPendingDeletion">
-                            Delete {{ tourPendingDeletion.name }}? This action cannot be undone.
+                            Delete {{ tourPendingDeletion.name }}? This action
+                            cannot be undone.
                         </template>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -499,7 +550,10 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         :disabled="deletingTourId !== null"
                         @click="deleteTour"
                     >
-                        <Spinner v-if="deletingTourId !== null" class="size-4" />
+                        <Spinner
+                            v-if="deletingTourId !== null"
+                            class="size-4"
+                        />
                         Delete tour
                     </Button>
                 </AlertDialogFooter>
@@ -546,7 +600,9 @@ const filteredRowCount = computed(() => table.getFilteredRowModel().rows.length)
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
-                        {{ filteredRowCount }} tour{{ filteredRowCount === 1 ? '' : 's' }}
+                        {{ filteredRowCount }} tour{{
+                            filteredRowCount === 1 ? '' : 's'
+                        }}
                     </p>
                 </div>
 

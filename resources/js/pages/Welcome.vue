@@ -26,7 +26,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
     </Head>
 
     <div
-        class="welcome-marketing min-h-screen bg-wh-background text-wh-on-surface font-wh-body selection:bg-wh-secondary-container selection:text-wh-on-secondary-container"
+        class="welcome-marketing min-h-screen bg-wh-background font-wh-body text-wh-on-surface selection:bg-wh-secondary-container selection:text-wh-on-secondary-container"
     >
         <!-- TopNavBar -->
         <nav
@@ -131,7 +131,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
             </div>
             <div class="relative z-10 max-w-5xl px-8 md:px-20">
                 <span
-                    class="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-wh-on-surface-variant"
+                    class="mb-4 inline-block text-xs font-semibold tracking-[0.2em] text-wh-on-surface-variant uppercase"
                 >
                     Curated Wilderness Journeys
                 </span>
@@ -139,13 +139,13 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                     class="text-shadow-editorial mb-8 font-wh-headline text-5xl leading-none tracking-tighter text-wh-primary sm:text-6xl md:text-8xl"
                 >
                     Embrace <br />
-                    <span class="pr-4 font-light italic text-wh-secondary"
+                    <span class="pr-4 font-light text-wh-secondary italic"
                         >the</span
                     >
                     Untamed
                 </h1>
                 <p
-                    class="mb-10 max-w-xl text-lg font-light leading-relaxed text-wh-on-surface-variant md:text-2xl"
+                    class="mb-10 max-w-xl text-lg leading-relaxed font-light text-wh-on-surface-variant md:text-2xl"
                 >
                     Step into a world where the horizon never ends. Boutique
                     expeditions designed for the soul that seeks the wild.
@@ -171,14 +171,11 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
         </section>
 
         <!-- Featured Expeditions -->
-        <section
-            id="expeditions"
-            class="bg-wh-surface px-8 py-24 md:px-20"
-        >
+        <section id="expeditions" class="bg-wh-surface px-8 py-24 md:px-20">
             <div class="mx-auto max-w-screen-2xl">
                 <div class="mb-16">
                     <span
-                        class="text-xs font-bold uppercase tracking-widest text-wh-on-surface-variant"
+                        class="text-xs font-bold tracking-widest text-wh-on-surface-variant uppercase"
                     >
                         The Collection
                     </span>
@@ -195,7 +192,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                         class="relative overflow-hidden rounded-xl bg-wh-surface-container-low p-2 md:col-span-7"
                     >
                         <div
-                            class="group relative h-full min-h-[280px] w-full overflow-hidden asymmetric-radius md:min-h-0"
+                            class="group asymmetric-radius relative h-full min-h-[280px] w-full overflow-hidden md:min-h-0"
                         >
                             <img
                                 alt="The Great Serengeti Migration"
@@ -226,14 +223,12 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                             </div>
                         </div>
                     </div>
-                    <div
-                        class="flex flex-col gap-8 md:col-span-5"
-                    >
+                    <div class="flex flex-col gap-8 md:col-span-5">
                         <div
                             class="relative min-h-[220px] flex-1 overflow-hidden rounded-xl bg-wh-surface-container-low p-2 md:min-h-0"
                         >
                             <div
-                                class="group relative h-full min-h-[200px] w-full overflow-hidden asymmetric-radius"
+                                class="group asymmetric-radius relative h-full min-h-[200px] w-full overflow-hidden"
                             >
                                 <img
                                     alt="Gorilla trekking in Rwanda"
@@ -263,7 +258,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                             class="relative min-h-[220px] flex-1 overflow-hidden rounded-xl bg-wh-surface-container-low p-2 md:min-h-0"
                         >
                             <div
-                                class="group relative h-full min-h-[200px] w-full overflow-hidden asymmetric-radius"
+                                class="group asymmetric-radius relative h-full min-h-[200px] w-full overflow-hidden"
                             >
                                 <img
                                     alt="Okavango Delta safari"
@@ -304,7 +299,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
             >
                 <div class="relative">
                     <div
-                        class="relative z-10 aspect-[4/5] w-4/5 overflow-hidden shadow-2xl asymmetric-radius"
+                        class="asymmetric-radius relative z-10 aspect-[4/5] w-4/5 overflow-hidden shadow-2xl"
                     >
                         <img
                             alt="Safari guide in the bush"
@@ -313,11 +308,11 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                         />
                     </div>
                     <div
-                        class="absolute -right-4 -bottom-10 z-20 aspect-square w-1/2 bg-wh-surface-container-highest p-4 shadow-xl asymmetric-radius"
+                        class="asymmetric-radius absolute -right-4 -bottom-10 z-20 aspect-square w-1/2 bg-wh-surface-container-highest p-4 shadow-xl"
                     >
                         <img
                             alt="Luxury safari tent interior"
-                            class="h-full w-full object-cover asymmetric-radius"
+                            class="asymmetric-radius h-full w-full object-cover"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwdgUBpXs9ZlgWs-zcQ8vsYqvxjss8HM9RJYrgj0PbBwsuxssXiJX2NV-S6He3QNEIu_eMim09_saqhFA2OIU5j4c_YKV5pRgw7Rxxo4_soeKcNbpMQ5EtWNabvSoSIRFJvLo0ufGLe2uaeeIkeutzocThv569lEOL_W60JSN8jkL3U-YhG6NB7a1_wqodBeSyJk0A3JkZEPlUxHzBpWxE6rmCYcSZNmeykGBzy-0O_PZsyl1CiT58x1_68_zSm75fHRcXjiJoXDBE"
                         />
                     </div>
@@ -327,7 +322,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                 </div>
                 <div class="space-y-8">
                     <span
-                        class="text-xs font-bold uppercase tracking-[0.2em] text-wh-secondary"
+                        class="text-xs font-bold tracking-[0.2em] text-wh-secondary uppercase"
                     >
                         The Soul of {{ appName }}
                     </span>
@@ -373,7 +368,9 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                         href="#story"
                     >
                         Read Our Mission
-                        <span class="material-symbols-outlined">arrow_forward</span>
+                        <span class="material-symbols-outlined"
+                            >arrow_forward</span
+                        >
                     </a>
                 </div>
             </div>
@@ -411,7 +408,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                             >★★★★★</span
                         >
                         <p
-                            class="font-wh-headline text-lg leading-relaxed italic text-wh-on-surface"
+                            class="font-wh-headline text-lg leading-relaxed text-wh-on-surface italic"
                         >
                             "The silence of the Serengeti at dawn is something I
                             will never forget. {{ appName }} made every detail
@@ -427,7 +424,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                         </div>
                     </div>
                     <div
-                        class="z-10 flex scale-105 flex-col items-center space-y-6 rounded-xl border border-wh-outline-variant/10 border-t-4 border-t-wh-secondary bg-wh-surface-container-lowest p-8 text-center shadow-sm"
+                        class="z-10 flex scale-105 flex-col items-center space-y-6 rounded-xl border border-t-4 border-wh-outline-variant/10 border-t-wh-secondary bg-wh-surface-container-lowest p-8 text-center shadow-sm"
                     >
                         <div
                             class="h-24 w-24 overflow-hidden rounded-full border-2 border-wh-secondary p-1"
@@ -442,11 +439,11 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                             >★★★★★</span
                         >
                         <p
-                            class="font-wh-headline text-lg leading-relaxed italic text-wh-on-surface"
+                            class="font-wh-headline text-lg leading-relaxed text-wh-on-surface italic"
                         >
                             "Beyond the luxury, it was the deep knowledge of our
-                            guides that blew me away. We didn't just see animals;
-                            we understood their lives."
+                            guides that blew me away. We didn't just see
+                            animals; we understood their lives."
                         </p>
                         <div>
                             <h4 class="font-bold text-wh-primary">
@@ -473,11 +470,11 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                             >★★★★★</span
                         >
                         <p
-                            class="font-wh-headline text-lg leading-relaxed italic text-wh-on-surface"
+                            class="font-wh-headline text-lg leading-relaxed text-wh-on-surface italic"
                         >
-                            "A masterclass in sustainable travel. Every lodge was
-                            a dream, and every experience felt respectful to the
-                            wild."
+                            "A masterclass in sustainable travel. Every lodge
+                            was a dream, and every experience felt respectful to
+                            the wild."
                         </p>
                         <div>
                             <h4 class="font-bold text-wh-primary">
@@ -502,7 +499,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
             >
                 <div class="space-y-6">
                     <div
-                        class="font-wh-headline text-xl italic text-wh-primary"
+                        class="font-wh-headline text-xl text-wh-primary italic"
                     >
                         {{ appName }}
                     </div>
@@ -516,8 +513,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                 </div>
                 <div class="grid grid-cols-2 gap-8">
                     <div class="flex flex-col gap-4">
-                        <span
-                            class="font-wh-headline font-bold text-wh-primary"
+                        <span class="font-wh-headline font-bold text-wh-primary"
                             >Navigation</span
                         >
                         <a
@@ -537,8 +533,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                         >
                     </div>
                     <div class="flex flex-col gap-4">
-                        <span
-                            class="font-wh-headline font-bold text-wh-primary"
+                        <span class="font-wh-headline font-bold text-wh-primary"
                             >Contact</span
                         >
                         <a
@@ -564,8 +559,7 @@ const appName = computed(() => (page.props.name as string) || 'Wild Horizon');
                     </div>
                 </div>
                 <div class="space-y-6">
-                    <span
-                        class="font-wh-headline font-bold text-wh-primary"
+                    <span class="font-wh-headline font-bold text-wh-primary"
                         >Newsletter</span
                     >
                     <p class="text-sm text-wh-on-surface-variant">

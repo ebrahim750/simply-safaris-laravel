@@ -98,10 +98,7 @@ onMounted(() => {
             </div>
 
             <div v-if="!isLocal" class="grid gap-2">
-                <div
-                    class="cf-turnstile"
-                    :data-sitekey="turnstileSiteKey"
-                />
+                <div class="cf-turnstile" :data-sitekey="turnstileSiteKey" />
                 <InputError :message="errors['cf-turnstile-response']" />
             </div>
 

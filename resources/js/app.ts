@@ -33,7 +33,8 @@ void createInertiaApp({
     setup({ el, App, props, plugin }) {
         const applyUserChosenTheme =
             props.initialPage.props.applyUserChosenTheme ?? true;
-        appName = props.initialPage.props.appBranding?.siteName ?? fallbackAppName;
+        appName =
+            props.initialPage.props.appBranding?.siteName ?? fallbackAppName;
 
         if (!el) {
             const app = createSSRApp({ render: () => h(App, props) });
@@ -45,7 +46,9 @@ void createInertiaApp({
         initializeTheme(applyUserChosenTheme);
 
         router.on('navigate', (event) => {
-            appName = event.detail.page.props.appBranding?.siteName ?? fallbackAppName;
+            appName =
+                event.detail.page.props.appBranding?.siteName ??
+                fallbackAppName;
             syncDocumentTheme(
                 event.detail.page.props.applyUserChosenTheme ?? true,
             );
