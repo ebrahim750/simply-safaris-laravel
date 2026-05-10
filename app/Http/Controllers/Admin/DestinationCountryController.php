@@ -56,7 +56,7 @@ class DestinationCountryController extends Controller
             'best_time_to_go' => $validated['best_time_to_go'] ?? null,
             'high_season' => $validated['high_season'] ?? null,
             'electrical' => $validated['electrical'] ?? null,
-            'tourist_info' => $validated['tourist_info'] ?? null,
+            'tourism_link' => $validated['tourism_link'] ?? null,
         ]);
 
         if ($request->hasFile('main_image')) {
@@ -81,7 +81,7 @@ class DestinationCountryController extends Controller
                 'best_time_to_go' => $country->best_time_to_go,
                 'high_season' => $country->high_season,
                 'electrical' => $country->electrical,
-                'tourist_info' => $country->tourist_info,
+                'tourism_link' => $country->tourism_link,
             ],
         ]);
     }
@@ -99,7 +99,7 @@ class DestinationCountryController extends Controller
             'best_time_to_go' => $validated['best_time_to_go'] ?? null,
             'high_season' => $validated['high_season'] ?? null,
             'electrical' => $validated['electrical'] ?? null,
-            'tourist_info' => $validated['tourist_info'] ?? null,
+            'tourism_link' => $validated['tourism_link'] ?? null,
         ]);
 
         if ($request->hasFile('main_image')) {

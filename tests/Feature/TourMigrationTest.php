@@ -85,7 +85,7 @@ test('countries places and tour place tables have the expected columns', functio
         'best_time_to_go',
         'high_season',
         'electrical',
-        'tourist_info',
+        'tourism_link',
         'created_at',
         'updated_at',
     ]))->toBeTrue();

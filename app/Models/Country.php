@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'best_time_to_go',
     'high_season',
     'electrical',
-    'tourist_info',
+    'tourism_link',
 ])]
 class Country extends Model
 {

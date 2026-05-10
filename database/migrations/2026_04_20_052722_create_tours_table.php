@@ -14,12 +14,16 @@ return new class extends Migration
         Schema::create('tour_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
 
         Schema::create('tour_activities', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
 

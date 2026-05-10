@@ -46,7 +46,7 @@ class StoreDestinationCountryRequest extends FormRequest
             'best_time_to_go' => ['nullable', 'string'],
             'high_season' => ['nullable', 'string'],
             'electrical' => ['nullable', 'string'],
-            'tourist_info' => ['nullable', 'string', 'max:255'],
+            'tourism_link' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

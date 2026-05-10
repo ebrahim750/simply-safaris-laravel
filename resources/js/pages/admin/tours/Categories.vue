@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Check, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
+import { ArrowUpDown, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import {
     destroy as destroyTourCategory,
@@ -39,8 +39,17 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { FileUpload } from '@/components/ui/file-upload';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { categories as adminToursCategories } from '@/routes/admin/tours';
 
@@ -62,6 +71,8 @@ defineOptions({
 type AdminCategory = {
     id: number;
     name: string;
+    description: string | null;
+    image_url: string | null;
     created_at: string | null;
     created_at_display: string;
 };
@@ -77,16 +88,21 @@ const sorting = ref<SortingState>([
     },
 ]);
 const globalFilter = ref('');
-const isCreateCategoryOpen = ref(false);
+const isModalOpen = ref(false);
 const editingCategoryId = ref<number | null>(null);
 const deletingCategoryId = ref<number | null>(null);
 const isDeleteDialogOpen = ref(false);
 const categoryPendingDeletion = ref<AdminCategory | null>(null);
-const createCategoryForm = useForm({
+const imagePreview = ref<string | null>(null);
+
+const categoryForm = useForm<{
+    name: string;
+    description: string;
+    image: File | null;
+}>({
     name: '',
-});
-const editCategoryForm = useForm({
-    name: '',
+    description: '',
+    image: null,
 });
 
 const globalCategoryFilter: FilterFn<AdminCategory> = (row, _, filterValue) => {
@@ -96,7 +112,10 @@ const globalCategoryFilter: FilterFn<AdminCategory> = (row, _, filterValue) => {
         return true;
     }
 
-    return row.original.name.toLowerCase().includes(searchValue);
+    return (
+        row.original.name.toLowerCase().includes(searchValue) ||
+        (row.original.description ?? '').toLowerCase().includes(searchValue)
+    );
 };
 
 function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
@@ -106,64 +125,57 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
             : updaterOrValue;
 }
 
-function resetCreateCategoryForm(): void {
-    createCategoryForm.reset();
-    createCategoryForm.clearErrors();
+function resetForm(): void {
+    categoryForm.reset();
+    categoryForm.clearErrors();
+    imagePreview.value = null;
 }
 
-function closeCreateCategoryPanel(): void {
-    isCreateCategoryOpen.value = false;
-    resetCreateCategoryForm();
-}
-
-function toggleCreateCategoryPanel(): void {
-    if (isCreateCategoryOpen.value) {
-        closeCreateCategoryPanel();
-
-        return;
-    }
-
-    cancelEditingCategory();
-    isCreateCategoryOpen.value = true;
-}
-
-function submitCreateCategory(): void {
-    createCategoryForm.post(storeTourCategory.url(), {
-        preserveScroll: true,
-        onSuccess: () => {
-            createCategoryForm.reset();
-            createCategoryForm.clearErrors();
-        },
-    });
-}
-
-function startEditingCategory(category: AdminCategory): void {
-    closeCreateCategoryPanel();
-    editingCategoryId.value = category.id;
-    editCategoryForm.name = category.name;
-    editCategoryForm.clearErrors();
-}
-
-function cancelEditingCategory(): void {
+function closeModal(): void {
+    isModalOpen.value = false;
     editingCategoryId.value = null;
-    editCategoryForm.reset();
-    editCategoryForm.clearErrors();
+    resetForm();
 }
 
-function submitEditCategory(): void {
-    if (editingCategoryId.value === null) {
-        return;
-    }
+function openCreateModal(): void {
+    editingCategoryId.value = null;
+    resetForm();
+    isModalOpen.value = true;
+}
 
-    editCategoryForm.patch(
-        updateTourCategory.url({ category: editingCategoryId.value }),
-        {
+function openEditModal(category: AdminCategory): void {
+    editingCategoryId.value = category.id;
+    categoryForm.name = category.name;
+    categoryForm.description = category.description ?? '';
+    categoryForm.image = null;
+    imagePreview.value = category.image_url;
+    isModalOpen.value = true;
+}
+
+function submitCategoryForm(): void {
+    if (editingCategoryId.value === null) {
+        categoryForm.post(storeTourCategory.url(), {
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
-                cancelEditingCategory();
+                resetForm();
+                isModalOpen.value = false;
             },
-        },
-    );
+        });
+    } else {
+        categoryForm.post(
+            updateTourCategory.url({ category: editingCategoryId.value }),
+            {
+                preserveScroll: true,
+                forceFormData: true,
+                onSuccess: () => {
+                    resetForm();
+                    isModalOpen.value = false;
+                    editingCategoryId.value = null;
+                },
+            },
+        );
+    }
 }
 
 function openDeleteDialog(category: AdminCategory): void {
@@ -171,8 +183,6 @@ function openDeleteDialog(category: AdminCategory): void {
         return;
     }
 
-    closeCreateCategoryPanel();
-    cancelEditingCategory();
     categoryPendingDeletion.value = category;
     isDeleteDialogOpen.value = true;
 }
@@ -234,30 +244,47 @@ const columns: ColumnDef<AdminCategory>[] = [
                 },
             ),
         cell: ({ row }) => {
-            if (editingCategoryId.value === row.original.id) {
-                return h('div', { class: 'space-y-2' }, [
-                    h(Input, {
-                        modelValue: editCategoryForm.name,
-                        class: 'max-w-sm',
-                        placeholder: 'Category name',
-                        disabled: editCategoryForm.processing,
-                        'onUpdate:modelValue': (value: string | number) => {
-                            editCategoryForm.name = String(value);
-                        },
+            const children = [];
+
+            if (row.original.image_url) {
+                children.push(
+                    h('img', {
+                        src: row.original.image_url,
+                        alt: row.original.name,
+                        class: 'h-8 w-8 rounded-md object-cover',
                     }),
-                    h(InputError, {
-                        message: editCategoryForm.errors.name,
-                    }),
-                ]);
+                );
             }
+
+            children.push(
+                h(
+                    'span',
+                    { class: 'font-medium text-foreground' },
+                    row.original.name,
+                ),
+            );
 
             return h(
                 'div',
-                { class: 'font-medium text-foreground' },
-                row.original.name,
+                { class: 'flex items-center gap-3' },
+                children,
             );
         },
     },
+    {
+        accessorKey: 'description',
+        header: () => h('div', { class: 'text-left font-medium' }, 'Description'),
+        cell: ({ row }) =>
+            h(
+                'div',
+                {
+                    class: 'max-w-xs truncate text-muted-foreground',
+                    title: row.original.description ?? undefined,
+                },
+                row.original.description || '—',
+            ),
+    },
+
     {
         accessorKey: 'created_at',
         header: ({ column }) =>
@@ -287,49 +314,8 @@ const columns: ColumnDef<AdminCategory>[] = [
         id: 'actions',
         enableSorting: false,
         header: () => h('div', { class: 'text-right' }, 'Actions'),
-        cell: ({ row }) => {
-            if (editingCategoryId.value === row.original.id) {
-                return h('div', { class: 'flex justify-end gap-2' }, [
-                    h(
-                        Button,
-                        {
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3',
-                            type: 'button',
-                            disabled: editCategoryForm.processing,
-                            onClick: submitEditCategory,
-                        },
-                        {
-                            default: () =>
-                                editCategoryForm.processing
-                                    ? [
-                                          h(Spinner, { class: 'size-3.5' }),
-                                          'Saving',
-                                      ]
-                                    : [h(Check, { class: 'size-3.5' }), 'Save'],
-                        },
-                    ),
-                    h(
-                        Button,
-                        {
-                            variant: 'outline',
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3 text-muted-foreground',
-                            type: 'button',
-                            disabled: editCategoryForm.processing,
-                            onClick: cancelEditingCategory,
-                        },
-                        {
-                            default: () => [
-                                h(X, { class: 'size-3.5' }),
-                                'Cancel',
-                            ],
-                        },
-                    ),
-                ]);
-            }
-
-            return h('div', { class: 'flex justify-end gap-2' }, [
+        cell: ({ row }) =>
+            h('div', { class: 'flex justify-end gap-2' }, [
                 h(
                     Button,
                     {
@@ -337,7 +323,7 @@ const columns: ColumnDef<AdminCategory>[] = [
                         size: 'sm',
                         class: 'h-8 cursor-pointer px-3 text-muted-foreground',
                         type: 'button',
-                        onClick: () => startEditingCategory(row.original),
+                        onClick: () => openEditModal(row.original),
                     },
                     {
                         default: () => [
@@ -366,8 +352,7 @@ const columns: ColumnDef<AdminCategory>[] = [
                                 : [h(Trash2, { class: 'size-3.5' }), 'Delete'],
                     },
                 ),
-            ]);
-        },
+            ]),
     },
 ];
 
@@ -444,6 +429,81 @@ const filteredRowCount = computed(
             </AlertDialogContent>
         </AlertDialog>
 
+        <Dialog :open="isModalOpen" @update:open="closeModal">
+            <DialogContent class="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ editingCategoryId === null ? 'Add category' : 'Edit category' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ editingCategoryId === null ? 'Create a new tour category.' : 'Update this tour category.' }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form
+                    class="space-y-4"
+                    @submit.prevent="submitCategoryForm"
+                >
+                    <div class="space-y-2">
+                        <Label for="category_name">Name</Label>
+                        <Input
+                            id="category_name"
+                            v-model="categoryForm.name"
+                            placeholder="Category name"
+                            :disabled="categoryForm.processing"
+                        />
+                        <InputError :message="categoryForm.errors.name" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="category_description">Description</Label>
+                        <textarea
+                            id="category_description"
+                            v-model="categoryForm.description"
+                            rows="4"
+                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Describe this category..."
+                            :disabled="categoryForm.processing"
+                        />
+                        <InputError :message="categoryForm.errors.description" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <FileUpload
+                            id="category_image"
+                            label="Image"
+                            v-model="categoryForm.image"
+                            :preview-url="imagePreview"
+                            preview-alt="Category image"
+                            accept=".png,.jpg,.jpeg,.webp"
+                            hint="PNG, JPG, JPEG, or WEBP up to 5MB"
+                            :error="categoryForm.errors.image"
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="cursor-pointer"
+                            :disabled="categoryForm.processing"
+                            @click="closeModal"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            class="cursor-pointer"
+                            :disabled="categoryForm.processing"
+                        >
+                            <Spinner v-if="categoryForm.processing" />
+                            {{ editingCategoryId === null ? 'Add category' : 'Save changes' }}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+
         <Heading
             title="Tour Categories"
             description="Manage tour categories."
@@ -464,80 +524,21 @@ const filteredRowCount = computed(
                     <Button
                         type="button"
                         class="cursor-pointer"
-                        :variant="
-                            isCreateCategoryOpen ? 'secondary' : 'default'
-                        "
-                        @click="toggleCreateCategoryPanel"
+                        @click="openCreateModal"
                     >
                         <Plus class="size-4" />
-                        {{ isCreateCategoryOpen ? 'Close' : 'Add category' }}
+                        Add category
                     </Button>
                 </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <Collapsible :open="isCreateCategoryOpen" class="space-y-4">
-                    <CollapsibleContent>
-                        <div class="flex justify-end">
-                            <form
-                                class="inline-block w-full max-w-md rounded-lg border border-border bg-muted/30 p-4"
-                                @submit.prevent="submitCreateCategory"
-                            >
-                                <div class="flex flex-col gap-3">
-                                    <div class="w-full max-w-sm space-y-2">
-                                        <Input
-                                            v-model="createCategoryForm.name"
-                                            placeholder="Add a new category"
-                                            :disabled="
-                                                createCategoryForm.processing
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                createCategoryForm.errors.name
-                                            "
-                                        />
-                                    </div>
-
-                                    <div class="flex gap-2">
-                                        <Button
-                                            type="submit"
-                                            class="cursor-pointer"
-                                            :disabled="
-                                                createCategoryForm.processing
-                                            "
-                                        >
-                                            <Spinner
-                                                v-if="
-                                                    createCategoryForm.processing
-                                                "
-                                            />
-                                            Add
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            class="cursor-pointer"
-                                            :disabled="
-                                                createCategoryForm.processing
-                                            "
-                                            @click="closeCreateCategoryPanel"
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </CollapsibleContent>
-                </Collapsible>
-
                 <div
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
-                        placeholder="Search categories by name..."
+                        placeholder="Search categories..."
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">

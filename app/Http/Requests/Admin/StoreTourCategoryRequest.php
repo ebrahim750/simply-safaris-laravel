@@ -24,6 +24,7 @@ class StoreTourCategoryRequest extends FormRequest
     {
         $this->merge([
             'name' => trim((string) $this->input('name')),
+            'description' => trim((string) $this->input('description')) ?: null,
         ]);
     }
 
@@ -40,6 +41,17 @@ class StoreTourCategoryRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique(TourCategory::class, 'name'),
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:png,jpg,jpeg,webp',
+                'max:5120',
             ],
         ];
     }

@@ -26,6 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Editor } from '@/components/ui/editor';
 import { cn } from '@/lib/utils';
 
 type CountryOption = {
@@ -62,8 +63,18 @@ const form = useForm({
     best_time_to_go: '',
     high_season: '',
     electrical: '',
-    tourist_info: '',
+    tourism_link: '',
 });
+
+const electricalOptions = [
+    { value: '110-120V, Type A/B', label: '110-120V, Type A/B (US, Canada, Japan)' },
+    { value: '220-240V, Type C/E/F', label: '220-240V, Type C/E/F (Europe)' },
+    { value: '220-240V, Type G', label: '220-240V, Type G (UK, Ireland, UAE)' },
+    { value: '220-240V, Type D/M', label: '220-240V, Type D/M (India, South Africa)' },
+    { value: '220-240V, Type I', label: '220-240V, Type I (Australia, China, Argentina)' },
+    { value: '100V, Type A/B', label: '100V, Type A/B (Japan)' },
+    { value: 'Multiple standards', label: 'Multiple standards' },
+];
 const countrySearch = ref('');
 const mainImagePreview = ref<string | null>(null);
 
@@ -95,7 +106,7 @@ const selectedCountryOption = computed(
 
 function textAreaClass(errorKey?: string): string {
     return cn(
-        'flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+        'flex min-h-28 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
         errorKey && form.errors[errorKey]
             ? 'border-destructive ring-destructive/20'
             : '',
@@ -145,7 +156,7 @@ function submit(): void {
                     :disabled="form.processing || !form.name"
                     @click="submit"
                 >
-                    Save country
+                    Add country
                 </Button>
             </div>
         </div>
@@ -231,10 +242,9 @@ function submit(): void {
 
                     <div class="grid gap-2">
                         <Label for="overview">Overview</Label>
-                        <textarea
-                            id="overview"
+                        <Editor
                             v-model="form.overview"
-                            :class="textAreaClass('overview')"
+                            :error="!!form.errors.overview"
                             placeholder="General overview of the country..."
                         />
                         <InputError :message="form.errors.overview" />
@@ -279,23 +289,36 @@ function submit(): void {
                     <div class="grid gap-6 md:grid-cols-3">
                         <div class="grid gap-2">
                             <Label for="electrical">Electrical</Label>
-                            <textarea
-                                id="electrical"
-                                v-model="form.electrical"
-                                :class="textAreaClass('electrical')"
-                                placeholder="Voltage, plug types..."
-                            />
+                            <Select v-model="form.electrical">
+                                <SelectTrigger
+                                    id="electrical"
+                                    class="w-full"
+                                >
+                                    <SelectValue
+                                        placeholder="Select electrical standard"
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="option in electricalOptions"
+                                        :key="option.value"
+                                        :value="option.value"
+                                    >
+                                        {{ option.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                             <InputError :message="form.errors.electrical" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="tourist_info">Tourist info</Label>
+                            <Label for="tourism_link">Tourism link</Label>
                             <Input
-                                id="tourist_info"
-                                v-model="form.tourist_info"
+                                id="tourism_link"
+                                v-model="form.tourism_link"
                                 placeholder="Official tourism website..."
                             />
-                            <InputError :message="form.errors.tourist_info" />
+                            <InputError :message="form.errors.tourism_link" />
                         </div>
                     </div>
                 </CardContent>
@@ -352,16 +375,6 @@ function submit(): void {
                 </CardContent>
             </Card>
 
-            <div
-                class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end"
-            >
-                <Button as-child type="button" variant="outline">
-                    <Link :href="countriesIndex()">Cancel</Link>
-                </Button>
-                <Button type="submit" :disabled="form.processing || !form.name">
-                    Save country
-                </Button>
-            </div>
         </form>
     </div>
 </template>

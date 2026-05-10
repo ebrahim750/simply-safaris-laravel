@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Check, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
+import { ArrowUpDown, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import {
     destroy as destroyTourActivity,
@@ -39,8 +39,17 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { FileUpload } from '@/components/ui/file-upload';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { activities as adminToursActivities } from '@/routes/admin/tours';
 
@@ -62,6 +71,8 @@ defineOptions({
 type AdminActivity = {
     id: number;
     name: string;
+    description: string | null;
+    image_url: string | null;
     created_at: string | null;
     created_at_display: string;
 };
@@ -77,16 +88,21 @@ const sorting = ref<SortingState>([
     },
 ]);
 const globalFilter = ref('');
-const isCreateActivityOpen = ref(false);
+const isModalOpen = ref(false);
 const editingActivityId = ref<number | null>(null);
 const deletingActivityId = ref<number | null>(null);
 const isDeleteDialogOpen = ref(false);
 const activityPendingDeletion = ref<AdminActivity | null>(null);
-const createActivityForm = useForm({
+const imagePreview = ref<string | null>(null);
+
+const activityForm = useForm<{
+    name: string;
+    description: string;
+    image: File | null;
+}>({
     name: '',
-});
-const editActivityForm = useForm({
-    name: '',
+    description: '',
+    image: null,
 });
 
 const globalActivityFilter: FilterFn<AdminActivity> = (row, _, filterValue) => {
@@ -96,7 +112,10 @@ const globalActivityFilter: FilterFn<AdminActivity> = (row, _, filterValue) => {
         return true;
     }
 
-    return row.original.name.toLowerCase().includes(searchValue);
+    return (
+        row.original.name.toLowerCase().includes(searchValue) ||
+        (row.original.description ?? '').toLowerCase().includes(searchValue)
+    );
 };
 
 function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
@@ -106,64 +125,57 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
             : updaterOrValue;
 }
 
-function resetCreateActivityForm(): void {
-    createActivityForm.reset();
-    createActivityForm.clearErrors();
+function resetForm(): void {
+    activityForm.reset();
+    activityForm.clearErrors();
+    imagePreview.value = null;
 }
 
-function closeCreateActivityPanel(): void {
-    isCreateActivityOpen.value = false;
-    resetCreateActivityForm();
-}
-
-function toggleCreateActivityPanel(): void {
-    if (isCreateActivityOpen.value) {
-        closeCreateActivityPanel();
-
-        return;
-    }
-
-    cancelEditingActivity();
-    isCreateActivityOpen.value = true;
-}
-
-function submitCreateActivity(): void {
-    createActivityForm.post(storeTourActivity.url(), {
-        preserveScroll: true,
-        onSuccess: () => {
-            createActivityForm.reset();
-            createActivityForm.clearErrors();
-        },
-    });
-}
-
-function startEditingActivity(activity: AdminActivity): void {
-    closeCreateActivityPanel();
-    editingActivityId.value = activity.id;
-    editActivityForm.name = activity.name;
-    editActivityForm.clearErrors();
-}
-
-function cancelEditingActivity(): void {
+function closeModal(): void {
+    isModalOpen.value = false;
     editingActivityId.value = null;
-    editActivityForm.reset();
-    editActivityForm.clearErrors();
+    resetForm();
 }
 
-function submitEditActivity(): void {
-    if (editingActivityId.value === null) {
-        return;
-    }
+function openCreateModal(): void {
+    editingActivityId.value = null;
+    resetForm();
+    isModalOpen.value = true;
+}
 
-    editActivityForm.patch(
-        updateTourActivity.url({ activity: editingActivityId.value }),
-        {
+function openEditModal(activity: AdminActivity): void {
+    editingActivityId.value = activity.id;
+    activityForm.name = activity.name;
+    activityForm.description = activity.description ?? '';
+    activityForm.image = null;
+    imagePreview.value = activity.image_url;
+    isModalOpen.value = true;
+}
+
+function submitActivityForm(): void {
+    if (editingActivityId.value === null) {
+        activityForm.post(storeTourActivity.url(), {
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
-                cancelEditingActivity();
+                resetForm();
+                isModalOpen.value = false;
             },
-        },
-    );
+        });
+    } else {
+        activityForm.post(
+            updateTourActivity.url({ activity: editingActivityId.value }),
+            {
+                preserveScroll: true,
+                forceFormData: true,
+                onSuccess: () => {
+                    resetForm();
+                    isModalOpen.value = false;
+                    editingActivityId.value = null;
+                },
+            },
+        );
+    }
 }
 
 function openDeleteDialog(activity: AdminActivity): void {
@@ -171,8 +183,6 @@ function openDeleteDialog(activity: AdminActivity): void {
         return;
     }
 
-    closeCreateActivityPanel();
-    cancelEditingActivity();
     activityPendingDeletion.value = activity;
     isDeleteDialogOpen.value = true;
 }
@@ -234,30 +244,47 @@ const columns: ColumnDef<AdminActivity>[] = [
                 },
             ),
         cell: ({ row }) => {
-            if (editingActivityId.value === row.original.id) {
-                return h('div', { class: 'space-y-2' }, [
-                    h(Input, {
-                        modelValue: editActivityForm.name,
-                        class: 'max-w-sm',
-                        placeholder: 'Activity name',
-                        disabled: editActivityForm.processing,
-                        'onUpdate:modelValue': (value: string | number) => {
-                            editActivityForm.name = String(value);
-                        },
+            const children = [];
+
+            if (row.original.image_url) {
+                children.push(
+                    h('img', {
+                        src: row.original.image_url,
+                        alt: row.original.name,
+                        class: 'h-8 w-8 rounded-md object-cover',
                     }),
-                    h(InputError, {
-                        message: editActivityForm.errors.name,
-                    }),
-                ]);
+                );
             }
+
+            children.push(
+                h(
+                    'span',
+                    { class: 'font-medium text-foreground' },
+                    row.original.name,
+                ),
+            );
 
             return h(
                 'div',
-                { class: 'font-medium text-foreground' },
-                row.original.name,
+                { class: 'flex items-center gap-3' },
+                children,
             );
         },
     },
+    {
+        accessorKey: 'description',
+        header: () => h('div', { class: 'text-left font-medium' }, 'Description'),
+        cell: ({ row }) =>
+            h(
+                'div',
+                {
+                    class: 'max-w-xs truncate text-muted-foreground',
+                    title: row.original.description ?? undefined,
+                },
+                row.original.description || '—',
+            ),
+    },
+
     {
         accessorKey: 'created_at',
         header: ({ column }) =>
@@ -287,49 +314,8 @@ const columns: ColumnDef<AdminActivity>[] = [
         id: 'actions',
         enableSorting: false,
         header: () => h('div', { class: 'text-right' }, 'Actions'),
-        cell: ({ row }) => {
-            if (editingActivityId.value === row.original.id) {
-                return h('div', { class: 'flex justify-end gap-2' }, [
-                    h(
-                        Button,
-                        {
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3',
-                            type: 'button',
-                            disabled: editActivityForm.processing,
-                            onClick: submitEditActivity,
-                        },
-                        {
-                            default: () =>
-                                editActivityForm.processing
-                                    ? [
-                                          h(Spinner, { class: 'size-3.5' }),
-                                          'Saving',
-                                      ]
-                                    : [h(Check, { class: 'size-3.5' }), 'Save'],
-                        },
-                    ),
-                    h(
-                        Button,
-                        {
-                            variant: 'outline',
-                            size: 'sm',
-                            class: 'h-8 cursor-pointer px-3 text-muted-foreground',
-                            type: 'button',
-                            disabled: editActivityForm.processing,
-                            onClick: cancelEditingActivity,
-                        },
-                        {
-                            default: () => [
-                                h(X, { class: 'size-3.5' }),
-                                'Cancel',
-                            ],
-                        },
-                    ),
-                ]);
-            }
-
-            return h('div', { class: 'flex justify-end gap-2' }, [
+        cell: ({ row }) =>
+            h('div', { class: 'flex justify-end gap-2' }, [
                 h(
                     Button,
                     {
@@ -337,7 +323,7 @@ const columns: ColumnDef<AdminActivity>[] = [
                         size: 'sm',
                         class: 'h-8 cursor-pointer px-3 text-muted-foreground',
                         type: 'button',
-                        onClick: () => startEditingActivity(row.original),
+                        onClick: () => openEditModal(row.original),
                     },
                     {
                         default: () => [
@@ -366,8 +352,7 @@ const columns: ColumnDef<AdminActivity>[] = [
                                 : [h(Trash2, { class: 'size-3.5' }), 'Delete'],
                     },
                 ),
-            ]);
-        },
+            ]),
     },
 ];
 
@@ -444,6 +429,81 @@ const filteredRowCount = computed(
             </AlertDialogContent>
         </AlertDialog>
 
+        <Dialog :open="isModalOpen" @update:open="closeModal">
+            <DialogContent class="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ editingActivityId === null ? 'Add activity' : 'Edit activity' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ editingActivityId === null ? 'Create a new tour activity.' : 'Update this tour activity.' }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form
+                    class="space-y-4"
+                    @submit.prevent="submitActivityForm"
+                >
+                    <div class="space-y-2">
+                        <Label for="activity_name">Name</Label>
+                        <Input
+                            id="activity_name"
+                            v-model="activityForm.name"
+                            placeholder="Activity name"
+                            :disabled="activityForm.processing"
+                        />
+                        <InputError :message="activityForm.errors.name" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="activity_description">Description</Label>
+                        <textarea
+                            id="activity_description"
+                            v-model="activityForm.description"
+                            rows="4"
+                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Describe this activity..."
+                            :disabled="activityForm.processing"
+                        />
+                        <InputError :message="activityForm.errors.description" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <FileUpload
+                            id="activity_image"
+                            label="Image"
+                            v-model="activityForm.image"
+                            :preview-url="imagePreview"
+                            preview-alt="Activity image"
+                            accept=".png,.jpg,.jpeg,.webp"
+                            hint="PNG, JPG, JPEG, or WEBP up to 5MB"
+                            :error="activityForm.errors.image"
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="cursor-pointer"
+                            :disabled="activityForm.processing"
+                            @click="closeModal"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            class="cursor-pointer"
+                            :disabled="activityForm.processing"
+                        >
+                            <Spinner v-if="activityForm.processing" />
+                            {{ editingActivityId === null ? 'Add activity' : 'Save changes' }}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+
         <Heading
             title="Tour Activities"
             description="Manage tour activities."
@@ -464,80 +524,21 @@ const filteredRowCount = computed(
                     <Button
                         type="button"
                         class="cursor-pointer"
-                        :variant="
-                            isCreateActivityOpen ? 'secondary' : 'default'
-                        "
-                        @click="toggleCreateActivityPanel"
+                        @click="openCreateModal"
                     >
                         <Plus class="size-4" />
-                        {{ isCreateActivityOpen ? 'Close' : 'Add activity' }}
+                        Add activity
                     </Button>
                 </div>
             </CardHeader>
             <CardContent class="space-y-4">
-                <Collapsible :open="isCreateActivityOpen" class="space-y-4">
-                    <CollapsibleContent>
-                        <div class="flex justify-end">
-                            <form
-                                class="inline-block w-full max-w-md rounded-lg border border-border bg-muted/30 p-4"
-                                @submit.prevent="submitCreateActivity"
-                            >
-                                <div class="flex flex-col gap-3">
-                                    <div class="w-full max-w-sm space-y-2">
-                                        <Input
-                                            v-model="createActivityForm.name"
-                                            placeholder="Add a new activity"
-                                            :disabled="
-                                                createActivityForm.processing
-                                            "
-                                        />
-                                        <InputError
-                                            :message="
-                                                createActivityForm.errors.name
-                                            "
-                                        />
-                                    </div>
-
-                                    <div class="flex gap-2">
-                                        <Button
-                                            type="submit"
-                                            class="cursor-pointer"
-                                            :disabled="
-                                                createActivityForm.processing
-                                            "
-                                        >
-                                            <Spinner
-                                                v-if="
-                                                    createActivityForm.processing
-                                                "
-                                            />
-                                            Add
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            class="cursor-pointer"
-                                            :disabled="
-                                                createActivityForm.processing
-                                            "
-                                            @click="closeCreateActivityPanel"
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </CollapsibleContent>
-                </Collapsible>
-
                 <div
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
-                        placeholder="Search activities by name..."
+                        placeholder="Search activities..."
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">

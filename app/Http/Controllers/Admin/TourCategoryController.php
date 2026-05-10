@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\StoreTourCategoryRequest;
 use App\Http\Requests\Admin\UpdateTourCategoryRequest;
 use App\Models\TourCategory;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,10 +19,12 @@ class TourCategoryController extends Controller
         return Inertia::render('admin/tours/Categories', [
             'categories' => TourCategory::query()
                 ->latest('id')
-                ->get(['id', 'name', 'created_at'])
+                ->get()
                 ->map(fn (TourCategory $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'description' => $category->description,
+                    'image_url' => $category->image ? Storage::disk('public')->url($category->image) : null,
                     'created_at' => $category->created_at?->toIso8601String(),
                     'created_at_display' => $category->created_at?->format('M j, Y g:i A') ?? 'N/A',
                 ]),
@@ -29,14 +33,40 @@ class TourCategoryController extends Controller
 
     public function store(StoreTourCategoryRequest $request): RedirectResponse
     {
-        TourCategory::query()->create($request->validated());
+        $validated = $request->validated();
+
+        $category = TourCategory::query()->create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'image' => '',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $category->forceFill([
+                'image' => $this->storeImage($request->file('image'), 'categories/'.$category->id),
+            ])->save();
+        }
 
         return to_route('admin.tours.categories');
     }
 
     public function update(UpdateTourCategoryRequest $request, TourCategory $category): RedirectResponse
     {
-        $category->update($request->validated());
+        $validated = $request->validated();
+
+        $data = [
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+        ];
+
+        if ($request->hasFile('image')) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = $this->storeImage($request->file('image'), 'categories/'.$category->id);
+        }
+
+        $category->update($data);
 
         return to_route('admin.tours.categories');
     }
@@ -44,8 +74,18 @@ class TourCategoryController extends Controller
     public function destroy(TourCategory $category): RedirectResponse
     {
         $category->tours()->detach();
+
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+
         $category->delete();
 
         return to_route('admin.tours.categories');
+    }
+
+    private function storeImage(UploadedFile $file, string $directory): string
+    {
+        return $file->store($directory, 'public');
     }
 }

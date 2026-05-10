@@ -105,7 +105,7 @@ test('admin users can open create country page and store a country', function ()
             'best_time_to_go' => 'June to October',
             'high_season' => 'July to September',
             'electrical' => '230V, Type D/G plugs',
-            'tourist_info' => 'https://www.tanzaniatourism.go.tz',
+            'tourism_link' => 'https://www.tanzaniatourism.go.tz',
         ]);
 
     $response->assertRedirect(route('admin.destinations.countries'));
@@ -119,7 +119,7 @@ test('admin users can open create country page and store a country', function ()
         'best_time_to_go' => 'June to October',
         'high_season' => 'July to September',
         'electrical' => '230V, Type D/G plugs',
-        'tourist_info' => 'https://www.tanzaniatourism.go.tz',
+        'tourism_link' => 'https://www.tanzaniatourism.go.tz',
     ]);
 });
 
@@ -174,7 +174,7 @@ test('admin users can open edit page and update a country with regenerated uniqu
             'best_time_to_go' => 'December to February',
             'high_season' => 'June to August',
             'electrical' => '240V, Type G plugs',
-            'tourist_info' => 'https://www.visituganda.com',
+            'tourism_link' => 'https://www.visituganda.com',
         ]);
 
     $response->assertRedirect(route('admin.destinations.countries'));
@@ -189,7 +189,7 @@ test('admin users can open edit page and update a country with regenerated uniqu
         'best_time_to_go' => 'December to February',
         'high_season' => 'June to August',
         'electrical' => '240V, Type G plugs',
-        'tourist_info' => 'https://www.visituganda.com',
+        'tourism_link' => 'https://www.visituganda.com',
     ]);
 });
 

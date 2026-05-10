@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\TourCategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name'])]
+#[Fillable(['name', 'description', 'image'])]
 class TourCategory extends Model
 {
-    /** @use HasFactory<\Database\Factories\TourCategoryFactory> */
+    /** @use HasFactory<TourCategoryFactory> */
     use HasFactory;
 
     public function tours(): BelongsToMany
