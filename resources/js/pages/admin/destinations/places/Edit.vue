@@ -17,6 +17,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Editor } from '@/components/ui/editor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -24,22 +25,20 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type CountryOption = {
     id: number;
     name: string;
-    flag_svg: string | null;
-    flag_png: string | null;
+    country_code: string | null;
 };
 
 type Place = {
     id: number;
     country_id: number;
     name: string;
-    slug: string;
     overview: string | null;
     main_image: string | null;
 };
@@ -111,7 +110,11 @@ function submit(): void {
             />
 
             <div class="flex gap-2">
-                <Button as-child variant="outline">
+                <Button
+                    as-child
+                    variant="outline"
+                    :disabled="form.processing"
+                >
                     <Link :href="placesIndex()">Cancel</Link>
                 </Button>
                 <Button
@@ -119,7 +122,8 @@ function submit(): void {
                     :disabled="form.processing"
                     @click="submit"
                 >
-                    Save
+                    <Spinner v-if="form.processing" class="size-4" />
+                    Save changes
                 </Button>
             </div>
         </div>
@@ -154,15 +158,8 @@ function submit(): void {
                                         class="flex items-center gap-2"
                                     >
                                         <img
-                                            v-if="
-                                                selectedCountry.flag_svg ||
-                                                selectedCountry.flag_png
-                                            "
-                                            :src="
-                                                selectedCountry.flag_svg ??
-                                                selectedCountry.flag_png ??
-                                                undefined
-                                            "
+                                            v-if="selectedCountry.country_code"
+                                            :src="`https://flagcdn.com/w40/${selectedCountry.country_code}.png`"
                                             :alt="`${selectedCountry.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
@@ -180,16 +177,9 @@ function submit(): void {
                                     >
                                         <div class="flex items-center gap-2">
                                             <img
-                                                v-if="
-                                                    country.flag_svg ||
-                                                    country.flag_png
-                                                "
-                                                :src="
-                                                    country.flag_svg ??
-                                                    country.flag_png ??
-                                                    undefined
-                                                "
-                                                :alt="`${country.name} flag`"
+                                                v-if="country.country_code"
+                                                 :src="`https://flagcdn.com/w40/${country.country_code}.png`"
+                                                 :alt="`${country.name} flag`"
                                                 class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                             />
                                             <span>{{ country.name }}</span>
@@ -202,21 +192,11 @@ function submit(): void {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="slug">Current slug</Label>
-                        <Input
-                            id="slug"
-                            :model-value="props.place.slug"
-                            disabled
-                        />
-                    </div>
-
-                    <div class="grid gap-2">
                         <Label for="overview">Overview</Label>
-                        <textarea
-                            id="overview"
+                        <Editor
                             v-model="form.overview"
-                            class="flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                            placeholder="Short place overview"
+                            :error="!!form.errors.overview"
+                            placeholder="General overview of the place..."
                         />
                         <InputError :message="form.errors.overview" />
                     </div>

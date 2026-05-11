@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -20,6 +20,7 @@ import {
     store as storeTourActivity,
     update as updateTourActivity,
 } from '@/actions/App/Http/Controllers/Admin/TourActivityController';
+import { edit as editTour } from '@/actions/App/Http/Controllers/Admin/TourController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import {
@@ -73,6 +74,7 @@ type AdminActivity = {
     name: string;
     description: string | null;
     image_url: string | null;
+    tours: { id: number; name: string; main_image: string | null }[];
     created_at: string | null;
     created_at_display: string;
 };
@@ -93,6 +95,8 @@ const editingActivityId = ref<number | null>(null);
 const deletingActivityId = ref<number | null>(null);
 const isDeleteDialogOpen = ref(false);
 const activityPendingDeletion = ref<AdminActivity | null>(null);
+const isRelatedToursDialogOpen = ref(false);
+const activityForRelatedTours = ref<AdminActivity | null>(null);
 const imagePreview = ref<string | null>(null);
 
 const activityForm = useForm<{
@@ -152,6 +156,16 @@ function openEditModal(activity: AdminActivity): void {
     isModalOpen.value = true;
 }
 
+function openRelatedToursDialog(activity: AdminActivity): void {
+    activityForRelatedTours.value = activity;
+    isRelatedToursDialogOpen.value = true;
+}
+
+function closeRelatedToursDialog(): void {
+    isRelatedToursDialogOpen.value = false;
+    activityForRelatedTours.value = null;
+}
+
 function submitActivityForm(): void {
     if (editingActivityId.value === null) {
         activityForm.post(storeTourActivity.url(), {
@@ -163,7 +177,7 @@ function submitActivityForm(): void {
             },
         });
     } else {
-        activityForm.post(
+        activityForm.patch(
             updateTourActivity.url({ activity: editingActivityId.value }),
             {
                 preserveScroll: true,
@@ -285,6 +299,30 @@ const columns: ColumnDef<AdminActivity>[] = [
             ),
     },
 
+    {
+        id: 'associated_tours',
+        header: 'Associated Tours',
+        enableSorting: false,
+        cell: ({ row }) => {
+            const tourCount = row.original.tours.length;
+
+            if (tourCount === 0) {
+                return h('span', { class: 'text-muted-foreground text-xs' }, '—');
+            }
+
+            return h(
+                Button,
+                {
+                    variant: 'ghost',
+                    class: 'h-8 cursor-pointer px-2 text-sm font-normal text-muted-foreground hover:text-foreground',
+                    onClick: () => openRelatedToursDialog(row.original),
+                },
+                {
+                    default: () => `${tourCount} tour${tourCount === 1 ? '' : 's'}`,
+                },
+            );
+        },
+    },
     {
         accessorKey: 'created_at',
         header: ({ column }) =>
@@ -428,6 +466,71 @@ const filteredRowCount = computed(
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog
+            :open="isRelatedToursDialogOpen"
+            @update:open="closeRelatedToursDialog"
+        >
+            <DialogContent class="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>
+                        <template v-if="activityForRelatedTours">
+                            {{ activityForRelatedTours.name }} — Associated Tours
+                        </template>
+                    </DialogTitle>
+                    <DialogDescription>
+                        Tours linked to this activity.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-2">
+                    <template v-if="activityForRelatedTours">
+                        <div
+                            v-if="activityForRelatedTours.tours.length === 0"
+                            class="py-4 text-center text-sm text-muted-foreground"
+                        >
+                            No tours associated with this activity.
+                        </div>
+                        <table v-else class="min-w-full text-sm">
+                            <tbody class="divide-y divide-border">
+                                <tr
+                                    v-for="tour in activityForRelatedTours.tours"
+                                    :key="tour.id"
+                                    class="group"
+                                >
+                                    <td class="py-2 pr-3">
+                                        <Link :href="editTour({ tour: tour.id })">
+                                            <img
+                                                v-if="tour.main_image"
+                                                :src="tour.main_image"
+                                                :alt="tour.name"
+                                                class="h-10 w-14 rounded-md border border-border bg-muted object-cover"
+                                                loading="lazy"
+                                            />
+                                            <div
+                                                v-else
+                                                class="flex h-10 w-14 items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                                            >
+                                                No image
+                                            </div>
+                                        </Link>
+                                    </td>
+                                    <td class="py-2">
+                                        <Link
+                                            :href="editTour({ tour: tour.id })"
+                                            class="font-medium text-foreground hover:underline"
+                                        >
+                                            {{ tour.name }}
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </template>
+                </div>
+
+            </DialogContent>
+        </Dialog>
 
         <Dialog :open="isModalOpen" @update:open="closeModal">
             <DialogContent class="max-w-lg">

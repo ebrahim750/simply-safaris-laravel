@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Plus, Trash2, UploadCloudIcon, X } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
     create as createTour,
     store as storeTour,
@@ -39,6 +39,7 @@ type TourOption = {
 type PlaceOption = TourOption & {
     country_id: number;
     country_name: string;
+    country_code: string | null;
 };
 
 type ItineraryItemForm = {
@@ -98,6 +99,36 @@ const mainImagePreview = ref<string | null>(null);
 const galleryImagePreviews = ref<string[]>([]);
 const draggedGalleryIndex = ref<number | null>(null);
 const pricingDialogOpen = ref(false);
+
+const placesByCountry = computed(() => {
+    const grouped = new Map<
+        number,
+        {
+            country_id: number;
+            country_name: string;
+            country_code: string | null;
+            places: PlaceOption[];
+        }
+    >();
+
+    for (const place of props.places) {
+        const existing = grouped.get(place.country_id);
+        if (existing) {
+            existing.places.push(place);
+        } else {
+            grouped.set(place.country_id, {
+                country_id: place.country_id,
+                country_name: place.country_name,
+                country_code: place.country_code,
+                places: [place],
+            });
+        }
+    }
+
+    return Array.from(grouped.values()).sort((a, b) =>
+        a.country_name.localeCompare(b.country_name),
+    );
+});
 
 function textAreaClass(errorKey?: string): string {
     return cn(
@@ -849,35 +880,49 @@ function submit(): void {
                             >
                         </CardHeader>
                         <CardContent class="space-y-3">
-                            <div v-if="props.places.length" class="space-y-2">
-                                <label
-                                    v-for="place in props.places"
-                                    :key="place.id"
-                                    class="flex items-start gap-3 rounded-md border border-border p-3"
+                            <div v-if="placesByCountry.length" class="space-y-4">
+                                <div
+                                    v-for="group in placesByCountry"
+                                    :key="group.country_id"
+                                    class="space-y-2"
                                 >
-                                    <Checkbox
-                                        :model-value="
-                                            form.place_ids.includes(place.id)
-                                        "
-                                        @update:model-value="
-                                            toggleSelection(
-                                                'place_ids',
-                                                place.id,
-                                                $event,
-                                            )
-                                        "
-                                    />
-                                    <div class="space-y-1">
-                                        <p class="text-sm font-medium">
-                                            {{ place.name }}
-                                        </p>
+                                    <div class="flex items-center gap-2">
+                                        <img
+                                            v-if="group.country_code"
+                                            :src="`https://flagcdn.com/w40/${group.country_code}.png`"
+                                            :alt="`${group.country_name} flag`"
+                                            class="h-4 w-6 rounded-[2px] border border-border object-cover"
+                                        />
                                         <p
-                                            class="text-xs tracking-wide text-muted-foreground uppercase"
+                                            class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
                                         >
-                                            {{ place.country_name }}
+                                            {{ group.country_name }}
                                         </p>
                                     </div>
-                                </label>
+                                    <label
+                                        v-for="place in group.places"
+                                        :key="place.id"
+                                        class="flex items-start gap-3 rounded-md border border-border p-3"
+                                    >
+                                        <Checkbox
+                                            :model-value="
+                                                form.place_ids.includes(place.id)
+                                            "
+                                            @update:model-value="
+                                                toggleSelection(
+                                                    'place_ids',
+                                                    place.id,
+                                                    $event,
+                                                )
+                                            "
+                                        />
+                                        <div class="space-y-1">
+                                            <p class="text-sm font-medium">
+                                                {{ place.name }}
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">
                                 No places are available yet.

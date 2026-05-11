@@ -4,7 +4,6 @@ import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
 import 'vue3-colorpicker/style.css';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -55,9 +54,6 @@ defineOptions({
         ],
     },
 });
-
-const page = usePage();
-const status = computed(() => page.props.flash.status);
 
 const form = useForm({
     primary_color: props.siteSettings.primary_color ?? '',
@@ -111,11 +107,6 @@ function isActive(href: string): boolean {
                 {{ tab.label }}
             </Link>
         </div>
-
-        <Alert v-if="status">
-            <AlertTitle>Settings saved</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
 
         <Card class="max-w-4xl">
             <CardHeader>

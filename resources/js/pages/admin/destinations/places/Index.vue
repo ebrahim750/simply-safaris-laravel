@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -23,7 +23,6 @@ import {
     index as placesIndex,
 } from '@/actions/App/Http/Controllers/Admin/DestinationPlaceController';
 import Heading from '@/components/Heading.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -38,12 +37,18 @@ type AdminPlace = {
     id: number;
     country_id: number;
     country_name: string;
+    country_code: string | null;
     name: string;
     slug: string;
     main_image: string | null;
     created_at: string | null;
     created_at_display: string;
 };
+
+function flagImage(countryCode: string | null): string | null {
+    if (!countryCode) return null;
+    return `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+}
 
 const props = defineProps<{
     places: AdminPlace[];
@@ -64,8 +69,6 @@ defineOptions({
     },
 });
 
-const page = usePage();
-const status = computed(() => page.props.flash.status as string | undefined);
 const sorting = ref<SortingState>([
     {
         id: 'created_at',
@@ -123,18 +126,17 @@ const columns: ColumnDef<AdminPlace>[] = [
                     ],
                 },
             ),
-    },
-    {
-        accessorKey: 'main_image',
-        header: 'Image',
         cell: ({ row }) =>
-            row.original.main_image
-                ? h('img', {
-                      src: row.original.main_image,
-                      alt: row.original.name,
-                      class: 'h-10 w-10 rounded-md object-cover',
-                  })
-                : h('div', { class: 'h-10 w-10 rounded-md bg-muted' }),
+            h('div', { class: 'flex items-center gap-3' }, [
+                row.original.main_image
+                    ? h('img', {
+                          src: row.original.main_image,
+                          alt: row.original.name,
+                          class: 'h-10 w-10 rounded-md object-cover',
+                      })
+                    : h('div', { class: 'h-10 w-10 rounded-md bg-muted' }),
+                h('span', row.original.name),
+            ]),
     },
     {
         accessorKey: 'country_name',
@@ -142,18 +144,17 @@ const columns: ColumnDef<AdminPlace>[] = [
         cell: ({ row }) =>
             h(
                 'div',
-                { class: 'text-muted-foreground' },
-                row.original.country_name,
-            ),
-    },
-    {
-        accessorKey: 'slug',
-        header: 'Slug',
-        cell: ({ row }) =>
-            h(
-                'span',
-                { class: 'font-mono text-xs text-muted-foreground' },
-                row.original.slug,
+                { class: 'flex items-center gap-2 text-muted-foreground' },
+                [
+                    row.original.country_code
+                        ? h('img', {
+                              src: flagImage(row.original.country_code),
+                              alt: `${row.original.country_name} flag`,
+                              class: 'h-5 w-7 rounded-[2px] border border-border object-cover',
+                          })
+                        : null,
+                    h('span', row.original.country_name),
+                ],
             ),
     },
     {
@@ -251,11 +252,6 @@ const filteredRowCount = computed(
             description="Manage destination places grouped under countries."
         />
 
-        <Alert v-if="status">
-            <AlertTitle>Places updated</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
-
         <Card>
             <CardHeader>
                 <div
@@ -283,7 +279,7 @@ const filteredRowCount = computed(
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
-                        placeholder="Search places by name, slug, or country..."
+                        placeholder="Search places by name or country..."
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">

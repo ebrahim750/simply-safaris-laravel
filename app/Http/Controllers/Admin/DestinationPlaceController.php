@@ -20,13 +20,14 @@ class DestinationPlaceController extends Controller
     {
         return Inertia::render('admin/destinations/places/Index', [
             'places' => Place::query()
-                ->with('country:id,name')
+                ->with('country:id,name,country_code')
                 ->latest('id')
                 ->get(['id', 'country_id', 'name', 'slug', 'main_image', 'created_at'])
                 ->map(fn (Place $place): array => [
                     'id' => $place->id,
                     'country_id' => $place->country_id,
                     'country_name' => $place->country?->name ?? 'N/A',
+                    'country_code' => $place->country?->country_code ?? null,
                     'name' => $place->name,
                     'slug' => $place->slug,
                     'main_image' => $this->resolveImageUrl($place->main_image),
@@ -41,12 +42,11 @@ class DestinationPlaceController extends Controller
         return Inertia::render('admin/destinations/places/Create', [
             'countries' => Country::query()
                 ->orderBy('name')
-                ->get(['id', 'name', 'flag_svg', 'flag_png'])
+                ->get(['id', 'name', 'country_code'])
                 ->map(fn (Country $country): array => [
                     'id' => $country->id,
                     'name' => $country->name,
-                    'flag_svg' => $country->flag_svg,
-                    'flag_png' => $country->flag_png,
+                    'country_code' => $country->country_code,
                 ]),
         ]);
     }
@@ -79,18 +79,16 @@ class DestinationPlaceController extends Controller
                 'id' => $place->id,
                 'country_id' => $place->country_id,
                 'name' => $place->name,
-                'slug' => $place->slug,
                 'overview' => $place->overview,
                 'main_image' => $this->resolveImageUrl($place->main_image),
             ],
             'countries' => Country::query()
                 ->orderBy('name')
-                ->get(['id', 'name', 'flag_svg', 'flag_png'])
+                ->get(['id', 'name', 'country_code'])
                 ->map(fn (Country $country): array => [
                     'id' => $country->id,
                     'name' => $country->name,
-                    'flag_svg' => $country->flag_svg,
-                    'flag_png' => $country->flag_png,
+                    'country_code' => $country->country_code,
                 ]),
         ]);
     }

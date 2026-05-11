@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import ProdTestController from '@/actions/App/Http/Controllers/RootAccess/ProdTestController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -37,10 +36,8 @@ defineOptions({
     },
 });
 
-const page = usePage();
 const activeTab = ref<'email-test'>('email-test');
 const receiverEmail = ref(props.defaultReceiverEmail);
-const status = computed(() => page.props.flash.status);
 </script>
 
 <template>
@@ -67,11 +64,6 @@ const status = computed(() => page.props.flash.status);
                 Email test
             </button>
         </div>
-
-        <Alert v-if="status">
-            <AlertTitle>Email queued</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
 
         <Card v-if="activeTab === 'email-test'" class="max-w-2xl">
             <CardHeader>

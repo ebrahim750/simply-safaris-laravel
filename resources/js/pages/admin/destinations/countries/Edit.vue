@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { UploadCloudIcon } from 'lucide-vue-next';
+import { Globe, UploadCloudIcon } from 'lucide-vue-next';
 import { ref } from 'vue';
 import {
     index as countriesIndex,
@@ -19,12 +19,13 @@ import {
 import { Editor } from '@/components/ui/editor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type Country = {
     id: number;
     name: string;
-    slug: string;
+    country_code: string | null;
     overview: string | null;
     main_image: string | null;
     best_time_to_go: string | null;
@@ -52,7 +53,6 @@ defineOptions({
 });
 
 const form = useForm({
-    name: props.country.name,
     overview: props.country.overview ?? '',
     main_image: null as File | null,
     best_time_to_go: props.country.best_time_to_go ?? '',
@@ -85,7 +85,7 @@ function handleMainImageChange(event: Event): void {
 }
 
 function submit(): void {
-    form.post(updateCountry.url({ country: props.country.id }), {
+    form.patch(updateCountry.url({ country: props.country.id }), {
         preserveScroll: true,
         forceFormData: true,
     });
@@ -105,7 +105,11 @@ function submit(): void {
             />
 
             <div class="flex gap-2">
-                <Button as-child variant="outline">
+                <Button
+                    as-child
+                    variant="outline"
+                    :disabled="form.processing"
+                >
                     <Link :href="countriesIndex()">Cancel</Link>
                 </Button>
                 <Button
@@ -113,6 +117,10 @@ function submit(): void {
                     :disabled="form.processing"
                     @click="submit"
                 >
+                    <Spinner
+                        v-if="form.processing"
+                        class="size-4"
+                    />
                     Save changes
                 </Button>
             </div>
@@ -123,28 +131,18 @@ function submit(): void {
                 <CardHeader>
                     <CardTitle>Country details</CardTitle>
                     <CardDescription>
-                        Slug is auto-generated from the country name.
+                        Update the country information below.
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
-                    <div class="grid gap-2">
-                        <Label for="name">Name</Label>
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            placeholder="Kenya"
-                            required
+                    <div class="flex items-center gap-3">
+                        <img
+                            v-if="props.country.country_code"
+                            :src="`https://flagcdn.com/w40/${props.country.country_code}.png`"
+                            :alt="`${props.country.name} flag`"
+                            class="h-7 w-10 rounded-[3px] border border-border object-cover"
                         />
-                        <InputError :message="form.errors.name" />
-                    </div>
-
-                    <div class="grid gap-2">
-                        <Label for="slug">Current slug</Label>
-                        <Input
-                            id="slug"
-                            :model-value="props.country.slug"
-                            disabled
-                        />
+                        <span class="text-lg font-semibold">{{ props.country.name }}</span>
                     </div>
 
                     <div class="grid gap-2">
@@ -196,11 +194,15 @@ function submit(): void {
                     <div class="grid gap-6 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="tourism_link">Tourism link</Label>
-                            <Input
-                                id="tourism_link"
-                                v-model="form.tourism_link"
-                                placeholder="Official tourism website..."
-                            />
+                            <div class="relative">
+                                <Globe class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    id="tourism_link"
+                                    v-model="form.tourism_link"
+                                    placeholder="Official tourism website..."
+                                    class="pl-9"
+                                />
+                            </div>
                             <InputError :message="form.errors.tourism_link" />
                         </div>
                     </div>
@@ -258,16 +260,6 @@ function submit(): void {
                 </CardContent>
             </Card>
 
-            <div
-                class="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-end"
-            >
-                <Button as-child type="button" variant="outline">
-                    <Link :href="countriesIndex()">Cancel</Link>
-                </Button>
-                <Button type="submit" :disabled="form.processing">
-                    Save changes
-                </Button>
-            </div>
         </form>
     </div>
 </template>

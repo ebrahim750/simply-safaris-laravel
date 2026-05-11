@@ -9,6 +9,7 @@ use App\Models\TourActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,12 +20,22 @@ class TourActivityController extends Controller
         return Inertia::render('admin/tours/Activities', [
             'activities' => TourActivity::query()
                 ->latest('id')
+                ->with('tours:id,name,main_image')
                 ->get()
                 ->map(fn (TourActivity $activity): array => [
                     'id' => $activity->id,
                     'name' => $activity->name,
                     'description' => $activity->description,
                     'image_url' => $activity->image ? Storage::disk('public')->url($activity->image) : null,
+                    'tours' => $activity->tours->map(fn ($tour) => [
+                        'id' => $tour->id,
+                        'name' => $tour->name,
+                        'main_image' => blank($tour->main_image)
+                            ? null
+                            : (Str::startsWith($tour->main_image, ['http://', 'https://', '/'])
+                                ? $tour->main_image
+                                : Storage::disk('public')->url($tour->main_image)),
+                    ])->all(),
                     'created_at' => $activity->created_at?->toIso8601String(),
                     'created_at_display' => $activity->created_at?->format('M j, Y g:i A') ?? 'N/A',
                 ]),

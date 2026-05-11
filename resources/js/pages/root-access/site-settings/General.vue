@@ -3,7 +3,6 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -59,9 +58,6 @@ defineOptions({
     },
 });
 
-const page = usePage();
-const status = computed(() => page.props.flash.status);
-
 const form = useForm({
     site_name: props.siteSettings.site_name,
     site_tagline: props.siteSettings.site_tagline ?? '',
@@ -114,11 +110,6 @@ function isActive(href: string): boolean {
                 {{ tab.label }}
             </Link>
         </div>
-
-        <Alert v-if="status">
-            <AlertTitle>Settings saved</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
 
         <Card class="max-w-4xl">
             <CardHeader>

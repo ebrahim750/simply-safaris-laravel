@@ -18,6 +18,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Editor } from '@/components/ui/editor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -25,15 +26,14 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type CountryOption = {
     id: number;
     name: string;
-    flag_svg: string | null;
-    flag_png: string | null;
+    country_code: string | null;
 };
 
 const props = defineProps<{
@@ -112,10 +112,11 @@ function submit(): void {
                 </Button>
                 <Button
                     type="button"
-                    :disabled="form.processing"
+                    :disabled="form.processing || !form.name || !form.country_id"
                     @click="submit"
                 >
-                    Save
+                    <Spinner v-if="form.processing" class="size-4" />
+                    Add place
                 </Button>
             </div>
         </div>
@@ -123,9 +124,7 @@ function submit(): void {
         <Card>
             <CardHeader>
                 <CardTitle>Place details</CardTitle>
-                <CardDescription>
-                    Place slug is generated automatically from the name.
-                </CardDescription>
+
             </CardHeader>
             <CardContent>
                 <form class="space-y-6" @submit.prevent="submit">
@@ -150,15 +149,8 @@ function submit(): void {
                                         class="flex items-center gap-2"
                                     >
                                         <img
-                                            v-if="
-                                                selectedCountry.flag_svg ||
-                                                selectedCountry.flag_png
-                                            "
-                                            :src="
-                                                selectedCountry.flag_svg ??
-                                                selectedCountry.flag_png ??
-                                                undefined
-                                            "
+                                            v-if="selectedCountry.country_code"
+                                            :src="`https://flagcdn.com/w40/${selectedCountry.country_code}.png`"
                                             :alt="`${selectedCountry.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
@@ -176,15 +168,8 @@ function submit(): void {
                                     >
                                         <div class="flex items-center gap-2">
                                             <img
-                                                v-if="
-                                                    country.flag_svg ||
-                                                    country.flag_png
-                                                "
-                                                :src="
-                                                    country.flag_svg ??
-                                                    country.flag_png ??
-                                                    undefined
-                                                "
+                                                v-if="country.country_code"
+                                                :src="`https://flagcdn.com/w40/${country.country_code}.png`"
                                                 :alt="`${country.name} flag`"
                                                 class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                             />
@@ -199,11 +184,10 @@ function submit(): void {
 
                     <div class="grid gap-2">
                         <Label for="overview">Overview</Label>
-                        <textarea
-                            id="overview"
+                        <Editor
                             v-model="form.overview"
-                            class="flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                            placeholder="Short place overview"
+                            :error="!!form.errors.overview"
+                            placeholder="General overview of the place..."
                         />
                         <InputError :message="form.errors.overview" />
                     </div>

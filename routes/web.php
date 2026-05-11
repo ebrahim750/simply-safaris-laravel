@@ -29,6 +29,8 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::get('admin/tours', [TourController::class, 'index'])->name('admin.tours');
         Route::get('admin/tours/create', [TourController::class, 'create'])->name('admin.tours.create');
         Route::post('admin/tours', [TourController::class, 'store'])->name('admin.tours.store');
+        Route::get('admin/tours/{tour}/edit', [TourController::class, 'edit'])->name('admin.tours.edit');
+        Route::patch('admin/tours/{tour}', [TourController::class, 'update'])->name('admin.tours.update');
         Route::patch('admin/tours/{tour}/hidden', [TourController::class, 'toggleHidden'])->name('admin.tours.hidden.toggle');
         Route::delete('admin/tours/{tour}', [TourController::class, 'destroy'])->name('admin.tours.destroy');
         Route::get('admin/tours/categories', [TourCategoryController::class, 'index'])->name('admin.tours.categories');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -25,10 +25,11 @@ import { computed, defineComponent, h, ref } from 'vue';
 import {
     create as createTour,
     destroy as destroyTour,
+    edit as editTour,
     toggleHidden as toggleTourHidden,
 } from '@/actions/App/Http/Controllers/Admin/TourController';
 import Heading from '@/components/Heading.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -77,6 +78,8 @@ type AdminTour = {
     is_hidden: boolean;
     is_featured_on_home: boolean;
     is_featured_as_seasonal_recommendation: boolean;
+    categories: { id: number; name: string }[];
+    activities: { id: number; name: string }[];
     created_at: string | null;
     created_at_display: string;
 };
@@ -84,9 +87,6 @@ type AdminTour = {
 const props = defineProps<{
     tours: AdminTour[];
 }>();
-const page = usePage();
-const status = computed(() => page.props.flash.status as string | undefined);
-
 const sorting = ref<SortingState>([
     {
         id: 'created_at',
@@ -211,16 +211,6 @@ const TourImageThumbnail = defineComponent({
 
 const columns: ColumnDef<AdminTour>[] = [
     {
-        id: 'main_image',
-        header: 'Main image',
-        enableSorting: false,
-        cell: ({ row }) =>
-            h(TourImageThumbnail, {
-                imageUrl: row.original.main_image,
-                name: row.original.name,
-            }),
-    },
-    {
         accessorKey: 'name',
         header: ({ column }) =>
             h(
@@ -239,24 +229,30 @@ const columns: ColumnDef<AdminTour>[] = [
                 },
             ),
         cell: ({ row }) =>
-            h('div', { class: 'flex flex-col items-start gap-1' }, [
-                h(
-                    'span',
-                    { class: 'font-medium text-foreground' },
-                    row.original.name,
-                ),
-                row.original.is_hidden
-                    ? h(
-                          Badge,
-                          {
-                              variant: 'outline',
-                              class: 'border-orange-200/80 bg-orange-50 px-1.5 py-0 text-[10px] text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300',
-                          },
-                          {
-                              default: () => 'Hidden',
-                          },
-                      )
-                    : null,
+            h('div', { class: 'flex items-center gap-3' }, [
+                h(TourImageThumbnail, {
+                    imageUrl: row.original.main_image,
+                    name: row.original.name,
+                }),
+                h('div', { class: 'flex flex-col items-start gap-1' }, [
+                    h(
+                        'span',
+                        { class: 'font-medium text-foreground' },
+                        row.original.name,
+                    ),
+                    row.original.is_hidden
+                        ? h(
+                              Badge,
+                              {
+                                  variant: 'outline',
+                                  class: 'border-orange-200/80 bg-orange-50 px-1.5 py-0 text-[10px] text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300',
+                              },
+                              {
+                                  default: () => 'Hidden',
+                              },
+                          )
+                        : null,
+                ]),
             ]),
     },
     {
@@ -282,21 +278,64 @@ const columns: ColumnDef<AdminTour>[] = [
             h('div', { class: 'text-muted-foreground' }, row.original.price),
     },
     {
-        accessorKey: 'is_featured_on_home',
-        header: 'Featured on Home',
+        id: 'featuring',
+        header: 'Featuring',
+        enableSorting: false,
+        cell: ({ row }) => {
+            const badges = [];
+
+            if (row.original.is_featured_on_home) {
+                badges.push(
+                    h(Badge, { variant: 'default' }, { default: () => 'Home Page' }),
+                );
+            }
+
+            if (row.original.is_featured_as_seasonal_recommendation) {
+                badges.push(
+                    h(Badge, { variant: 'secondary' }, { default: () => 'Seasonal' }),
+                );
+            }
+
+            return h('div', { class: 'flex flex-wrap gap-1.5' }, [
+                badges.length === 0
+                    ? h('span', { class: 'text-muted-foreground text-xs' }, '—')
+                    : badges,
+            ]);
+        },
+    },
+    {
+        id: 'categories',
+        header: 'Categories',
+        enableSorting: false,
         cell: ({ row }) =>
-            h(
-                Badge,
-                {
-                    variant: row.original.is_featured_on_home
-                        ? 'default'
-                        : 'secondary',
-                },
-                {
-                    default: () =>
-                        row.original.is_featured_on_home ? 'Yes' : 'No',
-                },
-            ),
+            h('div', { class: 'flex flex-wrap gap-1.5' }, [
+                row.original.categories.length === 0
+                    ? h('span', { class: 'text-muted-foreground text-xs' }, '—')
+                    : row.original.categories.map((category) =>
+                          h(
+                              Badge,
+                              { variant: 'outline' },
+                              { default: () => category.name },
+                          ),
+                      ),
+            ]),
+    },
+    {
+        id: 'activities',
+        header: 'Activities',
+        enableSorting: false,
+        cell: ({ row }) =>
+            h('div', { class: 'flex flex-wrap gap-1.5' }, [
+                row.original.activities.length === 0
+                    ? h('span', { class: 'text-muted-foreground text-xs' }, '—')
+                    : row.original.activities.map((activity) =>
+                          h(
+                              Badge,
+                              { variant: 'outline' },
+                              { default: () => activity.name },
+                          ),
+                      ),
+            ]),
     },
     {
         accessorKey: 'created_at',
@@ -344,23 +383,33 @@ const columns: ColumnDef<AdminTour>[] = [
                                             { asChild: true },
                                             {
                                                 default: () =>
-                                                    h(
-                                                        Button,
-                                                        {
-                                                            variant: 'outline',
-                                                            size: 'icon',
-                                                            class: 'size-8 cursor-pointer text-muted-foreground',
-                                                            type: 'button',
-                                                            'aria-label':
-                                                                'Edit tour',
-                                                        },
-                                                        {
-                                                            default: () =>
-                                                                h(Pencil, {
-                                                                    class: 'size-4',
-                                                                }),
-                                                        },
-                                                    ),
+                                                        h(
+                                                            Link,
+                                                            {
+                                                                href: editTour.url({ tour: row.original.id }),
+                                                                asChild: true,
+                                                            },
+                                                            {
+                                                                default: () =>
+                                                                    h(
+                                                                        Button,
+                                                                        {
+                                                                            variant: 'outline',
+                                                                            size: 'icon',
+                                                                            class: 'size-8 cursor-pointer text-muted-foreground',
+                                                                            type: 'button',
+                                                                            'aria-label':
+                                                                                'Edit tour',
+                                                                        },
+                                                                        {
+                                                                            default: () =>
+                                                                                h(Pencil, {
+                                                                                    class: 'size-4',
+                                                                                }),
+                                                                        },
+                                                                    ),
+                                                            },
+                                                        ),
                                             },
                                         ),
                                         h(
@@ -564,11 +613,6 @@ const filteredRowCount = computed(
             title="Tours"
             description="Manage tours available for booking."
         />
-
-        <Alert v-if="status">
-            <AlertTitle>Tours updated</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
 
         <Card>
             <CardHeader>

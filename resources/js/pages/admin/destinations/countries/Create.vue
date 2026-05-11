@@ -27,6 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 type CountryOption = {
@@ -146,6 +147,7 @@ function submit(): void {
                     :disabled="form.processing || !form.name"
                     @click="submit"
                 >
+                    <Spinner v-if="form.processing" class="size-4" />
                     Add country
                 </Button>
             </div>

@@ -226,4 +226,9 @@ Vue components must have a single root element.
 - Never run `npm run build` or `npm run dev` automatically. The Vite dev server is already running separately. Running build commands will interfere with the active development session and trigger unnecessary full rebuilds.
 - If frontend changes aren't reflecting, ask the user to check their dev server instead of running build commands.
 
+# Git
+
+- Under no circumstance are you to execute any git commands.
+- If you absolutely have to run some git commands, ask the user first
+
 </custom-ebrahim-development-guidelines>

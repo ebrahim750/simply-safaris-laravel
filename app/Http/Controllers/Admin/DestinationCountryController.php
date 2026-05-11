@@ -38,8 +38,14 @@ class DestinationCountryController extends Controller
 
     public function create(): Response
     {
+        $existingNames = Country::query()->pluck('name')->map(fn (string $name): string => Str::lower($name))->all();
+
+        $catalog = $this->getCountryCatalog()
+            ->reject(fn (array $country): bool => in_array(Str::lower($country['name']), $existingNames, true))
+            ->values();
+
         return Inertia::render('admin/destinations/countries/Create', [
-            'country_options' => $this->getCountryCatalog(),
+            'country_options' => $catalog,
         ]);
     }
 
@@ -74,7 +80,7 @@ class DestinationCountryController extends Controller
             'country' => [
                 'id' => $country->id,
                 'name' => $country->name,
-                'slug' => $country->slug,
+                'country_code' => $country->country_code,
                 'overview' => $country->overview,
                 'main_image' => $this->resolveImageUrl($country->main_image),
                 'best_time_to_go' => $country->best_time_to_go,
@@ -87,12 +93,8 @@ class DestinationCountryController extends Controller
     public function update(UpdateDestinationCountryRequest $request, Country $country): RedirectResponse
     {
         $validated = $request->validated();
-        $countryOption = $this->findCountryOptionByName($validated['name']);
 
         $country->update([
-            'name' => $validated['name'],
-            'slug' => $this->generateUniqueSlug($validated['name'], $country),
-            'country_code' => $countryOption['code'] ?? $country->country_code,
             'overview' => $validated['overview'] ?? null,
             'best_time_to_go' => $validated['best_time_to_go'] ?? null,
             'high_season' => $validated['high_season'] ?? null,

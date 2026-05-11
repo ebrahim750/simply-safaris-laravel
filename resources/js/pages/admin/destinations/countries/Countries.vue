@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import type {
     ColumnDef,
     FilterFn,
@@ -22,7 +22,16 @@ import {
     index as countriesIndex,
 } from '@/actions/App/Http/Controllers/Admin/DestinationCountryController';
 import Heading from '@/components/Heading.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -32,6 +41,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 
 type AdminCountry = {
     country_code: string | null;
@@ -61,8 +71,6 @@ defineOptions({
     },
 });
 
-const page = usePage();
-const status = computed(() => page.props.flash.status as string | undefined);
 const sorting = ref<SortingState>([
     {
         id: 'created_at',
@@ -70,6 +78,9 @@ const sorting = ref<SortingState>([
     },
 ]);
 const globalFilter = ref('');
+const isDeleteDialogOpen = ref(false);
+const deletingCountryId = ref<number | null>(null);
+const countryPendingDeletion = ref<AdminCountry | null>(null);
 
 const globalCountryFilter: FilterFn<AdminCountry> = (row, _, filterValue) => {
     const searchValue = String(filterValue).trim().toLowerCase();
@@ -92,14 +103,46 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
             : updaterOrValue;
 }
 
-function removeCountry(country: AdminCountry): void {
-    if (!window.confirm(`Delete ${country.name}?`)) {
+function openDeleteDialog(country: AdminCountry): void {
+    if (deletingCountryId.value !== null) {
         return;
     }
 
-    router.delete(destroyCountry.url({ country: country.id }), {
-        preserveScroll: true,
-    });
+    countryPendingDeletion.value = country;
+    isDeleteDialogOpen.value = true;
+}
+
+function handleDeleteDialogOpenChange(open: boolean): void {
+    isDeleteDialogOpen.value = open;
+}
+
+function cancelDeleteDialog(): void {
+    if (deletingCountryId.value !== null) {
+        return;
+    }
+
+    isDeleteDialogOpen.value = false;
+    countryPendingDeletion.value = null;
+}
+
+function deleteCountry(): void {
+    if (deletingCountryId.value !== null || countryPendingDeletion.value === null) {
+        return;
+    }
+
+    deletingCountryId.value = countryPendingDeletion.value.id;
+
+    router.delete(
+        destroyCountry.url({ country: countryPendingDeletion.value.id }),
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                deletingCountryId.value = null;
+                isDeleteDialogOpen.value = false;
+                countryPendingDeletion.value = null;
+            },
+        },
+    );
 }
 
 const columns: ColumnDef<AdminCountry>[] = [
@@ -116,21 +159,22 @@ const columns: ColumnDef<AdminCountry>[] = [
                 },
                 {
                     default: () => [
-                        'Name',
+                        'Country',
                         h(ArrowUpDown, { class: 'size-4' }),
                     ],
                 },
             ),
-    },
-    {
-        accessorKey: 'slug',
-        header: 'Slug',
         cell: ({ row }) =>
-            h(
-                'span',
-                { class: 'font-mono text-xs text-muted-foreground' },
-                row.original.slug,
-            ),
+            h('div', { class: 'flex items-center gap-3' }, [
+                row.original.country_code
+                    ? h('img', {
+                          src: `https://flagcdn.com/w40/${row.original.country_code}.png`,
+                          alt: `${row.original.name} flag`,
+                          class: 'h-5 w-7 rounded-[2px] border border-border object-cover',
+                      })
+                    : null,
+                h('span', row.original.name),
+            ]),
     },
     {
         accessorKey: 'created_at',
@@ -164,14 +208,26 @@ const columns: ColumnDef<AdminCountry>[] = [
         cell: ({ row }) =>
             h('div', { class: 'flex justify-end gap-2' }, [
                 h(
-                    Link,
+                    Button,
                     {
-                        href: editCountry({ country: row.original.id }),
-                        class: 'inline-flex size-8 items-center justify-center rounded-md border border-input bg-background text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground',
-                        'aria-label': `Edit ${row.original.name}`,
+                        variant: 'outline',
+                        size: 'icon',
+                        class: 'size-8 cursor-pointer',
+                        disabled: deletingCountryId.value !== null,
+                        asChild: true,
                     },
                     {
-                        default: () => h(Pencil, { class: 'size-4' }),
+                        default: () =>
+                            h(
+                                Link,
+                                {
+                                    href: editCountry({ country: row.original.id }),
+                                    'aria-label': `Edit ${row.original.name}`,
+                                },
+                                {
+                                    default: () => h(Pencil, { class: 'size-4' }),
+                                },
+                            ),
                     },
                 ),
                 h(
@@ -181,10 +237,14 @@ const columns: ColumnDef<AdminCountry>[] = [
                         size: 'icon',
                         class: 'size-8 cursor-pointer text-destructive hover:text-destructive',
                         type: 'button',
-                        onClick: () => removeCountry(row.original),
+                        disabled: deletingCountryId.value !== null,
+                        onClick: () => openDeleteDialog(row.original),
                     },
                     {
-                        default: () => h(Trash2, { class: 'size-4' }),
+                        default: () =>
+                            deletingCountryId.value === row.original.id
+                                ? h(Spinner, { class: 'size-4' })
+                                : h(Trash2, { class: 'size-4' }),
                     },
                 ),
             ]),
@@ -222,15 +282,54 @@ const filteredRowCount = computed(
     <Head title="Countries" />
 
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+        <AlertDialog
+            :open="isDeleteDialogOpen"
+            @update:open="handleDeleteDialogOpenChange"
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete country</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        <template v-if="countryPendingDeletion">
+                            Delete {{ countryPendingDeletion.name }}? This action
+                            cannot be undone.
+                        </template>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel as-child>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="cursor-pointer"
+                            :disabled="deletingCountryId !== null"
+                            @click="cancelDeleteDialog"
+                        >
+                            Cancel
+                        </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction as-child>
+                        <Button
+                            type="button"
+                            class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+                            :disabled="deletingCountryId !== null"
+                            @click="deleteCountry"
+                        >
+                            <Spinner
+                                v-if="deletingCountryId !== null"
+                                class="size-4"
+                            />
+                            Delete country
+                        </Button>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
         <Heading
             title="Countries"
             description="Manage destination countries used across the admin."
         />
-
-        <Alert v-if="status">
-            <AlertTitle>Countries updated</AlertTitle>
-            <AlertDescription>{{ status }}</AlertDescription>
-        </Alert>
 
         <Card>
             <CardHeader>
@@ -259,7 +358,7 @@ const filteredRowCount = computed(
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
-                        placeholder="Search countries by name or slug..."
+                        placeholder="Search countries by name..."
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
