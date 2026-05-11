@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'main_image',
     'best_time_to_go',
     'high_season',
-    'electrical',
     'tourism_link',
 ])]
 class Country extends Model

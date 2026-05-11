@@ -16,16 +16,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Editor } from '@/components/ui/editor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Editor } from '@/components/ui/editor';
 import { cn } from '@/lib/utils';
 
 type Country = {
@@ -36,7 +29,6 @@ type Country = {
     main_image: string | null;
     best_time_to_go: string | null;
     high_season: string | null;
-    electrical: string | null;
     tourism_link: string | null;
 };
 
@@ -65,19 +57,8 @@ const form = useForm({
     main_image: null as File | null,
     best_time_to_go: props.country.best_time_to_go ?? '',
     high_season: props.country.high_season ?? '',
-    electrical: props.country.electrical ?? '',
     tourism_link: props.country.tourism_link ?? '',
 });
-
-const electricalOptions = [
-    { value: '110-120V, Type A/B', label: '110-120V, Type A/B (US, Canada, Japan)' },
-    { value: '220-240V, Type C/E/F', label: '220-240V, Type C/E/F (Europe)' },
-    { value: '220-240V, Type G', label: '220-240V, Type G (UK, Ireland, UAE)' },
-    { value: '220-240V, Type D/M', label: '220-240V, Type D/M (India, South Africa)' },
-    { value: '220-240V, Type I', label: '220-240V, Type I (Australia, China, Argentina)' },
-    { value: '100V, Type A/B', label: '100V, Type A/B (Japan)' },
-    { value: 'Multiple standards', label: 'Multiple standards' },
-];
 
 const mainImagePreview = ref<string | null>(props.country.main_image);
 
@@ -212,31 +193,7 @@ function submit(): void {
                         </div>
                     </div>
 
-                    <div class="grid gap-6 md:grid-cols-3">
-                        <div class="grid gap-2">
-                            <Label for="electrical">Electrical</Label>
-                            <Select v-model="form.electrical">
-                                <SelectTrigger
-                                    id="electrical"
-                                    class="w-full"
-                                >
-                                    <SelectValue
-                                        placeholder="Select electrical standard"
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="option in electricalOptions"
-                                        :key="option.value"
-                                        :value="option.value"
-                                    >
-                                        {{ option.label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <InputError :message="form.errors.electrical" />
-                        </div>
-
+                    <div class="grid gap-6 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="tourism_link">Tourism link</Label>
                             <Input

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { UploadCloudIcon } from 'lucide-vue-next';
+import { Globe, UploadCloudIcon } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import {
     create as createCountry,
@@ -17,6 +17,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Editor } from '@/components/ui/editor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -26,7 +27,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Editor } from '@/components/ui/editor';
 import { cn } from '@/lib/utils';
 
 type CountryOption = {
@@ -62,19 +62,9 @@ const form = useForm({
     main_image: null as File | null,
     best_time_to_go: '',
     high_season: '',
-    electrical: '',
     tourism_link: '',
 });
 
-const electricalOptions = [
-    { value: '110-120V, Type A/B', label: '110-120V, Type A/B (US, Canada, Japan)' },
-    { value: '220-240V, Type C/E/F', label: '220-240V, Type C/E/F (Europe)' },
-    { value: '220-240V, Type G', label: '220-240V, Type G (UK, Ireland, UAE)' },
-    { value: '220-240V, Type D/M', label: '220-240V, Type D/M (India, South Africa)' },
-    { value: '220-240V, Type I', label: '220-240V, Type I (Australia, China, Argentina)' },
-    { value: '100V, Type A/B', label: '100V, Type A/B (Japan)' },
-    { value: 'Multiple standards', label: 'Multiple standards' },
-];
 const countrySearch = ref('');
 const mainImagePreview = ref<string | null>(null);
 
@@ -286,38 +276,18 @@ function submit(): void {
                         </div>
                     </div>
 
-                    <div class="grid gap-6 md:grid-cols-3">
-                        <div class="grid gap-2">
-                            <Label for="electrical">Electrical</Label>
-                            <Select v-model="form.electrical">
-                                <SelectTrigger
-                                    id="electrical"
-                                    class="w-full"
-                                >
-                                    <SelectValue
-                                        placeholder="Select electrical standard"
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="option in electricalOptions"
-                                        :key="option.value"
-                                        :value="option.value"
-                                    >
-                                        {{ option.label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <InputError :message="form.errors.electrical" />
-                        </div>
-
+                    <div class="grid gap-6 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="tourism_link">Tourism link</Label>
-                            <Input
-                                id="tourism_link"
-                                v-model="form.tourism_link"
-                                placeholder="Official tourism website..."
-                            />
+                            <div class="relative">
+                                <Globe class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    id="tourism_link"
+                                    v-model="form.tourism_link"
+                                    placeholder="Official tourism website..."
+                                    class="pl-9"
+                                />
+                            </div>
                             <InputError :message="form.errors.tourism_link" />
                         </div>
                     </div>
