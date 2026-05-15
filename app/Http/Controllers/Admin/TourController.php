@@ -29,7 +29,7 @@ class TourController extends Controller
         return Inertia::render('admin/tours/Tours', [
             'tours' => Tour::query()
                 ->latest('id')
-                ->with(['categories:id,name', 'activities:id,name'])
+                ->with(['categories:id,name', 'activities:id,name', 'places:id,name'])
                 ->get(['id', 'name', 'main_image', 'price', 'is_hidden', 'is_featured_on_home', 'is_featured_as_seasonal_recommendation', 'show_external_booking', 'created_at'])
                 ->map(fn (Tour $tour): array => $this->mapIndexTour($tour, $currency)),
         ]);
@@ -316,7 +316,7 @@ class TourController extends Controller
             'is_featured_as_seasonal_recommendation' => $tour->is_featured_as_seasonal_recommendation,
             'show_external_booking' => $tour->show_external_booking,
             'categories' => $tour->categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->name])->all(),
-            'activities' => $tour->activities->map(fn ($activity) => ['id' => $activity->id, 'name' => $activity->name])->all(),
+            'places' => $tour->places->map(fn ($place) => ['id' => $place->id, 'name' => $place->name])->all(),
             'created_at' => $tour->created_at?->toIso8601String(),
             'created_at_display' => $tour->created_at?->format('M j, Y g:i A') ?? 'N/A',
         ];

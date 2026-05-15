@@ -80,7 +80,7 @@ type AdminTour = {
     is_featured_on_home: boolean;
     is_featured_as_seasonal_recommendation: boolean;
     categories: { id: number; name: string }[];
-    activities: { id: number; name: string }[];
+    places: { id: number; name: string }[];
     created_at: string | null;
     created_at_display: string;
 };
@@ -221,6 +221,23 @@ const columns: ColumnDef<AdminTour>[] = [
             ]),
     },
     {
+        id: 'places',
+        header: 'Places',
+        enableSorting: false,
+        cell: ({ row }) =>
+            h('div', { class: 'flex flex-wrap gap-1.5' }, [
+                row.original.places.length === 0
+                    ? h('span', { class: 'text-muted-foreground text-xs' }, '—')
+                    : row.original.places.map((place) =>
+                          h(
+                              Badge,
+                              { variant: 'outline' },
+                              { default: () => place.name },
+                          ),
+                      ),
+            ]),
+    },
+    {
         id: 'price',
         accessorFn: (row) => row.price_amount,
         header: ({ column }) =>
@@ -281,23 +298,6 @@ const columns: ColumnDef<AdminTour>[] = [
                               Badge,
                               { variant: 'outline' },
                               { default: () => category.name },
-                          ),
-                      ),
-            ]),
-    },
-    {
-        id: 'activities',
-        header: 'Activities',
-        enableSorting: false,
-        cell: ({ row }) =>
-            h('div', { class: 'flex flex-wrap gap-1.5' }, [
-                row.original.activities.length === 0
-                    ? h('span', { class: 'text-muted-foreground text-xs' }, '—')
-                    : row.original.activities.map((activity) =>
-                          h(
-                              Badge,
-                              { variant: 'outline' },
-                              { default: () => activity.name },
                           ),
                       ),
             ]),
