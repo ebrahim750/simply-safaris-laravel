@@ -60,29 +60,7 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
-    /* Wild Horizon marketing (Welcome) — prefixed so app shell tokens stay unchanged */
-    --font-wh-headline: 'Newsreader', ui-serif, Georgia, serif;
-    --font-wh-body: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
 
-    --color-wh-background: #fff8f0;
-    --color-wh-on-surface: #1e1b15;
-    --color-wh-primary: #33450d;
-    --color-wh-primary-container: #4a5d23;
-    --color-wh-on-primary: #ffffff;
-    --color-wh-secondary: #994626;
-    --color-wh-on-secondary: #ffffff;
-    --color-wh-secondary-container: #fe956e;
-    --color-wh-on-secondary-container: #762c0d;
-    --color-wh-surface: #fff8f0;
-    --color-wh-surface-container: #f4ede3;
-    --color-wh-surface-container-low: #faf3e9;
-    --color-wh-surface-container-lowest: #ffffff;
-    --color-wh-surface-container-high: #eee7dd;
-    --color-wh-surface-container-highest: #e8e2d8;
-    --color-wh-on-surface-variant: #45483c;
-    --color-wh-outline: #76786b;
-    --color-wh-outline-variant: #c6c8b8;
-    --color-wh-tertiary-container: #6a523a;
 }
 
 /*

@@ -43,17 +43,27 @@ class TourController extends Controller
             'currency' => $currency,
             'categories' => TourCategory::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'image'])
                 ->map(fn (TourCategory $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'image' => blank($category->image)
+                        ? null
+                        : (Str::startsWith($category->image, ['http://', 'https://', '/'])
+                            ? $category->image
+                            : Storage::disk('public')->url($category->image)),
                 ]),
             'activities' => TourActivity::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'image'])
                 ->map(fn (TourActivity $activity): array => [
                     'id' => $activity->id,
                     'name' => $activity->name,
+                    'image' => blank($activity->image)
+                        ? null
+                        : (Str::startsWith($activity->image, ['http://', 'https://', '/'])
+                            ? $activity->image
+                            : Storage::disk('public')->url($activity->image)),
                 ]),
             'places' => Place::query()
                 ->with('country:id,name,country_code')
@@ -166,17 +176,27 @@ class TourController extends Controller
             ],
             'categories' => TourCategory::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'image'])
                 ->map(fn (TourCategory $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'image' => blank($category->image)
+                        ? null
+                        : (Str::startsWith($category->image, ['http://', 'https://', '/'])
+                            ? $category->image
+                            : Storage::disk('public')->url($category->image)),
                 ]),
             'activities' => TourActivity::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'image'])
                 ->map(fn (TourActivity $activity): array => [
                     'id' => $activity->id,
                     'name' => $activity->name,
+                    'image' => blank($activity->image)
+                        ? null
+                        : (Str::startsWith($activity->image, ['http://', 'https://', '/'])
+                            ? $activity->image
+                            : Storage::disk('public')->url($activity->image)),
                 ]),
             'places' => Place::query()
                 ->with('country:id,name,country_code')

@@ -103,10 +103,12 @@ const activityForm = useForm<{
     name: string;
     description: string;
     image: File | null;
+    remove_image: boolean;
 }>({
     name: '',
     description: '',
     image: null,
+    remove_image: false,
 });
 
 const globalActivityFilter: FilterFn<AdminActivity> = (row, _, filterValue) => {
@@ -133,6 +135,7 @@ function resetForm(): void {
     activityForm.reset();
     activityForm.clearErrors();
     imagePreview.value = null;
+    activityForm.remove_image = false;
 }
 
 function closeModal(): void {
@@ -152,6 +155,7 @@ function openEditModal(activity: AdminActivity): void {
     activityForm.name = activity.name;
     activityForm.description = activity.description ?? '';
     activityForm.image = null;
+    activityForm.remove_image = false;
     imagePreview.value = activity.image_url;
     isModalOpen.value = true;
 }
@@ -257,33 +261,26 @@ const columns: ColumnDef<AdminActivity>[] = [
                     ],
                 },
             ),
-        cell: ({ row }) => {
-            const children = [];
-
-            if (row.original.image_url) {
-                children.push(
-                    h('img', {
-                        src: row.original.image_url,
-                        alt: row.original.name,
-                        class: 'h-8 w-8 rounded-md object-cover',
-                    }),
-                );
-            }
-
-            children.push(
+        cell: ({ row }) =>
+            h('div', { class: 'flex items-center gap-3' }, [
+                row.original.image_url
+                    ? h('img', {
+                          src: row.original.image_url,
+                          alt: row.original.name,
+                          class: 'h-8 w-8 rounded-md object-cover',
+                      })
+                    : h(
+                          'div',
+                          {
+                              class: 'h-8 w-8 rounded-md border border-dashed border-border bg-muted/40',
+                          },
+                      ),
                 h(
                     'span',
                     { class: 'font-medium text-foreground' },
                     row.original.name,
                 ),
-            );
-
-            return h(
-                'div',
-                { class: 'flex items-center gap-3' },
-                children,
-            );
-        },
+            ]),
     },
     {
         accessorKey: 'description',
@@ -582,6 +579,14 @@ const filteredRowCount = computed(
                             hint="PNG, JPG, JPEG, or WEBP up to 5MB"
                             :error="activityForm.errors.image"
                         />
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 cursor-pointer"
+                            @click="imagePreview = null; activityForm.remove_image = true"
+                        >
+                            <X class="h-3 w-3" />
+                            Remove image
+                        </button>
                     </div>
 
                     <DialogFooter>

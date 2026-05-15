@@ -56,6 +56,10 @@ class UpdateTourCategoryRequest extends FormRequest
                 'mimes:png,jpg,jpeg,webp',
                 'max:5120',
             ],
+            'remove_image' => [
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 }

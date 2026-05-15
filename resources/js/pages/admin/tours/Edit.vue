@@ -34,6 +34,7 @@ import { tours as adminTours } from '@/routes/admin';
 type TourOption = {
     id: number;
     name: string;
+    image: string | null;
 };
 
 type PlaceOption = TourOption & {
@@ -123,6 +124,8 @@ const mainImagePreview = ref<string | null>(props.tour.main_image);
 const galleryImagePreviews = ref<string[]>([...props.tour.gallery_images]);
 const draggedGalleryIndex = ref<number | null>(null);
 const pricingDialogOpen = ref(false);
+const categorySearch = ref('');
+const activitySearch = ref('');
 
 const placesByCountry = computed(() => {
     const grouped = new Map<
@@ -153,6 +156,18 @@ const placesByCountry = computed(() => {
         a.country_name.localeCompare(b.country_name),
     );
 });
+
+const filteredCategories = computed(() =>
+    props.categories.filter((c) =>
+        c.name.toLowerCase().includes(categorySearch.value.toLowerCase()),
+    ),
+);
+
+const filteredActivities = computed(() =>
+    props.activities.filter((a) =>
+        a.name.toLowerCase().includes(activitySearch.value.toLowerCase()),
+    ),
+);
 
 function textAreaClass(errorKey?: string): string {
     return cn(
@@ -685,14 +700,9 @@ function submit(): void {
                                                 :for="`itinerary_content_${index}`"
                                                 >Content</Label
                                             >
-                                            <textarea
-                                                :id="`itinerary_content_${index}`"
+                                            <Editor
                                                 v-model="item.content"
-                                                :class="
-                                                    textAreaClass(
-                                                        `itinerary_items.${index}.content`,
-                                                    )
-                                                "
+                                                :error="!!fieldError(`itinerary_items.${index}.content`)"
                                                 placeholder="Describe what happens during this itinerary step."
                                             />
                                             <InputError
@@ -968,12 +978,20 @@ function submit(): void {
                             >
                         </CardHeader>
                         <CardContent class="space-y-3">
+                            <Input
+                                v-if="props.categories.length > 5"
+                                v-model="categorySearch"
+                                placeholder="Search categories..."
+                            />
                             <div
-                                v-if="props.categories.length"
+                                v-if="filteredCategories.length"
                                 class="space-y-2"
+                                :class="{
+                                    'max-h-[280px] overflow-y-auto pr-1': props.categories.length > 5,
+                                }"
                             >
                                 <label
-                                    v-for="category in props.categories"
+                                    v-for="category in filteredCategories"
                                     :key="category.id"
                                     class="flex items-center gap-3 rounded-md border border-border p-3"
                                 >
@@ -991,13 +1009,27 @@ function submit(): void {
                                             )
                                         "
                                     />
+                                    <img
+                                        v-if="category.image"
+                                        :src="category.image"
+                                        :alt="category.name"
+                                        class="h-8 w-8 rounded-full object-cover"
+                                    />
+                                    <div
+                                        v-else
+                                        class="flex h-8 w-8 items-center justify-center rounded-full bg-muted"
+                                    >
+                                        <span class="text-xs text-muted-foreground">
+                                            {{ category.name.charAt(0).toUpperCase() }}
+                                        </span>
+                                    </div>
                                     <span class="text-sm font-medium">{{
                                         category.name
                                     }}</span>
                                 </label>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">
-                                No categories are available yet.
+                                No categories matched your search.
                             </p>
                             <InputError :message="fieldError('category_ids')" />
                             <InputError
@@ -1015,12 +1047,20 @@ function submit(): void {
                             >
                         </CardHeader>
                         <CardContent class="space-y-3">
+                            <Input
+                                v-if="props.activities.length > 5"
+                                v-model="activitySearch"
+                                placeholder="Search activities..."
+                            />
                             <div
-                                v-if="props.activities.length"
+                                v-if="filteredActivities.length"
                                 class="space-y-2"
+                                :class="{
+                                    'max-h-[280px] overflow-y-auto pr-1': props.activities.length > 5,
+                                }"
                             >
                                 <label
-                                    v-for="activity in props.activities"
+                                    v-for="activity in filteredActivities"
                                     :key="activity.id"
                                     class="flex items-center gap-3 rounded-md border border-border p-3"
                                 >
@@ -1038,13 +1078,27 @@ function submit(): void {
                                             )
                                         "
                                     />
+                                    <img
+                                        v-if="activity.image"
+                                        :src="activity.image"
+                                        :alt="activity.name"
+                                        class="h-8 w-8 rounded-full object-cover"
+                                    />
+                                    <div
+                                        v-else
+                                        class="flex h-8 w-8 items-center justify-center rounded-full bg-muted"
+                                    >
+                                        <span class="text-xs text-muted-foreground">
+                                            {{ activity.name.charAt(0).toUpperCase() }}
+                                        </span>
+                                    </div>
                                     <span class="text-sm font-medium">{{
                                         activity.name
                                     }}</span>
                                 </label>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">
-                                No activities are available yet.
+                                No activities matched your search.
                             </p>
                             <InputError :message="fieldError('activity_ids')" />
                             <InputError

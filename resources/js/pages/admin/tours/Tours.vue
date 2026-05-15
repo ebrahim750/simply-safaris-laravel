@@ -21,7 +21,7 @@ import {
     Plus,
     Trash2,
 } from 'lucide-vue-next';
-import { computed, defineComponent, h, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import {
     create as createTour,
     destroy as destroyTour,
@@ -56,6 +56,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import TourImageThumbnail from '@/components/TourImageThumbnail.vue';
 import { tours as adminTours } from '@/routes/admin';
 
 defineOptions({
@@ -172,42 +173,6 @@ function deleteTour(): void {
         },
     });
 }
-
-const TourImageThumbnail = defineComponent({
-    name: 'TourImageThumbnail',
-    props: {
-        imageUrl: {
-            type: String,
-            default: null,
-        },
-        name: {
-            type: String,
-            required: true,
-        },
-    },
-    setup(componentProps) {
-        const hasImageError = ref(false);
-
-        return () =>
-            componentProps.imageUrl && !hasImageError.value
-                ? h('img', {
-                      src: componentProps.imageUrl,
-                      alt: `${componentProps.name} main image`,
-                      class: 'h-12 w-16 rounded-md border border-border bg-muted object-cover',
-                      loading: 'lazy',
-                      onError: () => {
-                          hasImageError.value = true;
-                      },
-                  })
-                : h(
-                      'div',
-                      {
-                          class: 'flex h-12 w-16 items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-[11px] font-medium uppercase tracking-wide text-muted-foreground',
-                      },
-                      'No image',
-                  );
-    },
-});
 
 const columns: ColumnDef<AdminTour>[] = [
     {

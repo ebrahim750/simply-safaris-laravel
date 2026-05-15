@@ -75,6 +75,11 @@ class TourCategoryController extends Controller
                 Storage::disk('public')->delete($category->image);
             }
             $data['image'] = $this->storeImage($request->file('image'), 'categories/'.$category->id);
+        } elseif ($request->boolean('remove_image')) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = null;
         }
 
         $category->update($data);

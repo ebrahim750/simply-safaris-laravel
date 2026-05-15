@@ -75,6 +75,11 @@ class TourActivityController extends Controller
                 Storage::disk('public')->delete($activity->image);
             }
             $data['image'] = $this->storeImage($request->file('image'), 'activities/'.$activity->id);
+        } elseif ($request->boolean('remove_image')) {
+            if ($activity->image) {
+                Storage::disk('public')->delete($activity->image);
+            }
+            $data['image'] = null;
         }
 
         $activity->update($data);

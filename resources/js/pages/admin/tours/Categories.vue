@@ -103,10 +103,12 @@ const categoryForm = useForm<{
     name: string;
     description: string;
     image: File | null;
+    remove_image: boolean;
 }>({
     name: '',
     description: '',
     image: null,
+    remove_image: false,
 });
 
 const globalCategoryFilter: FilterFn<AdminCategory> = (row, _, filterValue) => {
@@ -133,6 +135,7 @@ function resetForm(): void {
     categoryForm.reset();
     categoryForm.clearErrors();
     imagePreview.value = null;
+    categoryForm.remove_image = false;
 }
 
 function closeModal(): void {
@@ -152,6 +155,7 @@ function openEditModal(category: AdminCategory): void {
     categoryForm.name = category.name;
     categoryForm.description = category.description ?? '';
     categoryForm.image = null;
+    categoryForm.remove_image = false;
     imagePreview.value = category.image_url;
     isModalOpen.value = true;
 }
@@ -257,33 +261,26 @@ const columns: ColumnDef<AdminCategory>[] = [
                     ],
                 },
             ),
-        cell: ({ row }) => {
-            const children = [];
-
-            if (row.original.image_url) {
-                children.push(
-                    h('img', {
-                        src: row.original.image_url,
-                        alt: row.original.name,
-                        class: 'h-8 w-8 rounded-md object-cover',
-                    }),
-                );
-            }
-
-            children.push(
+        cell: ({ row }) =>
+            h('div', { class: 'flex items-center gap-3' }, [
+                row.original.image_url
+                    ? h('img', {
+                          src: row.original.image_url,
+                          alt: row.original.name,
+                          class: 'h-8 w-8 rounded-md object-cover',
+                      })
+                    : h(
+                          'div',
+                          {
+                              class: 'h-8 w-8 rounded-md border border-dashed border-border bg-muted/40',
+                          },
+                      ),
                 h(
                     'span',
                     { class: 'font-medium text-foreground' },
                     row.original.name,
                 ),
-            );
-
-            return h(
-                'div',
-                { class: 'flex items-center gap-3' },
-                children,
-            );
-        },
+            ]),
     },
     {
         accessorKey: 'description',
@@ -582,6 +579,14 @@ const filteredRowCount = computed(
                             hint="PNG, JPG, JPEG, or WEBP up to 5MB"
                             :error="categoryForm.errors.image"
                         />
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 cursor-pointer"
+                            @click="imagePreview = null; categoryForm.remove_image = true"
+                        >
+                            <X class="h-3 w-3" />
+                            Remove image
+                        </button>
                     </div>
 
                     <DialogFooter>

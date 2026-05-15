@@ -2,8 +2,9 @@
 import { computed } from 'vue';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import InputError from '@/components/InputError.vue';
 import { Label } from '@/components/ui/label';
-import { ImageIcon, UploadCloudIcon } from 'lucide-vue-next';
+import { ImageIcon, UploadCloudIcon, X } from 'lucide-vue-next';
 
 const props = defineProps<{
     id: string;
@@ -46,6 +47,7 @@ const previewSrc = computed(() => {
             )"
         >
             <input
+                v-if="!hasPreview"
                 :id="id"
                 type="file"
                 :accept="accept"
@@ -53,26 +55,45 @@ const previewSrc = computed(() => {
                 @change="handleFile"
             />
 
-            <div v-if="hasPreview" class="flex flex-col items-center gap-2">
-                <img
-                    :src="previewSrc ?? undefined"
-                    :alt="previewAlt"
-                    :class="cn(
-                        'rounded-md border border-border bg-background p-2 object-contain',
-                        previewHeight ? '' : 'h-20 w-auto',
-                    )"
-                    :style="previewHeight ? { height: previewHeight, width: 'auto' } : {}"
-                />
+            <template v-if="hasPreview">
+                <div class="relative flex flex-col items-center gap-2">
+                    <img
+                        :src="previewSrc ?? undefined"
+                        :alt="previewAlt"
+                        :class="cn(
+                            'rounded-md border border-border bg-background p-2 object-contain',
+                            previewHeight ? '' : 'h-20 w-auto',
+                        )"
+                        :style="previewHeight ? { height: previewHeight, width: 'auto' } : {}"
+                    />
+                </div>
                 <span class="text-xs text-muted-foreground">
                     {{ modelValue ? modelValue.name : 'Current image' }}
                 </span>
-            </div>
+                <label
+                    :for="id"
+                    class="cursor-pointer text-sm text-primary hover:underline"
+                >
+                    Replace image
+                </label>
+                <input
+                    :id="id"
+                    type="file"
+                    :accept="accept"
+                    class="sr-only"
+                    @change="handleFile"
+                />
+            </template>
 
-            <div v-else class="flex flex-col items-center gap-2 text-muted-foreground">
+            <label
+                v-else
+                :for="id"
+                class="flex flex-col items-center gap-2 text-muted-foreground cursor-pointer"
+            >
                 <UploadCloudIcon class="h-10 w-10" />
                 <span class="text-sm">Click or drag to upload</span>
                 <span v-if="accept" class="text-xs">{{ accept }}</span>
-            </div>
+            </label>
         </div>
 
         <InputError v-if="error" :message="error" />
