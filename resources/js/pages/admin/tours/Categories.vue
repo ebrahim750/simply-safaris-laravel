@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table';
-import { ArrowUpDown, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
+import { ArrowUpDown, Pencil, Plus, Trash2, UploadCloudIcon, X } from 'lucide-vue-next';
 import { computed, h, ref } from 'vue';
 import {
     destroy as destroyTourCategory,
@@ -48,10 +48,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { FileUpload } from '@/components/ui/file-upload';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import { categories as adminToursCategories } from '@/routes/admin/tours';
 
 defineOptions({
@@ -98,6 +99,7 @@ const categoryPendingDeletion = ref<AdminCategory | null>(null);
 const isRelatedToursDialogOpen = ref(false);
 const categoryForRelatedTours = ref<AdminCategory | null>(null);
 const imagePreview = ref<string | null>(null);
+const imageIsObjectUrl = ref(false);
 
 const categoryForm = useForm<{
     name: string;
@@ -131,11 +133,44 @@ function updateValue<T>(updaterOrValue: Updater<T>, state: { value: T }): void {
             : updaterOrValue;
 }
 
+function revokeImagePreview(): void {
+    if (imagePreview.value && imageIsObjectUrl.value) {
+        URL.revokeObjectURL(imagePreview.value);
+    }
+}
+
 function resetForm(): void {
+    revokeImagePreview();
     categoryForm.reset();
     categoryForm.clearErrors();
     imagePreview.value = null;
+    imageIsObjectUrl.value = false;
     categoryForm.remove_image = false;
+}
+
+function handleImageChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    categoryForm.image = file;
+
+    revokeImagePreview();
+
+    if (file) {
+        imagePreview.value = URL.createObjectURL(file);
+        imageIsObjectUrl.value = true;
+    } else {
+        imagePreview.value = null;
+        imageIsObjectUrl.value = false;
+    }
+
+    categoryForm.remove_image = false;
+}
+
+function removeImage(): void {
+    revokeImagePreview();
+    imagePreview.value = null;
+    imageIsObjectUrl.value = false;
+    categoryForm.image = null;
+    categoryForm.remove_image = true;
 }
 
 function closeModal(): void {
@@ -157,6 +192,7 @@ function openEditModal(category: AdminCategory): void {
     categoryForm.image = null;
     categoryForm.remove_image = false;
     imagePreview.value = category.image_url;
+    imageIsObjectUrl.value = false;
     isModalOpen.value = true;
 }
 
@@ -530,7 +566,7 @@ const filteredRowCount = computed(
         </Dialog>
 
         <Dialog :open="isModalOpen" @update:open="closeModal">
-            <DialogContent class="max-w-lg">
+            <DialogContent class="max-w-lg" @open-auto-focus.prevent>
                 <DialogHeader>
                     <DialogTitle>
                         {{ editingCategoryId === null ? 'Add category' : 'Edit category' }}
@@ -569,24 +605,48 @@ const filteredRowCount = computed(
                     </div>
 
                     <div class="space-y-2">
-                        <FileUpload
-                            id="category_image"
-                            label="Image"
-                            v-model="categoryForm.image"
-                            :preview-url="imagePreview"
-                            preview-alt="Category image"
-                            accept=".png,.jpg,.jpeg,.webp"
-                            hint="PNG, JPG, JPEG, or WEBP up to 5MB"
-                            :error="categoryForm.errors.image"
-                        />
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 cursor-pointer"
-                            @click="imagePreview = null; categoryForm.remove_image = true"
+                        <Label for="category_image">Image</Label>
+                        <div
+                            :class="
+                                cn(
+                                    'relative flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/40 p-6 text-center',
+                                    categoryForm.errors.image && 'border-destructive',
+                                )
+                            "
                         >
-                            <X class="h-3 w-3" />
-                            Remove image
-                        </button>
+                            <Input
+                                id="category_image"
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.webp"
+                                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                @change="handleImageChange"
+                            />
+                            <div
+                                v-if="imagePreview"
+                                class="group relative w-full"
+                            >
+                                <img
+                                    :src="imagePreview"
+                                    alt="Category image preview"
+                                    class="max-h-56 w-full rounded-md border border-border object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    class="absolute top-2 right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground"
+                                    @click="removeImage"
+                                >
+                                    <X class="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                            <template v-else>
+                                <UploadCloudIcon class="h-10 w-10 text-muted-foreground" />
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium">Choose category image</p>
+                                    <p class="text-xs text-muted-foreground">PNG, JPG, JPEG, or WEBP up to 5MB</p>
+                                </div>
+                            </template>
+                        </div>
+                        <InputError :message="categoryForm.errors.image" />
                     </div>
 
                     <DialogFooter>
