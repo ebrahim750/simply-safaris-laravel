@@ -231,4 +231,9 @@ Vue components must have a single root element.
 - Under no circumstance are you to execute any git commands.
 - If you absolutely have to run some git commands, ask the user first
 
+# Reference only folder
+
+- The reference-only folder on the project root, contains frontend template to use in the app
+- Don't make any changes to the files in the reference-only folder
+
 </custom-ebrahim-development-guidelines>
