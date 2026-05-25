@@ -14,7 +14,8 @@ use App\Http\Controllers\RootAccess\SiteSettingsController;
 use App\Http\Controllers\RootAccess\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::inertia('/', 'Home')->name('home');
+Route::inertia('/contact', 'Contact')->name('contact');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');

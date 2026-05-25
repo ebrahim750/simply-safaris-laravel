@@ -1,3 +1,4 @@
+<!-- From: c:\dev\simply-safaris\AGENTS.md -->
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -122,7 +123,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 # Laravel Herd
 
 - The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
-- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
+- Use the `herd` CLI to manage services, PHP versions, and sites (e.g., `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
 
 === tests rules ===
 
@@ -218,7 +219,7 @@ Vue components must have a single root element.
 
 # Database modifications
 
-- When creating any modifications to the db use the same migration file, for example you add a seperate col on users table dont create a seperate migration file just for the col. This is because we are still in dev. So i can run "php aritsan migrate:fresh --seed" to see the new changes
+- When creating any modifications to the db use the same migration file, for example you add a seperate col on users table dont create a seperate migration file just for the col. This is because we are still in dev. So i can run "php artisan migrate:fresh --seed" to see the new changes
 
 
 ## Build & Dev Server
