@@ -1,3 +1,7 @@
+<script setup lang="ts">
+const currentYear = new Date().getFullYear();
+</script>
+
 <template>
     <footer class="footer footer-style1">
         <div class="tf-container">
@@ -97,14 +101,25 @@
                 </div>
             </div>
             <div class="row footer-bottom">
-                <div class="col-md-6">
-                    <p class="copy-right public-footer-copyright">
-                        Copyright © {{ new Date().getFullYear() }} by
-                        <a href="#" class="text-main">Simply Safaris.</a> All
-                        Rights Reserved
+                <div class="col-md-4">
+                    <p class="copy-right public-footer-credit">
+                        Website by
+                        <a
+                            href="https://simplyit.co.tz"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-main"
+                            >SimplyIT</a
+                        >
                     </p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <p class="copy-right public-footer-copyright">
+                        Simply Safaris &copy; {{ currentYear }} | All rights
+                        reserved.
+                    </p>
+                </div>
+                <div class="col-md-4">
                     <ul
                         class="footer-bottom-links flex-six public-footer-bottom-links"
                     >
@@ -147,14 +162,40 @@
     gap: 12px;
 }
 
+.public-footer-credit,
 .public-footer-copyright,
 .footer-bottom-link {
     color: #ffffff !important;
     font-size: 13px !important;
 }
 
+.public-footer-credit,
+.public-footer-copyright {
+    margin-bottom: 0;
+}
+
+.public-footer-copyright {
+    text-align: center;
+}
+
+.public-footer-bottom-links {
+    justify-content: flex-end;
+}
+
 .footer-link-separator {
     color: rgba(255, 255, 255, 0.4);
     font-size: 13px;
+}
+
+@media (max-width: 767px) {
+    .public-footer-credit,
+    .public-footer-copyright {
+        text-align: center;
+    }
+
+    .public-footer-bottom-links {
+        justify-content: center;
+        margin-top: 10px;
+    }
 }
 </style>
