@@ -15,6 +15,7 @@ use App\Http\Controllers\RootAccess\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('home');
+Route::inertia('/about', 'About')->name('about');
 Route::inertia('/contact', 'Contact')->name('contact');
 
 Route::middleware(['auth'])->group(function () {

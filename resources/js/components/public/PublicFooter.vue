@@ -1,5 +1,26 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { about, contact, home } from '@/routes';
+
 const currentYear = new Date().getFullYear();
+const showBackToTop = ref(false);
+
+const handleScroll = () => {
+    showBackToTop.value = window.scrollY > 300;
+};
+
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+onMounted(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+});
 </script>
 
 <template>
@@ -33,11 +54,11 @@ const currentYear = new Date().getFullYear();
                 <div class="footer-service public-footer-column">
                     <h5 class="title">Services</h5>
                     <ul class="footer-menu">
-                        <li><a href="#">About Us</a></li>
+                        <li><Link :href="about()">About Us</Link></li>
                         <li><a href="#">Gallery</a></li>
                         <li><a href="#">Our Team</a></li>
                         <li><a href="#">Blog Insights</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><Link :href="contact()">Contact</Link></li>
                     </ul>
                 </div>
                 <div class="footer-gallery public-footer-column">
@@ -141,6 +162,13 @@ const currentYear = new Date().getFullYear();
             </div>
         </div>
     </footer>
+
+    <a
+        id="scroll-top"
+        class="button-go"
+        :class="{ show: showBackToTop }"
+        @click="scrollToTop"
+    ></a>
 </template>
 
 <style scoped>
@@ -197,5 +225,17 @@ const currentYear = new Date().getFullYear();
         justify-content: center;
         margin-top: 10px;
     }
+}
+
+#scroll-top {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    cursor: pointer;
+}
+
+#scroll-top.show {
+    opacity: 1;
+    visibility: visible;
 }
 </style>

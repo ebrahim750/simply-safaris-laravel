@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-import { home, contact } from '@/routes';
+import { about, contact, home } from '@/routes';
 
 const mobileMenuOpen = ref(false);
 const languageOpen = ref(false);
@@ -145,6 +145,19 @@ onUnmounted(() => {
                                                         :href="home()"
                                                         @click="closeMobileMenu"
                                                         >Home</Link
+                                                    >
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url ===
+                                                            '/about',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="about()"
+                                                        @click="closeMobileMenu"
+                                                        >About</Link
                                                     >
                                                 </li>
                                                 <li
