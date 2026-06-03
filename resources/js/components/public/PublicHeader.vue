@@ -1,11 +1,22 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { about, contact, home } from '@/routes';
+import destinations from '@/routes/destinations';
 
+const page = usePage();
 const mobileMenuOpen = ref(false);
 const languageOpen = ref(false);
 const searchOpen = ref(false);
+const openDropdowns = ref<Set<string>>(new Set());
+
+const destinationsData = computed(() => page.props.destinations as Array<{
+    id: number;
+    name: string;
+    slug: string;
+    country_code: string | null;
+    places: Array<{ id: number; name: string; slug: string }>;
+}>);
 const headerLower = ref<HTMLElement | null>(null);
 const isHeaderFixed = ref(false);
 const isHeaderSmall = ref(false);
@@ -16,11 +27,26 @@ let headerHeight = 0;
 
 const closeMobileMenu = () => {
     mobileMenuOpen.value = false;
+    openDropdowns.value.clear();
 };
 
 const closeHeaderDropdowns = () => {
     languageOpen.value = false;
     searchOpen.value = false;
+};
+
+const toggleDropdown = (slug: string) => {
+    const newSet = new Set(openDropdowns.value);
+    if (newSet.has(slug)) {
+        newSet.delete(slug);
+    } else {
+        newSet.add(slug);
+    }
+    openDropdowns.value = newSet;
+};
+
+const isDropdownOpen = (slug: string): boolean => {
+    return openDropdowns.value.has(slug);
 };
 
 const measureStickyHeader = () => {
@@ -159,6 +185,52 @@ onUnmounted(() => {
                                                         @click="closeMobileMenu"
                                                         >About</Link
                                                     >
+                                                </li>
+                                                <li
+                                                    class="dropdown2"
+                                                    :class="{
+                                                        current: $page.url.startsWith('/destinations'),
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="destinations.index()"
+                                                        @click="closeMobileMenu"
+                                                        >Destinations</Link
+                                                    >
+                                                    <ul>
+                                                        <li
+                                                            v-for="country in destinationsData"
+                                                            :key="country.id"
+                                                            :class="{ dropdown2: country.places.length > 0 }"
+                                                        >
+                                                            <Link
+                                                                :href="destinations.country({ country: country.slug })"
+                                                                @click="closeMobileMenu"
+                                                                class="flex items-center gap-5"
+                                                            >
+                                                                <img
+                                                                    v-if="country.country_code"
+                                                                    :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
+                                                                    :alt="`${country.name} flag`"
+                                                                    class="inline-block shrink-0 rounded-md object-cover"
+                                                                    style="width: 30px; height: auto; margin-right: 12px;"
+                                                                />
+                                                                <span class="leading-none">{{ country.name }}</span>
+                                                            </Link>
+                                                            <ul v-if="country.places.length > 0">
+                                                                <li
+                                                                    v-for="place in country.places"
+                                                                    :key="place.id"
+                                                                >
+                                                                    <Link
+                                                                        :href="destinations.place({ country: country.slug, place: place.slug })"
+                                                                        @click="closeMobileMenu"
+                                                                        >{{ place.name }}</Link
+                                                                    >
+                                                                </li>
+                                                            </ul>
+                                                        </li>
+                                                    </ul>
                                                 </li>
                                                 <li
                                                     :class="{

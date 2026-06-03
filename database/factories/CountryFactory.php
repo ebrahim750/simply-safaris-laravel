@@ -28,7 +28,6 @@ class CountryFactory extends Factory
             'main_image' => null,
             'best_time_to_go' => null,
             'high_season' => null,
-            'electrical' => null,
             'tourism_link' => null,
         ];
     }

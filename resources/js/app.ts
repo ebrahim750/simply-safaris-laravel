@@ -19,6 +19,7 @@ void createInertiaApp({
             case name === 'Home':
             case name === 'About':
             case name === 'Contact':
+            case name.startsWith('destinations/'):
                 return PublicLayout;
             case name === 'Welcome':
                 return null;

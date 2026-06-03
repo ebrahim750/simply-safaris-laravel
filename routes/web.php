@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
 use App\Http\Controllers\Admin\TourController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
+use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
 use App\Http\Controllers\RootAccess\GeneralSiteSettingsController;
 use App\Http\Controllers\RootAccess\LogoSiteSettingsController;
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Home')->name('home');
 Route::inertia('/about', 'About')->name('about');
 Route::inertia('/contact', 'Contact')->name('contact');
+
+Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
+Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
+Route::get('/destinations/{country:slug}/{place:slug}', [DestinationController::class, 'showPlace'])->name('destinations.place');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');

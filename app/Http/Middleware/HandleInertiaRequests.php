@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Country;
+use App\Models\Place;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -64,6 +66,26 @@ class HandleInertiaRequests extends Middleware
         View::share('faviconUrl', $faviconUrl);
         View::share('siteName', $siteName);
 
+        $destinations = [];
+        if (Schema::hasTable('countries')) {
+            $destinations = Country::query()
+                ->with(['places' => fn ($query) => $query->select('id', 'country_id', 'name', 'slug')->orderBy('name')])
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'country_code'])
+                ->map(fn (Country $country): array => [
+                    'id' => $country->id,
+                    'name' => $country->name,
+                    'slug' => $country->slug,
+                    'country_code' => $country->country_code,
+                    'places' => $country->places->map(fn (Place $place): array => [
+                        'id' => $place->id,
+                        'name' => $place->name,
+                        'slug' => $place->slug,
+                    ])->all(),
+                ])
+                ->all();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -81,6 +103,7 @@ class HandleInertiaRequests extends Middleware
                 'adminLogoLightUrl' => $adminLogoLightUrl,
                 'adminLogoDarkUrl' => $adminLogoDarkUrl,
             ],
+            'destinations' => $destinations,
         ];
     }
 }
