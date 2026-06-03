@@ -14,16 +14,28 @@ class DestinationController extends Controller
     public function index(): Response
     {
         $countries = Country::query()
-            ->with(['places' => fn ($query) => $query->select('id', 'country_id', 'name', 'slug')->orderBy('name')])
+            ->with([
+                'places' => fn ($query) => $query
+                    ->select('id', 'country_id', 'name', 'slug', 'main_image')
+                    ->withCount('tours')
+                    ->orderBy('name'),
+            ])
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'main_image', 'overview'])
+            ->get(['id', 'name', 'slug', 'country_code', 'main_image', 'overview'])
             ->map(fn (Country $country) => [
                 'id' => $country->id,
                 'name' => $country->name,
                 'slug' => $country->slug,
+                'country_code' => $country->country_code,
                 'main_image' => $this->resolveImageUrl($country->main_image),
                 'overview' => $country->overview,
-                'places' => $country->places,
+                'places' => $country->places->map(fn (Place $place) => [
+                    'id' => $place->id,
+                    'name' => $place->name,
+                    'slug' => $place->slug,
+                    'main_image' => $this->resolveImageUrl($place->main_image),
+                    'tours_count' => $place->tours_count,
+                ])->all(),
             ]);
 
         return Inertia::render('destinations/Index', [

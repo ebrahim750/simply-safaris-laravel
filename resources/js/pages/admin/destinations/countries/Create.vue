@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Globe, UploadCloudIcon } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import {
     create as createCountry,
     index as countriesIndex,
@@ -68,6 +68,27 @@ const form = useForm({
 
 const countrySearch = ref('');
 const mainImagePreview = ref<string | null>(null);
+const countrySearchWrapper = ref<HTMLDivElement | null>(null);
+const isCountrySelectOpen = ref(false);
+
+async function focusCountrySearchInput(): Promise<void> {
+    await nextTick();
+
+    const focusInput = (): void => {
+        countrySearchWrapper.value
+            ?.querySelector('input')
+            ?.focus({ preventScroll: true });
+    };
+
+    window.requestAnimationFrame(focusInput);
+    window.setTimeout(focusInput, 50);
+}
+
+watch(isCountrySelectOpen, (open) => {
+    if (open) {
+        void focusCountrySearchInput();
+    }
+});
 
 const props = defineProps<{
     country_options: CountryOption[];
@@ -165,7 +186,7 @@ function submit(): void {
                 <CardContent class="space-y-6">
                     <div class="grid gap-2">
                         <Label for="name">Country</Label>
-                        <Select v-model="form.name">
+                        <Select v-model="form.name" v-model:open="isCountrySelectOpen">
                             <SelectTrigger id="name" class="w-full">
                                 <SelectValue placeholder="Select country">
                                     <div
@@ -192,7 +213,7 @@ function submit(): void {
                                 </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                                <div class="p-2">
+                                <div ref="countrySearchWrapper" class="p-2">
                                     <Input
                                         v-model="countrySearch"
                                         placeholder="Search country..."

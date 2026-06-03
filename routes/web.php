@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\DestinationCountryController;
 use App\Http\Controllers\Admin\DestinationPlaceController;
 use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
-use App\Http\Controllers\Admin\TourController;
+use App\Http\Controllers\Admin\TourController as AdminTourController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
@@ -13,6 +13,7 @@ use App\Http\Controllers\RootAccess\LogoSiteSettingsController;
 use App\Http\Controllers\RootAccess\ProdTestController;
 use App\Http\Controllers\RootAccess\SiteSettingsController;
 use App\Http\Controllers\RootAccess\UserController;
+use App\Http\Controllers\TourController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('home');
@@ -22,6 +23,9 @@ Route::inertia('/contact', 'Contact')->name('contact');
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
 Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
 Route::get('/destinations/{country:slug}/{place:slug}', [DestinationController::class, 'showPlace'])->name('destinations.place');
+
+Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
+Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');
@@ -33,13 +37,13 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'password.change.required', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::middleware('admin')->group(function () {
-        Route::get('admin/tours', [TourController::class, 'index'])->name('admin.tours');
-        Route::get('admin/tours/create', [TourController::class, 'create'])->name('admin.tours.create');
-        Route::post('admin/tours', [TourController::class, 'store'])->name('admin.tours.store');
-        Route::get('admin/tours/{tour}/edit', [TourController::class, 'edit'])->name('admin.tours.edit');
-        Route::patch('admin/tours/{tour}', [TourController::class, 'update'])->name('admin.tours.update');
-        Route::patch('admin/tours/{tour}/hidden', [TourController::class, 'toggleHidden'])->name('admin.tours.hidden.toggle');
-        Route::delete('admin/tours/{tour}', [TourController::class, 'destroy'])->name('admin.tours.destroy');
+        Route::get('admin/tours', [AdminTourController::class, 'index'])->name('admin.tours');
+        Route::get('admin/tours/create', [AdminTourController::class, 'create'])->name('admin.tours.create');
+        Route::post('admin/tours', [AdminTourController::class, 'store'])->name('admin.tours.store');
+        Route::get('admin/tours/{tour}/edit', [AdminTourController::class, 'edit'])->name('admin.tours.edit');
+        Route::patch('admin/tours/{tour}', [AdminTourController::class, 'update'])->name('admin.tours.update');
+        Route::patch('admin/tours/{tour}/hidden', [AdminTourController::class, 'toggleHidden'])->name('admin.tours.hidden.toggle');
+        Route::delete('admin/tours/{tour}', [AdminTourController::class, 'destroy'])->name('admin.tours.destroy');
         Route::get('admin/tours/categories', [TourCategoryController::class, 'index'])->name('admin.tours.categories');
         Route::post('admin/tours/categories', [TourCategoryController::class, 'store'])->name('admin.tours.categories.store');
         Route::patch('admin/tours/categories/{category}', [TourCategoryController::class, 'update'])->name('admin.tours.categories.update');

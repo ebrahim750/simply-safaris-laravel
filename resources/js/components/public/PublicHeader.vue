@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { about, contact, home } from '@/routes';
 import destinations from '@/routes/destinations';
+import tours from '@/routes/tours';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -184,6 +185,19 @@ onUnmounted(() => {
                                                         :href="about()"
                                                         @click="closeMobileMenu"
                                                         >About</Link
+                                                    >
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url ===
+                                                            '/tours',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="tours.index()"
+                                                        @click="closeMobileMenu"
+                                                        >Tours</Link
                                                     >
                                                 </li>
                                                 <li

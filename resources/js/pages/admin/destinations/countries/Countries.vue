@@ -358,7 +358,7 @@ const filteredRowCount = computed(
                     <Input
                         :model-value="globalFilter"
                         class="w-full sm:max-w-sm"
-                        placeholder="Search countries by name..."
+                        placeholder="Search..."
                         @update:model-value="table.setGlobalFilter($event)"
                     />
                     <p class="text-sm text-muted-foreground">
