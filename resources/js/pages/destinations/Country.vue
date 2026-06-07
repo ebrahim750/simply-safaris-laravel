@@ -173,20 +173,43 @@ onMounted(() => {
         <div class="tf-container">
             <div class="row">
                 <div class="col-lg-12">
+                    <div v-if="country.overview" class="country-overview">
+                        <h2>Overview</h2>
+                        <div v-html="country.overview"></div>
+                    </div>
                     <div class="country-info-grid">
                         <div v-if="country.best_time_to_go" class="info-card">
                             <div class="info-icon">
                                 <i class="icon-17"></i>
                             </div>
-                            <h4>Best Time to Go</h4>
-                            <p>{{ country.best_time_to_go }}</p>
+                            <div class="info-content">
+                                <h4>Best Time to Go</h4>
+                                <p>{{ country.best_time_to_go }}</p>
+                            </div>
                         </div>
                         <div v-if="country.high_season" class="info-card">
                             <div class="info-icon">
                                 <i class="icon-18"></i>
                             </div>
-                            <h4>High Season</h4>
-                            <p>{{ country.high_season }}</p>
+                            <div class="info-content">
+                                <h4>High Season</h4>
+                                <p>{{ country.high_season }}</p>
+                            </div>
+                        </div>
+                        <div v-if="country.tourism_link" class="info-card">
+                            <div class="info-icon">
+                                <i class="icon-map-1"></i>
+                            </div>
+                            <div class="info-content">
+                                <h4>Tourist Information</h4>
+                                <a
+                                    :href="country.tourism_link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {{ country.name }} Tourism Board
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -608,46 +631,95 @@ onMounted(() => {
     background: #fff;
 }
 
-.country-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+.country-overview {
+    margin-bottom: 50px;
 }
 
-.info-card {
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
-}
-
-.info-icon {
-    width: 50px;
-    height: 50px;
-    background: #4da528;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 15px;
-}
-
-.info-icon i {
-    color: #fff;
-    font-size: 20px;
-}
-
-.info-card h4 {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 10px;
+.country-overview h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
     color: #081e2a;
 }
 
-.info-card p {
+.country-overview :deep(p) {
+    color: #555;
+    line-height: 1.8;
+    font-size: 16px;
+    margin: 0 0 12px;
+}
+
+.country-overview :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.country-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.info-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-icon i {
+    color: #4da528;
+    font-size: 28px;
+}
+
+.info-content h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #081e2a;
+}
+
+.info-content p {
     color: #666;
-    line-height: 1.7;
+    line-height: 1.6;
     margin: 0;
+    font-size: 15px;
+}
+
+.info-content a {
+    color: #4da528;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.info-content a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 991px) {
+    .country-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+}
+
+@media (max-width: 767px) {
+    .country-info-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
 }
 
 /* Places Section */
