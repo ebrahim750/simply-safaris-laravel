@@ -36,6 +36,15 @@ const props = defineProps<{
 }>();
 
 const activeSection = ref('');
+const showOverviewModal = ref(false);
+const overviewRef = ref<HTMLElement | null>(null);
+const isOverviewTruncated = ref(false);
+
+const checkOverviewOverflow = () => {
+    if (overviewRef.value) {
+        isOverviewTruncated.value = overviewRef.value.scrollHeight > overviewRef.value.clientHeight;
+    }
+};
 
 const scrollToSection = (slug: string) => {
     const element = document.getElementById(`place-${slug}`);
@@ -53,6 +62,9 @@ const scrollToSection = (slug: string) => {
 };
 
 onMounted(() => {
+    checkOverviewOverflow();
+    window.addEventListener('resize', checkOverviewOverflow);
+
     const observer = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
@@ -93,6 +105,7 @@ onMounted(() => {
     return () => {
         observer.disconnect();
         removeNavigateListener();
+        window.removeEventListener('resize', checkOverviewOverflow);
     };
 });
 </script>
@@ -138,9 +151,17 @@ onMounted(() => {
                                 </a>
                             </div>
                         </div>
-                        <div v-if="country.overview" class="hero-overview">
+                        <div v-if="country.overview" ref="overviewRef" class="hero-overview">
                             <div v-html="country.overview"></div>
                         </div>
+                        <a
+                            v-if="isOverviewTruncated"
+                            href="#"
+                            class="read-more-link"
+                            @click.prevent="showOverviewModal = true"
+                        >
+                            Read more
+                        </a>
                     </div>
                 </div>
             </div>
@@ -181,7 +202,7 @@ onMounted(() => {
                 <div class="col-lg-3">
                     <div class="places-sidebar">
                         <div class="sidebar-inner">
-                            <h4>Places in {{ country.name }}</h4>
+                            <h4>Destinations in {{ country.name }}</h4>
                             <nav class="places-nav">
                                 <ul>
                                     <li
@@ -244,9 +265,9 @@ onMounted(() => {
                                     <div class="col-md-7">
                                         <div class="place-details">
                                             <h3 class="place-name">{{ place.name }}</h3>
-                                            <p v-if="place.overview" class="place-overview">
-                                                {{ place.overview }}
-                                            </p>
+                                            <div v-if="place.overview" class="place-overview">
+                                                <div v-html="place.overview"></div>
+                                            </div>
 
                                             <!-- Related Tours -->
                                             <div v-if="place.tours.length > 0" class="place-tours">
@@ -305,6 +326,15 @@ onMounted(() => {
             </div>
         </div>
     </section>
+
+    <!-- Overview Modal -->
+    <div v-if="showOverviewModal" class="modal-overlay" @click.self="showOverviewModal = false">
+        <div class="modal-content">
+            <button class="modal-close" @click="showOverviewModal = false">×</button>
+            <h3>About {{ country.name }}</h3>
+            <div class="modal-body" v-html="country.overview"></div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -417,9 +447,9 @@ onMounted(() => {
 
 .map-card {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 16px 16px 0 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 0 16px 16px;
+    padding: 0 0 16px;
     margin-top: 30px;
     margin-bottom: 16px;
 }
@@ -462,6 +492,10 @@ onMounted(() => {
     color: #666;
     line-height: 1.7;
     font-size: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .hero-overview :deep(p) {
@@ -470,6 +504,82 @@ onMounted(() => {
 
 .hero-overview :deep(p:last-child) {
     margin-bottom: 0;
+}
+
+.read-more-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #4da528;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.read-more-link:hover {
+    color: #3d8a20;
+    text-decoration: underline;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #081e2a;
+}
+
+.modal-body {
+    color: #666;
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+.modal-body :deep(p) {
+    margin: 0 0 12px;
+}
+
+.modal-body :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #333;
 }
 
 @media (max-width: 991px) {
