@@ -172,3 +172,13 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* jsVectorMap tooltip is appended to document.body, so it needs global z-index */
+.jvm-tooltip {
+    z-index: 99999 !important;
+}
+
+/* jsVectorMap tooltip is appended to document.body, so it needs global z-index */
+.jvm-tooltip {
+    z-index: 99999 !important;
+}

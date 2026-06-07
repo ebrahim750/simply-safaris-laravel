@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
+import CountryMap from '@/components/CountryMap.vue';
 import { home } from '@/routes';
 import destinations from '@/routes/destinations';
 import tourRoutes from '@/routes/tours';
@@ -10,6 +11,7 @@ const props = defineProps<{
         id: number;
         name: string;
         slug: string;
+        country_code: string | null;
         main_image: string | null;
         overview: string | null;
         best_time_to_go: string | null;
@@ -37,6 +39,7 @@ const activeSection = ref('');
 
 const scrollToSection = (slug: string) => {
     const element = document.getElementById(`place-${slug}`);
+
     if (element) {
         const headerOffset = 120;
         const elementPosition = element.getBoundingClientRect().top;
@@ -63,6 +66,7 @@ onMounted(() => {
 
     props.country.places.forEach((place) => {
         const element = document.getElementById(`place-${place.slug}`);
+
         if (element) {
             observer.observe(element);
         }
@@ -71,6 +75,7 @@ onMounted(() => {
     // Handle hash-based scroll on page load and after Inertia navigation
     const handleHashScroll = () => {
         const hash = window.location.hash.replace('#', '');
+
         if (hash) {
             setTimeout(() => {
                 scrollToSection(hash);
@@ -102,8 +107,8 @@ onMounted(() => {
             <div class="hero-overlay"></div>
         </div>
         <div class="tf-container full">
-            <div class="row">
-                <div class="col-lg-12">
+            <div class="row align-items-stretch">
+                <div class="col-lg-9">
                     <div class="page-title-inner">
                         <div class="title">{{ country.name }}</div>
                         <ul class="breadcrumbs">
@@ -111,6 +116,31 @@ onMounted(() => {
                             <li><Link :href="destinations.index()">Destinations</Link></li>
                             <li><span>{{ country.name }}</span></li>
                         </ul>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="hero-sidebar">
+                        <div class="map-card">
+                            <div class="map-wrapper">
+                                <CountryMap
+                                    :country-code="country.country_code || ''"
+                                    :country-slug="country.slug"
+                                />
+                            </div>
+                            <div class="btn-maps-wrapper">
+                                <a
+                                    :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(country.name)}`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="btn-maps"
+                                >
+                                    Open Map
+                                </a>
+                            </div>
+                        </div>
+                        <div v-if="country.overview" class="hero-overview">
+                            <div v-html="country.overview"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,13 +153,6 @@ onMounted(() => {
             <div class="row">
                 <div class="col-lg-12">
                     <div class="country-info-grid">
-                        <div v-if="country.overview" class="info-card">
-                            <div class="info-icon">
-                                <i class="icon-15"></i>
-                            </div>
-                            <h4>Overview</h4>
-                            <p>{{ country.overview }}</p>
-                        </div>
                         <div v-if="country.best_time_to_go" class="info-card">
                             <div class="info-icon">
                                 <i class="icon-17"></i>
@@ -285,9 +308,21 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.page-title {
+    position: relative;
+    min-height: 600px;
+    display: flex;
+    align-items: stretch;
+    background: #f8f9fa;
+    padding-bottom: 0;
+}
+
 .hero-image {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 75%;
+    height: 100%;
     z-index: 0;
 }
 
@@ -303,14 +338,17 @@ onMounted(() => {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.8) 100%);
 }
 
-.page-title {
-    position: relative;
-    min-height: 600px;
+.page-title .row {
+    width: 100%;
+    margin: 0;
+}
+
+.page-title .row > .col-lg-9 {
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding-top: 140px;
+    padding-top: 60px;
     padding-bottom: 60px;
 }
 
@@ -364,21 +402,100 @@ onMounted(() => {
     font-size: 16px;
 }
 
-@media (max-width: 767px) {
-    .page-title {
-        min-height: 400px;
-        padding-top: 120px;
+.page-title .row > .col-lg-3 {
+    display: flex;
+    align-items: flex-start;
+}
+
+.hero-sidebar {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding-top: 0;
+    padding-bottom: 40px;
+}
+
+.map-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 0 16px 16px;
+    margin-top: 30px;
+    margin-bottom: 16px;
+}
+
+.hero-sidebar .map-wrapper {
+    margin-bottom: 12px;
+}
+
+.hero-sidebar :deep(.country-map) {
+    aspect-ratio: 3 / 2;
+    height: auto;
+    border-radius: 12px;
+}
+
+.btn-maps-wrapper {
+    text-align: center;
+}
+
+.btn-maps {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #4da528;
+    color: #fff;
+    text-align: center;
+    border-radius: 9999px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    transition: background 0.3s ease;
+}
+
+.btn-maps:hover {
+    background: #3d8a20;
+}
+
+.hero-overview {
+    color: #666;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.hero-overview :deep(p) {
+    margin: 0 0 12px;
+}
+
+.hero-overview :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+@media (max-width: 991px) {
+    .hero-image {
+        width: 100%;
+    }
+
+    .page-title .row > .col-lg-9 {
+        padding-top: 80px;
+        padding-bottom: 40px;
+    }
+
+    .hero-sidebar {
+        margin-top: 0;
+        margin-bottom: 40px;
     }
 
     .page-title-inner .title {
-        font-size: 42px;
+        font-size: 48px;
     }
 }
 
 /* Country Info */
 .section-country-info {
     padding: 60px 0;
-    background: #f8f9fa;
+    background: #fff;
 }
 
 .country-info-grid {
@@ -699,8 +816,22 @@ onMounted(() => {
 }
 
 @media (max-width: 767px) {
+    .page-title {
+        min-height: 400px;
+        padding-top: 120px;
+    }
+
+    .page-title .row > .col-lg-9 {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
     .page-title-inner .title {
         font-size: 36px;
+    }
+
+    .hero-sidebar {
+        margin-bottom: 40px;
     }
 
     .place-image-wrapper {
