@@ -111,7 +111,7 @@ class DestinationCountryController extends Controller
             ])->save();
         }
 
-        return to_route('admin.destinations.countries')
+        return redirect()->route('admin.destinations.countries.edit', $country)
             ->with('status', 'Country updated.');
     }
 

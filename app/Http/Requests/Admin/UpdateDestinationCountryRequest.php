@@ -27,7 +27,7 @@ class UpdateDestinationCountryRequest extends FormRequest
             'main_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'best_time_to_go' => ['nullable', 'string'],
             'high_season' => ['nullable', 'string'],
-            'tourism_link' => ['nullable', 'string', 'max:255'],
+            'tourism_link' => ['nullable', 'url', 'max:255'],
         ];
     }
 }

@@ -177,7 +177,7 @@ test('admin users can open edit page and update a country with regenerated uniqu
             'tourism_link' => 'https://www.visituganda.com',
         ]);
 
-    $response->assertRedirect(route('admin.destinations.countries'));
+    $response->assertRedirect(route('admin.destinations.countries.edit', $country));
     $response->assertSessionHas('status', 'Country updated.');
 
     $this->assertDatabaseHas('countries', [

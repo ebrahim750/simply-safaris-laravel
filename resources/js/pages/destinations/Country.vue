@@ -5,6 +5,7 @@ import CountryMap from '@/components/CountryMap.vue';
 import { home } from '@/routes';
 import destinations from '@/routes/destinations';
 import tourRoutes from '@/routes/tours';
+import { DollarSign, CalendarCheck, Clock, Globe, Plug, Car, Wallet } from 'lucide-vue-next';
 
 const props = defineProps<{
     country: {
@@ -17,6 +18,21 @@ const props = defineProps<{
         best_time_to_go: string | null;
         high_season: string | null;
         tourism_link: string | null;
+        timezone: string | null;
+        languages: string | null;
+        currency: string | null;
+        driving_side: string | null;
+        electrical: {
+            voltage: string | null;
+            plugs: string | null;
+        } | null;
+        climate: {
+            months: string[];
+            max_temp: (number | null)[];
+            sunshine_hours: (number | null)[];
+            rainfall_days: (number | null)[];
+            sea_temp: (number | null)[] | null;
+        } | null;
         places: Array<{
             id: number;
             name: string;
@@ -33,6 +49,7 @@ const props = defineProps<{
             }>;
         }>;
     };
+    rates_range: string | null;
 }>();
 
 const activeSection = ref('');
@@ -173,42 +190,193 @@ onMounted(() => {
         <div class="tf-container">
             <div class="row">
                 <div class="col-lg-12">
-                    <div v-if="country.overview" class="country-overview">
+                    <div class="country-overview-v2">
                         <h2>Overview</h2>
-                        <div v-html="country.overview"></div>
+
+                        <div class="overview-grid">
+                            <div class="overview-item">
+                                <DollarSign class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Rates</h4>
+                                    <p>{{ rates_range ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Best time to go</h4>
+                                    <p>{{ country.best_time_to_go ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>High Season</h4>
+                                    <p>{{ country.high_season ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <Clock class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Time Zone</h4>
+                                    <p>{{ country.timezone ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <Globe class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Language</h4>
+                                    <p>{{ country.languages ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <Plug class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Electrical</h4>
+                                    <template v-if="country.electrical">
+                                        <p>{{ country.electrical.voltage }}</p>
+                                        <p v-if="country.electrical.plugs"><strong>{{ country.electrical.plugs }}</strong></p>
+                                    </template>
+                                    <p v-else>-</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <Wallet class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Currency</h4>
+                                    <p>{{ country.currency ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <Car class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Driving Side</h4>
+                                    <p>{{ country.driving_side ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="overview-item">
+                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
+                                <div class="overview-content">
+                                    <h4>Tourist Info</h4>
+                                    <p v-if="country.tourism_link">
+                                        <a
+                                            :href="country.tourism_link"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="tourism-link"
+                                        >
+                                            <strong>{{ country.name }} Tourism Board</strong>
+                                        </a>
+                                    </p>
+                                    <p v-else>-</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="country-info-grid">
-                        <div v-if="country.best_time_to_go" class="info-card">
-                            <div class="info-icon">
-                                <i class="icon-17"></i>
-                            </div>
-                            <div class="info-content">
-                                <h4>Best Time to Go</h4>
-                                <p>{{ country.best_time_to_go }}</p>
-                            </div>
-                        </div>
-                        <div v-if="country.high_season" class="info-card">
-                            <div class="info-icon">
-                                <i class="icon-18"></i>
-                            </div>
-                            <div class="info-content">
-                                <h4>High Season</h4>
-                                <p>{{ country.high_season }}</p>
-                            </div>
-                        </div>
-                        <div v-if="country.tourism_link" class="info-card">
-                            <div class="info-icon">
-                                <i class="icon-map-1"></i>
-                            </div>
-                            <div class="info-content">
-                                <h4>Tourist Information</h4>
-                                <a
-                                    :href="country.tourism_link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Climate Section -->
+    <section v-if="country.climate" class="section-climate">
+        <div class="tf-container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="climate-inner">
+                        <h2>Climate</h2>
+
+                        <div class="climate-grid">
+                            <!-- Month headers -->
+                            <div class="climate-row climate-header">
+                                <div class="climate-label"></div>
+                                <div
+                                    v-for="month in country.climate.months"
+                                    :key="month"
+                                    class="climate-cell"
                                 >
-                                    {{ country.name }} Tourism Board
-                                </a>
+                                    {{ month }}
+                                </div>
+                            </div>
+
+                            <!-- Max temp -->
+                            <div class="climate-row">
+                                <div class="climate-label">Maximum daytime temperature °C</div>
+                                <div
+                                    v-for="(temp, index) in country.climate.max_temp"
+                                    :key="'temp-' + index"
+                                    class="climate-cell"
+                                >
+                                    <span
+                                        v-if="temp !== null"
+                                        class="climate-badge climate-badge-red"
+                                    >
+                                        {{ temp }}
+                                    </span>
+                                    <span v-else class="climate-dash">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Sunshine hours -->
+                            <div class="climate-row">
+                                <div class="climate-label">Hours of sunshine (daily)</div>
+                                <div
+                                    v-for="(hours, index) in country.climate.sunshine_hours"
+                                    :key="'sun-' + index"
+                                    class="climate-cell"
+                                >
+                                    <span
+                                        v-if="hours !== null"
+                                        class="climate-badge climate-badge-yellow"
+                                    >
+                                        {{ hours }}
+                                    </span>
+                                    <span v-else class="climate-dash">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Rainfall days -->
+                            <div class="climate-row">
+                                <div class="climate-label">Days with some rainfall</div>
+                                <div
+                                    v-for="(days, index) in country.climate.rainfall_days"
+                                    :key="'rain-' + index"
+                                    class="climate-cell"
+                                >
+                                    <span
+                                        v-if="days !== null"
+                                        class="climate-badge climate-badge-blue"
+                                    >
+                                        {{ days }}
+                                    </span>
+                                    <span v-else class="climate-dash">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Sea temp -->
+                            <div v-if="country.climate.sea_temp" class="climate-row">
+                                <div class="climate-label">Sea temperature °C</div>
+                                <div
+                                    v-for="(temp, index) in country.climate.sea_temp"
+                                    :key="'sea-' + index"
+                                    class="climate-cell"
+                                >
+                                    <span
+                                        v-if="temp !== null"
+                                        class="climate-badge climate-badge-red"
+                                    >
+                                        {{ temp }}
+                                    </span>
+                                    <span v-else class="climate-dash">-</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -242,16 +410,7 @@ onMounted(() => {
                                     </li>
                                 </ul>
                             </nav>
-                            <div v-if="country.tourism_link" class="widget-link">
-                                <a
-                                    :href="country.tourism_link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="btn"
-                                >
-                                    Tourism Information
-                                </a>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -287,7 +446,10 @@ onMounted(() => {
                                     <!-- Place Content (Right) -->
                                     <div class="col-md-7">
                                         <div class="place-details">
-                                            <h3 class="place-name">{{ place.name }}</h3>
+                                            <div class="place-title-row">
+                                                <h3 class="place-name">{{ place.name }}</h3>
+                                                <a href="#" class="inline-flex shrink-0 items-center rounded-lg bg-[#4da528]/15 px-3 py-1.5 font-medium text-[#4da528] transition-colors hover:bg-[#4da528]/25" style="font-size: 13px;">View tours</a>
+                                            </div>
                                             <div v-if="place.overview" class="place-overview">
                                                 <div v-html="place.overview"></div>
                                             </div>
@@ -631,92 +793,80 @@ onMounted(() => {
     background: #fff;
 }
 
-.country-overview {
+.country-overview-v2 {
     margin-bottom: 50px;
 }
 
-.country-overview h2 {
-    font-size: 32px;
+.country-overview-v2 h2 {
+    font-size: 28px;
     font-weight: 700;
     margin-bottom: 20px;
     color: #081e2a;
 }
 
-.country-overview :deep(p) {
+.country-overview-v2 .overview-text {
     color: #555;
     line-height: 1.8;
     font-size: 16px;
-    margin: 0 0 12px;
+    margin: 0 0 40px;
+    max-width: 900px;
 }
 
-.country-overview :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.country-info-grid {
+.overview-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
 }
 
-.info-card {
+.overview-item {
     display: flex;
     align-items: flex-start;
     gap: 16px;
-    padding: 0;
-    background: transparent;
-    border-radius: 0;
-    box-shadow: none;
 }
 
-.info-icon {
+.overview-icon {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #4a5d4a;
+    margin-top: 2px;
 }
 
-.info-icon i {
-    color: #4da528;
-    font-size: 28px;
-}
-
-.info-content h4 {
+.overview-content h4 {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 6px;
     color: #081e2a;
 }
 
-.info-content p {
+.overview-content p {
     color: #666;
     line-height: 1.6;
     margin: 0;
     font-size: 15px;
 }
 
-.info-content a {
-    color: #4da528;
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 500;
+.overview-content p strong {
+    color: #4a5d4a;
+    font-weight: 600;
 }
 
-.info-content a:hover {
+.tourism-link {
+    color: #4a5d4a;
+    text-decoration: none;
+}
+
+.tourism-link:hover {
     text-decoration: underline;
 }
 
 @media (max-width: 991px) {
-    .country-info-grid {
+    .overview-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 30px;
     }
 }
 
 @media (max-width: 767px) {
-    .country-info-grid {
+    .overview-grid {
         grid-template-columns: 1fr;
         gap: 24px;
     }
@@ -848,12 +998,22 @@ onMounted(() => {
     padding: 40px;
 }
 
+.place-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 15px;
+}
+
 .place-name {
     font-size: 28px;
     font-weight: 700;
-    margin-bottom: 15px;
+    margin: 0;
     color: #081e2a;
 }
+
+
 
 .place-overview {
     color: #666;
@@ -1022,6 +1182,116 @@ onMounted(() => {
 
     .tours-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Climate Section */
+.section-climate {
+    padding: 60px 0;
+    background: #f8f9fa;
+}
+
+.climate-inner h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #081e2a;
+}
+
+.climate-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.climate-row {
+    display: grid;
+    grid-template-columns: 200px repeat(12, 1fr);
+    align-items: center;
+    gap: 8px;
+}
+
+.climate-header .climate-cell {
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+}
+
+.climate-label {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+    padding-right: 12px;
+}
+
+.climate-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.climate-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.climate-badge-red {
+    background: #dc2626;
+}
+
+.climate-badge-yellow {
+    background: #eab308;
+    color: #1f2937;
+}
+
+.climate-badge-blue {
+    background: #3b82f6;
+}
+
+.climate-dash {
+    color: #ccc;
+    font-size: 14px;
+}
+
+@media (max-width: 991px) {
+    .climate-row {
+        grid-template-columns: 140px repeat(12, 1fr);
+        gap: 4px;
+    }
+
+    .climate-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 11px;
+    }
+
+    .climate-label {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 767px) {
+    .climate-row {
+        grid-template-columns: 120px repeat(12, 1fr);
+        gap: 2px;
+    }
+
+    .climate-badge {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+    }
+
+    .climate-header .climate-cell {
+        font-size: 11px;
     }
 }
 </style>

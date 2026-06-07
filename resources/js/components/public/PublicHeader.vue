@@ -175,32 +175,6 @@ onUnmounted(() => {
                                                     >
                                                 </li>
                                                 <li
-                                                    :class="{
-                                                        current:
-                                                            $page.url ===
-                                                            '/about',
-                                                    }"
-                                                >
-                                                    <Link
-                                                        :href="about()"
-                                                        @click="closeMobileMenu"
-                                                        >About</Link
-                                                    >
-                                                </li>
-                                                <li
-                                                    :class="{
-                                                        current:
-                                                            $page.url ===
-                                                            '/tours',
-                                                    }"
-                                                >
-                                                    <Link
-                                                        :href="tours.index()"
-                                                        @click="closeMobileMenu"
-                                                        >Tours</Link
-                                                    >
-                                                </li>
-                                                <li
                                                     class="dropdown2"
                                                     :class="{
                                                         current: $page.url.startsWith('/destinations'),
@@ -245,6 +219,32 @@ onUnmounted(() => {
                                                             </ul>
                                                         </li>
                                                     </ul>
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url ===
+                                                            '/tours',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="tours.index()"
+                                                        @click="closeMobileMenu"
+                                                        >Tours</Link
+                                                    >
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url ===
+                                                            '/about',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="about()"
+                                                        @click="closeMobileMenu"
+                                                        >About</Link
+                                                    >
                                                 </li>
                                                 <li
                                                     :class="{
