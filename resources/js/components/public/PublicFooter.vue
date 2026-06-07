@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref } from 'vue';
+
 import { about, contact, home } from '@/routes';
 
 const currentYear = new Date().getFullYear();
@@ -163,12 +164,17 @@ onUnmounted(() => {
         </div>
     </footer>
 
-    <a
-        id="scroll-top"
-        class="button-go"
-        :class="{ show: showBackToTop }"
+    <div
+        role="button"
+        tabindex="0"
+        class="fixed left-5 bottom-8 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#4DA528] text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:opacity-100"
+        :class="showBackToTop ? 'opacity-60 visible' : 'opacity-0 invisible'"
         @click="scrollToTop"
-    ></a>
+        @keydown.enter="scrollToTop"
+        aria-label="Back to top"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    </div>
 </template>
 
 <style scoped>
@@ -227,15 +233,4 @@ onUnmounted(() => {
     }
 }
 
-#scroll-top {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    cursor: pointer;
-}
-
-#scroll-top.show {
-    opacity: 1;
-    visibility: visible;
-}
 </style>

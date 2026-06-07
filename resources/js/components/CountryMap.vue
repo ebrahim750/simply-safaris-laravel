@@ -2,7 +2,7 @@
 import jsVectorMap from 'jsvectormap';
 import 'jsvectormap/dist/maps/world.js';
 import 'jsvectormap/dist/jsvectormap.css';
-import { onMounted, onUnmounted, shallowRef, useId } from 'vue';
+import { nextTick, onMounted, onUnmounted, shallowRef, useId } from 'vue';
 
 const props = defineProps<{
     countryCode: string;
@@ -12,6 +12,7 @@ const props = defineProps<{
 const containerId = `country-map-${useId()}`;
 const mapInstance = shallowRef<InstanceType<typeof jsVectorMap> | null>(null);
 let resizeHandler: (() => void) | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 // Country to continent mapping (ISO 3166-1 alpha-2)
 const continentMap: Record<string, string> = {
@@ -98,7 +99,9 @@ function stretchSvgToFill(): void {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await nextTick();
+
     const code = props.countryCode.trim().toUpperCase();
 
     mapInstance.value = new jsVectorMap({
@@ -138,6 +141,22 @@ onMounted(() => {
 
     stretchSvgToFill();
 
+    // Observe container resizes (handles layout settling on full page reloads)
+    const container = document.querySelector(`#${containerId}`);
+    if (container) {
+        resizeObserver = new ResizeObserver(() => {
+            mapInstance.value?.updateSize();
+            stretchSvgToFill();
+        });
+        resizeObserver.observe(container);
+    }
+
+    // Ensure correct size after layout fully settles
+    requestAnimationFrame(() => {
+        mapInstance.value?.updateSize();
+        stretchSvgToFill();
+    });
+
     resizeHandler = () => {
         mapInstance.value?.updateSize();
         stretchSvgToFill();
@@ -149,6 +168,11 @@ onUnmounted(() => {
     if (resizeHandler) {
         window.removeEventListener('resize', resizeHandler);
         resizeHandler = null;
+    }
+
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
     }
 
     mapInstance.value?.destroy();

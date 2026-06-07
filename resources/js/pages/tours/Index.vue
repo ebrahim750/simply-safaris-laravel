@@ -1,20 +1,51 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { MapPin, Compass, CalendarDays } from 'lucide-vue-next';
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
+import { ref } from 'vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
+import Pagination from '@/components/Pagination.vue';
+
+const priceRange = ref([100, 5000]);
+
+interface Tour {
+    id: number;
+    name: string;
+    main_image: string | null;
+    price: string;
+    price_amount: number;
+    duration_days: number | null;
+    categories: Array<{ id: number; name: string }>;
+    places: Array<{ id: number; name: string; country?: string }>;
+}
+
+interface PaginatorLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface ToursPaginator {
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    data: Tour[];
+    links: PaginatorLink[];
+}
 
 defineProps<{
-    tours: Array<{
+    tours: ToursPaginator;
+    countries: Array<{
         id: number;
         name: string;
-        main_image: string | null;
-        price: string;
-        price_amount: number;
-        duration_days: number | null;
-        categories: Array<{ id: number; name: string }>;
+        country_code: string | null;
         places: Array<{ id: number; name: string }>;
     }>;
 }>();
+
+const isDestinationOpen = ref(false);
 </script>
 
 <template>
@@ -44,20 +75,66 @@ defineProps<{
     <section class="archieve-tour">
         <div class="tf-container">
             <div class="row">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <form action="/" class="sider-bar-tour-package">
                         <div class="widget-filter mb-40">
                             <h6 class="title-tour">Search by Filter</h6>
                             <div class="group-select-wrap">
-                                <fieldset class="group-select relative mb-22">
-                                    <i class="icon-Vector-8"></i>
-                                    <div class="search-bar-group relative">
-                                        <label>Destination</label>
-                                        <div class="nice-select" tabindex="0">
+                                <div class="destination-accordion mb-22">
+                                    <button
+                                        type="button"
+                                        class="accordion-trigger"
+                                        @click="isDestinationOpen = !isDestinationOpen"
+                                    >
+                                        <MapPin class="filter-icon" />
+                                        <div class="search-bar-group relative">
+                                            <label>Destination</label>
                                             <span class="current">Location</span>
                                         </div>
+                                        <span
+                                            class="trigger-chevron"
+                                            :class="{ 'is-open': isDestinationOpen }"
+                                        >&#9662;</span>
+                                    </button>
+                                    <div v-show="isDestinationOpen" class="accordion-panel">
+                                        <div
+                                            v-for="country in countries"
+                                            :key="country.id"
+                                            class="accordion-country"
+                                        >
+                                            <div class="country-header group-check-box-wrap">
+                                                <div class="checkbox">
+                                                    <input
+                                                        :id="'country-' + country.id"
+                                                        type="checkbox"
+                                                    />
+                                                    <label :for="'country-' + country.id">
+                                                        <img
+                                                            v-if="country.country_code"
+                                                            :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
+                                                            :alt="country.name"
+                                                            class="country-flag"
+                                                        />
+                                                        <span>{{ country.name }}</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="country-places group-check-box-wrap">
+                                                <div
+                                                    v-for="place in country.places"
+                                                    :key="place.id"
+                                                    class="checkbox"
+                                                >
+                                                    <input
+                                                        :id="'place-' + place.id"
+                                                        type="checkbox"
+                                                    />
+                                                    <label :for="'place-' + place.id">{{ place.name }}</label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </fieldset>
+                                </div>
                                 <fieldset class="group-select relative mb-22">
                                     <i class="icon-Vector-22"></i>
                                     <div class="search-bar-group relative">
@@ -67,51 +144,34 @@ defineProps<{
                                         </div>
                                     </div>
                                 </fieldset>
-                                <fieldset class="group-select relative mb-22">
-                                    <i class="icon-Group-111"></i>
-                                    <div class="search-bar-group relative">
-                                        <label>Date</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">Date From</span>
-                                        </div>
-                                    </div>
-                                </fieldset>
-                                <fieldset class="group-select relative mb-22">
-                                    <i class="icon-user"></i>
-                                    <div class="search-bar-group relative">
-                                        <label>0</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">Guests</span>
-                                        </div>
-                                    </div>
-                                </fieldset>
                                 <fieldset class="group-select relative mb-40">
                                     <h6 class="title-tour">Filter By Price</h6>
                                     <div class="widget widget-price">
-                                        <div class="slider-labels">
-                                            <div class="caption flex-three">
-                                                <p class="price-range">Price:</p>
-                                                <div class="number-range">
-                                                    <span>$100</span>
-                                                    <span>$5,000</span>
-                                                </div>
-                                            </div>
+                                        <div class="slider-labels flex-two">
+                                            <span>Min</span>
+                                            <span>Max</span>
                                         </div>
-                                    </div>
-                                </fieldset>
-                                <fieldset class="group-select relative input-npd mb-22">
-                                    <div class="search-bar-group relative">
-                                        <label>0</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">English</span>
-                                        </div>
-                                    </div>
-                                </fieldset>
-                                <fieldset class="group-select relative input-npd mb-22">
-                                    <div class="search-bar-group relative">
-                                        <label>Any</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">Month</span>
+                                        <SliderRoot
+                                            v-model="priceRange"
+                                            class="range-slider"
+                                            :min="100"
+                                            :max="5000"
+                                            :step="100"
+                                            :min-steps-between-thumbs="1"
+                                        >
+                                            <SliderTrack class="slider-track">
+                                                <SliderRange class="slider-fill" />
+                                            </SliderTrack>
+                                            <SliderThumb
+                                                v-for="(_, index) in priceRange"
+                                                :key="index"
+                                                class="slider-thumb"
+                                                :aria-label="index === 0 ? 'Minimum price' : 'Maximum price'"
+                                            />
+                                        </SliderRoot>
+                                        <div class="slider-labels flex-two">
+                                            <span>${{ priceRange[0].toLocaleString() }}</span>
+                                            <span>${{ priceRange[1].toLocaleString() }}</span>
                                         </div>
                                     </div>
                                 </fieldset>
@@ -124,31 +184,7 @@ defineProps<{
                                     </div>
                                 </fieldset>
                             </div>
-                        </div>
-                        <div class="widget-filter mb-40">
-                            <h6 class="title-tour">Search by Filter</h6>
-                            <div class="group-check-box-wrap">
-                                <div class="checkbox">
-                                    <input id="check" type="checkbox" name="check" value="check" />
-                                    <label for="check">10+</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check1" type="checkbox" name="check" value="check" />
-                                    <label for="check1">12+</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check2" type="checkbox" name="check" value="check" />
-                                    <label for="check2">15+</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check3" type="checkbox" name="check" value="check" />
-                                    <label for="check3">Adults</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="widget-filter mb-40">
-                            <h6 class="title-tour">Search by Filter</h6>
-                            <div class="group-check-box-wrap">
+                            <div class="group-check-box-wrap mt-30">
                                 <div class="checkbox">
                                     <input id="check4-bar" type="checkbox" name="check" value="check" />
                                     <label for="check4-bar">Accepts Credit Cards</label>
@@ -185,44 +221,10 @@ defineProps<{
                         </div>
                     </form>
                 </div>
-                <div class="col-lg-8 listing-list-car-wrap">
-                    <form action="/" class="tf-my-listing mb-37">
-                        <div class="row align-center">
-                            <div class="col-sm-5">
-                                <p class="showing">
-                                    Showing <span class="text-main">{{ tours.length }}</span> of
-                                    {{ tours.length }} Results
-                                </p>
-                            </div>
-                            <div class="col-sm-7 group-bar-wrap flex-six">
-                                <div class="listing-all-wrap">
-                                    <div class="flex-three">
-                                        <div class="group-select-recently">
-                                            <div class="nice-select" tabindex="0">
-                                                <i class="icon-Vector6"></i
-                                                ><span class="current">Price</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="toolbar-list">
-                                        <div class="form-group">
-                                            <a class="btn-display-listing-grid active">
-                                                <i class="icon-list"></i>
-                                            </a>
-                                        </div>
-                                        <div class="form-group">
-                                            <a class="btn-display-listing-list">
-                                                <i class="icon-Group-1000001297"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                    <div class="listing-list-car-grid mb-60">
+                <div class="col-lg-9 listing-list-car-wrap">
+                    <div class="listing-list-car-grid mb-60 mt-37">
                         <div
-                            v-for="tour in tours"
+                            v-for="tour in tours.data"
                             :key="tour.id"
                             class="tour-listing box-sd"
                         >
@@ -230,37 +232,38 @@ defineProps<{
                                 :href="tourRoutes.show({ tour: tour.id })"
                                 class="tour-listing-image"
                             >
-                                <div class="badge-top flex-two">
-                                    <span class="feature">Featured</span>
-                                    <div class="badge-media flex-five">
-                                        <span class="media"
-                                            ><i class="icon-Group-1000002909"></i>5</span
-                                        >
-                                        <span class="media"
-                                            ><i class="icon-Group-1000002910"></i>2</span
-                                        >
-                                    </div>
+                                <div class="image-housing">
+                                    <img
+                                        v-if="tour.main_image"
+                                        :src="tour.main_image"
+                                        :alt="tour.name"
+                                    />
+                                    <img
+                                        v-else
+                                        src="/images/defaults/600x400.png"
+                                        :alt="tour.name"
+                                    />
                                 </div>
-                                <img
-                                    v-if="tour.main_image"
-                                    :src="tour.main_image"
-                                    :alt="tour.name"
-                                />
-                                <img
-                                    v-else
-                                    src="https://placehold.co/600x400/e2e8f0/475569?text=No+Image"
-                                    :alt="tour.name"
-                                />
                             </Link>
                             <div class="tour-listing-content">
-                                <span class="map"
-                                    ><i class="icon-Vector4"></i
-                                    >{{
-                                        tour.places.length > 0
-                                            ? tour.places.map((p) => p.name).join(', ')
-                                            : 'Worldwide'
-                                    }}</span
-                                >
+                                <div class="flex-three location-meta flex-wrap">
+                                    <span class="map"
+                                        ><MapPin class="icon-inline" />
+                                        {{
+                                            tour.places.length > 0
+                                                ? [...new Set(tour.places.map((p) => p.country).filter(Boolean))].join(', ')
+                                                : '-'
+                                        }}</span
+                                    >
+                                    <span v-if="tour.places.length > 0" class="map"
+                                        ><Compass class="icon-inline" />
+                                        {{
+                                            tour.places.length > 3
+                                                ? tour.places.slice(0, 3).map((p) => p.name).join(', ') + '...'
+                                                : tour.places.map((p) => p.name).join(', ')
+                                        }}</span
+                                    >
+                                </div>
                                 <h3 class="title-tour-list">
                                     <Link :href="tourRoutes.show({ tour: tour.id })"
                                         >{{ tour.name }}</Link
@@ -268,55 +271,12 @@ defineProps<{
                                 </h3>
                                 <div class="icon-box flex-three">
                                     <div class="icons flex-three">
-                                        <i class="icon-time-left"></i>
+                                        <CalendarDays class="icon-inline" />
                                         <span
-                                            >{{ tour.duration_days ?? 'N/A' }}
-                                            {{ tour.duration_days === 1 ? 'day' : 'days' }}</span
+                                            >{{ tour.duration_days ? `${tour.duration_days} ${tour.duration_days === 1 ? 'day' : 'days'}` : '-' }}</span
                                         >
                                     </div>
-                                    <div class="icons flex-three">
-                                        <svg
-                                            width="21"
-                                            height="16"
-                                            viewBox="0 0 21 16"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-miterlimit="10"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                            <path
-                                                d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-miterlimit="10"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                            <path
-                                                d="M17.1035 15.1797V9.02734"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-miterlimit="10"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                            <path
-                                                d="M20.1797 12.1035H14.0273"
-                                                stroke="currentColor"
-                                                stroke-width="1.7"
-                                                stroke-miterlimit="10"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-                                        <span>12 Person</span>
-                                    </div>
+
                                 </div>
                                 <div class="flex-two">
                                     <div class="price-box flex-three">
@@ -324,30 +284,16 @@ defineProps<{
                                             From <span class="price-sale">{{ tour.price }}</span>
                                         </p>
                                     </div>
-                                    <div class="icon-bookmark">
-                                        <i class="icon-Vector-151"></i>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row" v-if="tours.length > 0">
+                    <div class="row" v-if="tours.data.length > 0">
                         <div class="col-md-12">
-                            <ul class="tf-pagination flex-three">
-                                <li>
-                                    <a class="pages-link" href="#">
-                                        <i class="icon-29"></i
-                                    ></a>
-                                </li>
-                                <li class="pages-item active" aria-current="page">
-                                    <a class="pages-link" href="#">1</a>
-                                </li>
-                                <li>
-                                    <a class="pages-link" href="#"
-                                        ><i class="icon--1"></i
-                                    ></a>
-                                </li>
-                            </ul>
+                            <div class="flex justify-center">
+                                <Pagination :paginator="tours" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -357,3 +303,241 @@ defineProps<{
 
 
 </template>
+
+<style scoped>
+.listing-list-car-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.image-housing {
+    height: 300px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.image-housing img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.map {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.icon-inline {
+    width: 18px;
+    height: 18px;
+    color: #4DA528;
+    flex-shrink: 0;
+}
+
+.filter-icon {
+    width: 20px;
+    height: 20px;
+    color: #4DA528;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.location-meta {
+    gap: 40px;
+}
+
+.mt-30 {
+    margin-top: 30px;
+}
+
+.title-tour-list {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.title-tour-list a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.range-slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 18px;
+    margin-bottom: 8px;
+    margin-top: 6px;
+    user-select: none;
+    touch-action: none;
+}
+
+.slider-track {
+    position: relative;
+    flex: 1;
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+}
+
+.slider-fill {
+    position: absolute;
+    height: 100%;
+    background: #4da528;
+    border-radius: 2px;
+}
+
+.slider-thumb {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: #4da528;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.slider-thumb:focus-visible {
+    outline: 2px solid rgba(77, 165, 40, 0.35);
+    outline-offset: 2px;
+}
+
+.slider-labels {
+    font-size: 12px;
+    color: #999;
+}
+
+.destination-accordion {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.accordion-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 40px 12px 53px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.accordion-trigger .search-bar-group {
+    flex: 1;
+}
+
+.accordion-trigger .search-bar-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4f545a;
+    margin-bottom: 2px;
+}
+
+.accordion-trigger .current {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #081e2a;
+}
+
+.trigger-chevron {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    margin-top: -4px;
+    width: 8px;
+    height: 8px;
+    border-bottom: 1.7px solid #3a3a3c;
+    border-right: 1.7px solid #3a3a3c;
+    transform: rotate(45deg);
+    transition: all 0.15s ease-in-out;
+    pointer-events: none;
+}
+
+.trigger-chevron.is-open {
+    transform: rotate(-135deg);
+    margin-top: 0;
+}
+
+.accordion-panel {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 0 16px 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.country-header {
+    padding: 6px 0;
+}
+
+.destination-accordion .country-header.group-check-box-wrap input[type="checkbox"] + label {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #081e2a !important;
+}
+
+.country-flag {
+    width: 20px;
+    height: 14px;
+    border-radius: 2px;
+    object-fit: cover;
+    border: 1px solid #e5e5e5;
+    order: 1;
+}
+
+.country-places {
+    padding-left: 28px;
+    padding-bottom: 8px;
+}
+
+.destination-accordion .country-places.group-check-box-wrap input[type="checkbox"] + label {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #4f545a !important;
+}
+
+.place-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 14px;
+    color: #4f545a;
+    cursor: pointer;
+}
+
+.place-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4da528;
+}
+
+@media (max-width: 991px) {
+    .listing-list-car-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .listing-list-car-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

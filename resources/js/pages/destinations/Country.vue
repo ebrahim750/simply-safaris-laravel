@@ -386,7 +386,7 @@ onMounted(() => {
     </section>
 
     <!-- Places Section with Sidebar -->
-    <section class="section-places">
+    <section v-if="country.places.length > 0" class="section-places">
         <div class="tf-container">
             <div class="row">
                 <!-- Sticky Sidebar -->
@@ -632,7 +632,7 @@ onMounted(() => {
 
 .map-card {
     background: #fff;
-    border-radius: 16px 16px 0 0;
+    border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     padding: 0 0 16px;
     margin-top: 30px;
