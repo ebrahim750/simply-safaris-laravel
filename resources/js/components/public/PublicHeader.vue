@@ -237,7 +237,7 @@ onUnmounted(() => {
                                                                     :key="place.id"
                                                                 >
                                                                     <Link
-                                                                        :href="destinations.place({ country: country.slug, place: place.slug })"
+                                                                        :href="`${destinations.country({ country: country.slug }).url}#${place.slug}`"
                                                                         @click="closeMobileMenu"
                                                                         >{{ place.name }}</Link
                                                                     >

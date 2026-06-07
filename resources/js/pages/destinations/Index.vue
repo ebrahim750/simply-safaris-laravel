@@ -91,7 +91,7 @@ defineProps<{
                             class="destination-tour center"
                         >
                             <Link
-                                :href="destinations.place({ country: country.slug, place: place.slug })"
+                                :href="`${destinations.country({ country: country.slug }).url}#${place.slug}`"
                                 class="destination-image"
                                 style="width: 160px; height: 160px;"
                             >
@@ -126,11 +126,11 @@ defineProps<{
                                 <span class="tour text-white">{{ place.tours_count }} {{ place.tours_count === 1 ? 'Tour' : 'Tours' }}</span>
                             </div>
                             <div class="title-tour">
-                                <Link
-                                    :href="destinations.place({ country: country.slug, place: place.slug })"
+                                <a
+                                    :href="`${destinations.country({ country: country.slug }).url}#${place.slug}`"
                                 >
                                     {{ place.name }}
-                                </Link>
+                                </a>
                             </div>
                         </div>
                     </div>

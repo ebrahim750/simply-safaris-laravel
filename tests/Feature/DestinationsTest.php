@@ -28,20 +28,6 @@ describe('Destinations', function () {
         $response->assertStatus(200);
     });
 
-    it('can render place page', function () {
-        $country = Country::factory()->create();
-        $place = Place::factory()
-            ->for($country)
-            ->create();
-
-        $response = $this->get(route('destinations.place', [
-            'country' => $country,
-            'place' => $place,
-        ]));
-
-        $response->assertStatus(200);
-    });
-
     it('shares destinations data in inertia props', function () {
         Country::factory()
             ->count(2)

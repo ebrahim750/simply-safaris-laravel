@@ -47,21 +47,30 @@ class DestinationController extends Controller
     {
         $country->main_image = $this->resolveImageUrl($country->main_image);
 
+        $country->load([
+            'places' => fn ($query) => $query
+                ->orderBy('name')
+                ->with([
+                    'tours' => fn ($query) => $query
+                        ->select('tours.id', 'name', 'main_image', 'price', 'duration_days')
+                        ->orderByPivot('position'),
+                ])
+                ->withCount('tours'),
+        ]);
+
+        $country->places->each(function (Place $place) {
+            $place->main_image = $this->resolveImageUrl($place->main_image);
+            $place->setRelation('tours', $place->tours->take(4));
+            $place->tours->each(function ($tour) {
+                $tour->main_image = $this->resolveImageUrl($tour->main_image);
+            });
+        });
+
         return Inertia::render('destinations/Country', [
-            'country' => $country->load(['places' => fn ($query) => $query->orderBy('name')]),
-        ]);
-    }
-
-    public function showPlace(Country $country, Place $place): Response
-    {
-        $country->main_image = $this->resolveImageUrl($country->main_image);
-        $place->main_image = $this->resolveImageUrl($place->main_image);
-
-        return Inertia::render('destinations/Place', [
             'country' => $country,
-            'place' => $place->load('country'),
         ]);
     }
+
 
     private function resolveImageUrl(?string $path): ?string
     {
@@ -74,3 +83,4 @@ class DestinationController extends Controller
             : Storage::disk('public')->url($path);
     }
 }
+

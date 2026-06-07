@@ -22,7 +22,6 @@ Route::inertia('/contact', 'Contact')->name('contact');
 
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
 Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
-Route::get('/destinations/{country:slug}/{place:slug}', [DestinationController::class, 'showPlace'])->name('destinations.place');
 
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
@@ -86,3 +85,4 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
 });
 
 require __DIR__.'/settings.php';
+
