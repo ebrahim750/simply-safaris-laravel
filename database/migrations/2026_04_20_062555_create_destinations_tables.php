@@ -20,8 +20,7 @@ return new class extends Migration
             $table->string('main_image')->nullable();
             $table->text('best_time_to_go')->nullable();
             $table->text('high_season')->nullable();
-            $table->text('electrical')->nullable();
-            $table->string('tourist_info')->nullable();
+            $table->string('tourism_link')->nullable();
             $table->timestamps();
         });
 

@@ -1201,21 +1201,37 @@ onMounted(() => {
 .climate-grid {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 }
 
 .climate-row {
     display: grid;
     grid-template-columns: 200px repeat(12, 1fr);
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    transition: background-color 0.25s ease;
+}
+
+.climate-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.climate-header {
+    padding: 0 16px 4px;
+}
+
+.climate-header:hover {
+    background-color: transparent;
 }
 
 .climate-header .climate-cell {
     font-size: 13px;
     font-weight: 600;
-    color: #666;
+    color: #888;
     text-align: center;
+    letter-spacing: 0.3px;
 }
 
 .climate-label {
@@ -1223,6 +1239,7 @@ onMounted(() => {
     color: #555;
     line-height: 1.4;
     padding-right: 12px;
+    font-weight: 500;
 }
 
 .climate-cell {
@@ -1235,25 +1252,33 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: #fff;
+    cursor: default;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.climate-badge:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 .climate-badge-red {
-    background: #dc2626;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .climate-badge-yellow {
-    background: #eab308;
+    background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
     color: #1f2937;
 }
 
 .climate-badge-blue {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
 }
 
 .climate-dash {
@@ -1261,16 +1286,55 @@ onMounted(() => {
     font-size: 14px;
 }
 
+/* Staggered entrance animation */
+@keyframes climate-pop-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    70% {
+        transform: scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.climate-badge {
+    animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Stagger delays per column */
+.climate-cell:nth-child(2) .climate-badge { animation-delay: 0.02s; }
+.climate-cell:nth-child(3) .climate-badge { animation-delay: 0.04s; }
+.climate-cell:nth-child(4) .climate-badge { animation-delay: 0.06s; }
+.climate-cell:nth-child(5) .climate-badge { animation-delay: 0.08s; }
+.climate-cell:nth-child(6) .climate-badge { animation-delay: 0.10s; }
+.climate-cell:nth-child(7) .climate-badge { animation-delay: 0.12s; }
+.climate-cell:nth-child(8) .climate-badge { animation-delay: 0.14s; }
+.climate-cell:nth-child(9) .climate-badge { animation-delay: 0.16s; }
+.climate-cell:nth-child(10) .climate-badge { animation-delay: 0.18s; }
+.climate-cell:nth-child(11) .climate-badge { animation-delay: 0.20s; }
+.climate-cell:nth-child(12) .climate-badge { animation-delay: 0.22s; }
+.climate-cell:nth-child(13) .climate-badge { animation-delay: 0.24s; }
+
+/* Row stagger - each row starts slightly later */
+.climate-row:nth-child(2) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.05s); }
+.climate-row:nth-child(3) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.10s); }
+.climate-row:nth-child(4) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.15s); }
+.climate-row:nth-child(5) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.20s); }
+
 @media (max-width: 991px) {
     .climate-row {
         grid-template-columns: 140px repeat(12, 1fr);
-        gap: 4px;
+        gap: 6px;
     }
 
     .climate-badge {
-        width: 32px;
-        height: 32px;
-        font-size: 11px;
+        width: 36px;
+        height: 36px;
+        font-size: 12px;
     }
 
     .climate-label {
@@ -1281,17 +1345,18 @@ onMounted(() => {
 @media (max-width: 767px) {
     .climate-row {
         grid-template-columns: 120px repeat(12, 1fr);
-        gap: 2px;
+        gap: 3px;
+        padding: 8px 10px;
     }
 
     .climate-badge {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
         font-size: 10px;
     }
 
     .climate-header .climate-cell {
-        font-size: 11px;
+        font-size: 10px;
     }
 }
 </style>
