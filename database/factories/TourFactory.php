@@ -26,6 +26,15 @@ class TourFactory extends Factory
                 fake()->imageUrl(1200, 800, 'travel'),
                 fake()->imageUrl(1200, 800, 'travel'),
             ],
+            'external_url' => fake()->optional()->url(),
+            'external_link_button_text' => fake()->optional()->words(2, true),
+            'show_external_booking' => fake()->boolean(),
+            'duration_days' => fake()->numberBetween(1, 21),
+            'overview' => fake()->paragraphs(3, true),
+            'pricing_detailed' => fake()->paragraphs(2, true),
+            'is_hidden' => fake()->boolean(20),
+            'is_featured_on_home' => fake()->boolean(10),
+            'is_featured_as_seasonal_recommendation' => fake()->boolean(10),
         ];
     }
 }

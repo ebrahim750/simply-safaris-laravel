@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { MapPin, Bike, CalendarDays, Tag } from 'lucide-vue-next';
+import { MapPin, Bike, CalendarDays, Tag, Compass } from 'lucide-vue-next';
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
 import Pagination from '@/components/Pagination.vue';
@@ -51,6 +51,33 @@ defineProps<{
 const isDestinationOpen = ref(false);
 const isActivitiesOpen = ref(false);
 const isCategoriesOpen = ref(false);
+
+const selectedCountries = ref<number[]>([]);
+const selectedPlaces = ref<number[]>([]);
+const selectedCategories = ref<number[]>([]);
+const selectedActivities = ref<number[]>([]);
+
+const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
+
+const hasActiveFilters = computed(() =>
+    selectedCountries.value.length > 0 ||
+    selectedPlaces.value.length > 0 ||
+    selectedCategories.value.length > 0 ||
+    selectedActivities.value.length > 0 ||
+    priceRange.value[0] !== 100 ||
+    priceRange.value[1] !== 5000 ||
+    durationRange.value[0] !== 1 ||
+    durationRange.value[1] !== 30
+);
+
+function clearFilters(): void {
+    selectedCountries.value = [];
+    selectedPlaces.value = [];
+    selectedCategories.value = [];
+    selectedActivities.value = [];
+    priceRange.value = [100, 5000];
+    durationRange.value = [1, 30];
+}
 </script>
 
 <template>
@@ -83,7 +110,17 @@ const isCategoriesOpen = ref(false);
                 <div class="col-lg-3">
                     <form action="/" class="sider-bar-tour-package">
                         <div class="widget-filter mb-40">
-                            <h6 class="title-tour">Filter Tours</h6>
+                            <div class="flex items-center justify-between mb-4">
+                                <h6 class="title-tour">Filter Tours</h6>
+                                <button
+                                    v-if="hasActiveFilters"
+                                    type="button"
+                                    class="text-xs font-medium text-[#4DA528] bg-[#4DA528]/10 hover:bg-[#4DA528]/20 rounded-full px-3 py-1 transition-colors"
+                                    @click="clearFilters"
+                                >
+                                    Clear active filters
+                                </button>
+                            </div>
                             <div class="group-select-wrap">
                                 <div class="destination-accordion mb-22">
                                     <button
@@ -96,6 +133,7 @@ const isCategoriesOpen = ref(false);
                                             <label>Destination</label>
                                             <span class="current">Location</span>
                                         </div>
+                                        <span v-if="destinationCount > 0" class="filter-badge">selected: {{ destinationCount }}</span>
                                         <span
                                             class="trigger-chevron"
                                             :class="{ 'is-open': isDestinationOpen }"
@@ -111,7 +149,9 @@ const isCategoriesOpen = ref(false);
                                                 <div class="checkbox">
                                                     <input
                                                         :id="'country-' + country.id"
+                                                        v-model="selectedCountries"
                                                         type="checkbox"
+                                                        :value="country.id"
                                                     />
                                                     <label :for="'country-' + country.id">
                                                         <img
@@ -132,7 +172,9 @@ const isCategoriesOpen = ref(false);
                                                 >
                                                     <input
                                                         :id="'place-' + place.id"
+                                                        v-model="selectedPlaces"
                                                         type="checkbox"
+                                                        :value="place.id"
                                                     />
                                                     <label :for="'place-' + place.id">{{ place.name }}</label>
                                                 </div>
@@ -151,6 +193,7 @@ const isCategoriesOpen = ref(false);
                                             <label>Categories</label>
                                             <span class="current">Tour Type</span>
                                         </div>
+                                        <span v-if="selectedCategories.length > 0" class="filter-badge">selected: {{ selectedCategories.length }}</span>
                                         <span
                                             class="trigger-chevron"
                                             :class="{ 'is-open': isCategoriesOpen }"
@@ -165,7 +208,9 @@ const isCategoriesOpen = ref(false);
                                             <div class="checkbox">
                                                 <input
                                                     :id="'category-' + category.id"
+                                                    v-model="selectedCategories"
                                                     type="checkbox"
+                                                    :value="category.id"
                                                 />
                                                 <label :for="'category-' + category.id">{{ category.name }}</label>
                                             </div>
@@ -183,6 +228,7 @@ const isCategoriesOpen = ref(false);
                                             <label>Activities</label>
                                             <span class="current">Booking Type</span>
                                         </div>
+                                        <span v-if="selectedActivities.length > 0" class="filter-badge">selected: {{ selectedActivities.length }}</span>
                                         <span
                                             class="trigger-chevron"
                                             :class="{ 'is-open': isActivitiesOpen }"
@@ -197,7 +243,9 @@ const isCategoriesOpen = ref(false);
                                             <div class="checkbox">
                                                 <input
                                                     :id="'activity-' + activity.id"
+                                                    v-model="selectedActivities"
                                                     type="checkbox"
+                                                    :value="activity.id"
                                                 />
                                                 <label :for="'activity-' + activity.id">{{ activity.name }}</label>
                                             </div>
@@ -560,6 +608,21 @@ const isCategoriesOpen = ref(false);
 .activity-item,
 .category-item {
     padding: 6px 0;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #4DA528;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 10px;
+    margin-right: 4px;
 }
 
 .destination-accordion .activity-item.group-check-box-wrap input[type="checkbox"] + label,
