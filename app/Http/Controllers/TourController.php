@@ -7,6 +7,7 @@ use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
@@ -15,14 +16,30 @@ use Inertia\Response;
 
 class TourController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $tours = Tour::query()
             ->where('is_hidden', false)
+            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->input('search').'%'))
+            ->when($request->filled('categories'), fn ($query) => $query->whereHas('categories', fn ($q) => $q->whereIn('tour_categories.id', $request->array('categories'))))
+            ->when($request->filled('activities'), fn ($query) => $query->whereHas('activities', fn ($q) => $q->whereIn('tour_activities.id', $request->array('activities'))))
+            ->when($request->filled('places'), fn ($query) => $query->whereHas('places', fn ($q) => $q->whereIn('places.id', $request->array('places'))))
+            ->when($request->filled('countries'), fn ($query) => $query->whereHas('places', fn ($q) => $q->whereIn('country_id', $request->array('countries'))))
+            ->when($request->filled('price_min') || $request->filled('price_max'), function ($query) use ($request) {
+                $min = $request->input('price_min', 0);
+                $max = $request->input('price_max', PHP_INT_MAX);
+                $query->whereBetween('price', [(float) $min, (float) $max]);
+            })
+            ->when($request->filled('duration_min') || $request->filled('duration_max'), function ($query) use ($request) {
+                $min = $request->input('duration_min', 0);
+                $max = $request->input('duration_max', PHP_INT_MAX);
+                $query->whereBetween('duration_days', [(int) $min, (int) $max]);
+            })
             ->latest('id')
             ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name'])
             ->paginate(9)
-            ->through(fn (Tour $tour): array => $this->mapTour($tour));
+            ->through(fn (Tour $tour): array => $this->mapTour($tour))
+            ->withQueryString();
 
         $countries = Country::query()
             ->with(['places' => fn ($query) => $query->select('id', 'country_id', 'name')->orderBy('name')])
@@ -43,11 +60,28 @@ class TourController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $filters = [
+            'search' => $request->input('search'),
+            'categories' => array_map('intval', $request->array('categories', [])),
+            'activities' => array_map('intval', $request->array('activities', [])),
+            'places' => array_map('intval', $request->array('places', [])),
+            'countries' => array_map('intval', $request->array('countries', [])),
+            'price' => [
+                'min' => (int) $request->input('price_min', 100),
+                'max' => (int) $request->input('price_max', 5000),
+            ],
+            'duration' => [
+                'min' => (int) $request->input('duration_min', 1),
+                'max' => (int) $request->input('duration_max', 30),
+            ],
+        ];
+
         return Inertia::render('tours/Index', [
             'tours' => $tours,
             'countries' => $countries,
             'activities' => $activities,
             'categories' => $categories,
+            'filters' => $filters,
         ]);
     }
 

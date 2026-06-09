@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { MapPin, Bike, CalendarDays, Tag, Compass } from 'lucide-vue-next';
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
-import { computed, ref } from 'vue';
+import { debounce } from 'lodash-es';
+import { computed, ref, watch } from 'vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
 import Pagination from '@/components/Pagination.vue';
-
-const priceRange = ref([100, 5000]);
-const durationRange = ref([1, 30]);
 
 interface Tour {
     id: number;
@@ -36,7 +34,7 @@ interface ToursPaginator {
     links: PaginatorLink[];
 }
 
-defineProps<{
+const props = defineProps<{
     tours: ToursPaginator;
     countries: Array<{
         id: number;
@@ -46,16 +44,27 @@ defineProps<{
     }>;
     activities: Array<{ id: number; name: string }>;
     categories: Array<{ id: number; name: string }>;
+    filters: {
+        search: string | null;
+        categories: number[];
+        activities: number[];
+        places: number[];
+        countries: number[];
+        price: { min: number; max: number };
+        duration: { min: number; max: number };
+    };
 }>();
 
 const isDestinationOpen = ref(false);
 const isActivitiesOpen = ref(false);
 const isCategoriesOpen = ref(false);
 
-const selectedCountries = ref<number[]>([]);
-const selectedPlaces = ref<number[]>([]);
-const selectedCategories = ref<number[]>([]);
-const selectedActivities = ref<number[]>([]);
+const selectedCountries = ref<number[]>(props.filters.countries);
+const selectedPlaces = ref<number[]>(props.filters.places);
+const selectedCategories = ref<number[]>(props.filters.categories);
+const selectedActivities = ref<number[]>(props.filters.activities);
+const priceRange = ref([props.filters.price.min, props.filters.price.max]);
+const durationRange = ref([props.filters.duration.min, props.filters.duration.max]);
 
 const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
 
@@ -67,8 +76,31 @@ const hasActiveFilters = computed(() =>
     priceRange.value[0] !== 100 ||
     priceRange.value[1] !== 5000 ||
     durationRange.value[0] !== 1 ||
-    durationRange.value[1] !== 30
+    durationRange.value[1] !== 30 ||
+    props.filters.search !== null
 );
+
+function applyFilters(): void {
+    const params: Record<string, unknown> = {};
+    if (selectedCategories.value.length > 0) params.categories = selectedCategories.value;
+    if (selectedActivities.value.length > 0) params.activities = selectedActivities.value;
+    if (selectedPlaces.value.length > 0) params.places = selectedPlaces.value;
+    if (selectedCountries.value.length > 0) params.countries = selectedCountries.value;
+    if (priceRange.value[0] !== 100) params.price_min = priceRange.value[0];
+    if (priceRange.value[1] !== 5000) params.price_max = priceRange.value[1];
+    if (durationRange.value[0] !== 1) params.duration_min = durationRange.value[0];
+    if (durationRange.value[1] !== 30) params.duration_max = durationRange.value[1];
+
+    router.get(tourRoutes.index({ query: params }).url, {}, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
+
+const debouncedApplyFilters = debounce(applyFilters, 300);
+
+watch(priceRange, () => debouncedApplyFilters(), { deep: true });
+watch(durationRange, () => debouncedApplyFilters(), { deep: true });
 
 function clearFilters(): void {
     selectedCountries.value = [];
@@ -77,6 +109,11 @@ function clearFilters(): void {
     selectedActivities.value = [];
     priceRange.value = [100, 5000];
     durationRange.value = [1, 30];
+
+    router.get(tourRoutes.index().url, {}, {
+        preserveState: true,
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -121,6 +158,9 @@ function clearFilters(): void {
                                     Clear filter
                                 </button>
                             </div>
+                            <p v-if="props.filters.search" class="mt-2 text-sm text-gray-600">
+                                Search results for: "{{ props.filters.search }}"
+                            </p>
                             <div class="group-select-wrap">
                                 <div class="destination-accordion mb-22">
                                     <button
@@ -152,6 +192,7 @@ function clearFilters(): void {
                                                         v-model="selectedCountries"
                                                         type="checkbox"
                                                         :value="country.id"
+                                                        @change="applyFilters"
                                                     />
                                                     <label :for="'country-' + country.id">
                                                         <img
@@ -175,6 +216,7 @@ function clearFilters(): void {
                                                         v-model="selectedPlaces"
                                                         type="checkbox"
                                                         :value="place.id"
+                                                        @change="applyFilters"
                                                     />
                                                     <label :for="'place-' + place.id">{{ place.name }}</label>
                                                 </div>
@@ -211,6 +253,7 @@ function clearFilters(): void {
                                                     v-model="selectedCategories"
                                                     type="checkbox"
                                                     :value="category.id"
+                                                    @change="applyFilters"
                                                 />
                                                 <label :for="'category-' + category.id">{{ category.name }}</label>
                                             </div>
@@ -246,6 +289,7 @@ function clearFilters(): void {
                                                     v-model="selectedActivities"
                                                     type="checkbox"
                                                     :value="activity.id"
+                                                    @change="applyFilters"
                                                 />
                                                 <label :for="'activity-' + activity.id">{{ activity.name }}</label>
                                             </div>
