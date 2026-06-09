@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
 import Pagination from '@/components/Pagination.vue';
+import TourCardSkeleton from '@/components/TourCardSkeleton.vue';
 
 interface Tour {
     id: number;
@@ -28,6 +29,7 @@ interface PaginatorLink {
 interface ToursPaginator {
     current_page: number;
     last_page: number;
+    per_page: number;
     prev_page_url: string | null;
     next_page_url: string | null;
     data: Tour[];
@@ -58,6 +60,7 @@ const props = defineProps<{
 const isDestinationOpen = ref(false);
 const isActivitiesOpen = ref(false);
 const isCategoriesOpen = ref(false);
+const isLoading = ref(false);
 
 const selectedCountries = ref<number[]>(props.filters.countries);
 const selectedPlaces = ref<number[]>(props.filters.places);
@@ -92,9 +95,11 @@ function applyFilters(): void {
     if (durationRange.value[1] !== 30) params.duration_max = durationRange.value[1];
     if (props.filters.search) params.search = props.filters.search;
 
+    isLoading.value = true;
     router.get(tourRoutes.index({ query: params }).url, {}, {
         preserveState: true,
         preserveScroll: true,
+        onFinish: () => { isLoading.value = false; },
     });
 }
 
@@ -111,9 +116,11 @@ function clearFilters(): void {
     priceRange.value = [100, 5000];
     durationRange.value = [1, 30];
 
+    isLoading.value = true;
     router.get(tourRoutes.index().url, {}, {
         preserveState: true,
         preserveScroll: true,
+        onFinish: () => { isLoading.value = false; },
     });
 }
 </script>
@@ -369,11 +376,18 @@ function clearFilters(): void {
                         Search results for: "{{ props.filters.search }}"
                     </p>
                     <div class="listing-list-car-grid mb-60 mt-37">
-                        <div
-                            v-for="tour in tours.data"
-                            :key="tour.id"
-                            class="tour-listing box-sd"
-                        >
+                        <template v-if="isLoading">
+                            <TourCardSkeleton
+                                v-for="n in tours.per_page || 9"
+                                :key="`skeleton-${n}`"
+                            />
+                        </template>
+                        <template v-else>
+                            <div
+                                v-for="tour in tours.data"
+                                :key="tour.id"
+                                class="tour-listing box-sd"
+                            >
                             <Link
                                 :href="tourRoutes.show({ tour: tour.id })"
                                 class="tour-listing-image"
@@ -433,9 +447,10 @@ function clearFilters(): void {
 
                                 </div>
                             </div>
-                        </div>
+                            </div>
+                        </template>
                     </div>
-                    <div class="row" v-if="tours.data.length > 0">
+                    <div class="row" v-if="tours.data.length > 0 && !isLoading">
                         <div class="col-md-12">
                             <div class="flex justify-center">
                                 <Pagination :paginator="tours" />
