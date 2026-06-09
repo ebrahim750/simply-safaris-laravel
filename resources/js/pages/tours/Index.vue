@@ -7,7 +7,6 @@ import { computed, ref, watch } from 'vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
 import Pagination from '@/components/Pagination.vue';
-import TourCardSkeleton from '@/components/TourCardSkeleton.vue';
 
 interface Tour {
     id: number;
@@ -163,7 +162,7 @@ function clearFilters(): void {
                                     :class="{ 'opacity-0 pointer-events-none': !hasActiveFilters }"
                                     @click="clearFilters"
                                 >
-                                    Clear filter
+                                    Clear filters
                                 </button>
                             </div>
                             <div class="group-select-wrap">
@@ -368,26 +367,24 @@ function clearFilters(): void {
                         </div>
                     </form>
                 </div>
-                <div class="col-lg-9 listing-list-car-wrap">
+                <div class="col-lg-9 listing-list-car-wrap" style="position: relative">
                     <p
                         v-if="props.filters.search"
-                        class="mb-4 text-center !text-base text-gray-600"
+                        class="text-center text-gray-600"
+                        style="font-size: 25px; position: absolute; top: 0; left: 0; right: 0;"
                     >
                         Search results for: "{{ props.filters.search }}"
                     </p>
-                    <div class="listing-list-car-grid mb-60 mt-37">
-                        <template v-if="isLoading">
-                            <TourCardSkeleton
-                                v-for="n in tours.per_page || 9"
-                                :key="`skeleton-${n}`"
-                            />
-                        </template>
-                        <template v-else>
+                    <div class="listing-list-car-grid mb-60" style="padding-top: 45px">
+                        <div
+                            v-for="tour in tours.data"
+                            :key="tour.id"
+                            class="tour-listing box-sd relative"
+                        >
                             <div
-                                v-for="tour in tours.data"
-                                :key="tour.id"
-                                class="tour-listing box-sd"
-                            >
+                                v-if="isLoading"
+                                class="absolute inset-0 bg-white/60 animate-pulse z-10"
+                            ></div>
                             <Link
                                 :href="tourRoutes.show({ tour: tour.id })"
                                 class="tour-listing-image"
@@ -447,8 +444,7 @@ function clearFilters(): void {
 
                                 </div>
                             </div>
-                            </div>
-                        </template>
+                        </div>
                     </div>
                     <div class="row" v-if="tours.data.length > 0 && !isLoading">
                         <div class="col-md-12">

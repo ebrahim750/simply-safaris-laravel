@@ -20,7 +20,20 @@ class TourController extends Controller
     {
         $tours = Tour::query()
             ->where('is_hidden', false)
-            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->input('search').'%'))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = '%'.$request->input('search').'%';
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', $search)
+                        ->orWhere('overview', 'like', $search)
+                        ->orWhere('pricing_detailed', 'like', $search)
+                        ->orWhereHas('places', function ($q) use ($search) {
+                            $q->where('name', 'like', $search)
+                                ->orWhereHas('country', fn ($q) => $q->where('name', 'like', $search));
+                        })
+                        ->orWhereHas('categories', fn ($q) => $q->where('name', 'like', $search))
+                        ->orWhereHas('activities', fn ($q) => $q->where('name', 'like', $search));
+                });
+            })
             ->when($request->filled('categories'), fn ($query) => $query->whereHas('categories', fn ($q) => $q->whereIn('tour_categories.id', $request->array('categories'))))
             ->when($request->filled('activities'), fn ($query) => $query->whereHas('activities', fn ($q) => $q->whereIn('tour_activities.id', $request->array('activities'))))
             ->when($request->filled('places'), fn ($query) => $query->whereHas('places', fn ($q) => $q->whereIn('places.id', $request->array('places'))))
@@ -37,7 +50,7 @@ class TourController extends Controller
             })
             ->latest('id')
             ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name'])
-            ->paginate(9)
+            ->paginate(12)
             ->through(fn (Tour $tour): array => $this->mapTour($tour))
             ->withQueryString();
 
