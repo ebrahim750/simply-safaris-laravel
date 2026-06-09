@@ -95,6 +95,14 @@ const refreshStickyHeader = () => {
     handleStickyHeader();
 };
 
+const handleSearchSubmit = () => {
+    const query = searchQuery.value.trim();
+    if (query) {
+        searchOpen.value = false;
+        router.get(tours.index({ query: { search: query } }).url);
+    }
+};
+
 const fetchSuggestions = debounce(async (query: string) => {
     if (!query.trim()) {
         suggestions.value = [];
@@ -427,13 +435,7 @@ onUnmounted(() => {
                                 type="text"
                                 placeholder="Search tours..."
                                 class="w-full !rounded-none !border-0 !border-b-2 !border-gray-200 !bg-transparent py-6 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:!border-gray-900 focus:!outline-none focus:!ring-0 focus:!shadow-none lg:pr-14 lg:text-5xl"
-                                @keydown.enter="() => {
-                                    const query = searchQuery.value.trim();
-                                    if (query) {
-                                        searchOpen.value = false;
-                                        router.get(tours.index({ query: { search: query } }).url);
-                                    }
-                                }"
+                                @keydown.enter="handleSearchSubmit"
                             />
                             <Search
                                 class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-300 lg:right-6 lg:h-6 lg:w-6"

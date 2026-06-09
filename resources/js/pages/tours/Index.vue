@@ -158,9 +158,6 @@ function clearFilters(): void {
                                     Clear filter
                                 </button>
                             </div>
-                            <p v-if="props.filters.search" class="mt-2 text-sm text-gray-600">
-                                Search results for: "{{ props.filters.search }}"
-                            </p>
                             <div class="group-select-wrap">
                                 <div class="destination-accordion mb-22">
                                     <button
@@ -364,6 +361,12 @@ function clearFilters(): void {
                     </form>
                 </div>
                 <div class="col-lg-9 listing-list-car-wrap">
+                    <p
+                        v-if="props.filters.search"
+                        class="mb-4 text-center text-sm text-gray-600"
+                    >
+                        Search results for: "{{ props.filters.search }}"
+                    </p>
                     <div class="listing-list-car-grid mb-60 mt-37">
                         <div
                             v-for="tour in tours.data"
