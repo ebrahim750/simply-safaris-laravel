@@ -90,6 +90,7 @@ function applyFilters(): void {
     if (priceRange.value[1] !== 5000) params.price_max = priceRange.value[1];
     if (durationRange.value[0] !== 1) params.duration_min = durationRange.value[0];
     if (durationRange.value[1] !== 30) params.duration_max = durationRange.value[1];
+    if (props.filters.search) params.search = props.filters.search;
 
     router.get(tourRoutes.index({ query: params }).url, {}, {
         preserveState: true,
@@ -363,7 +364,7 @@ function clearFilters(): void {
                 <div class="col-lg-9 listing-list-car-wrap">
                     <p
                         v-if="props.filters.search"
-                        class="mb-4 text-center text-sm text-gray-600"
+                        class="mb-4 text-center !text-base text-gray-600"
                     >
                         Search results for: "{{ props.filters.search }}"
                     </p>
