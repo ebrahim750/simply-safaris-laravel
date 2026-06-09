@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ChevronsLeft, ChevronsRight } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface PaginatorLink {
     url: string | null;
@@ -20,10 +21,12 @@ const props = defineProps<{
     paginator: Paginator;
 }>();
 
-const pageLinks = props.paginator.links.filter(
-    (link) =>
-        !link.label.toLowerCase().includes('previous') &&
-        !link.label.toLowerCase().includes('next')
+const pageLinks = computed(() =>
+    props.paginator.links.filter(
+        (link) =>
+            !link.label.toLowerCase().includes('previous') &&
+            !link.label.toLowerCase().includes('next')
+    )
 );
 </script>
 
@@ -36,7 +39,7 @@ const pageLinks = props.paginator.links.filter(
             class="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:border-[#4DA528] hover:text-[#4DA528] disabled:cursor-not-allowed disabled:opacity-40"
             :class="{ 'pointer-events-none opacity-40': !paginator.prev_page_url }"
         >
-            <ChevronsLeft class="h-5 w-5" />
+            <ChevronLeft class="h-5 w-5" />
         </Link>
 
         <Link
@@ -62,7 +65,7 @@ const pageLinks = props.paginator.links.filter(
             class="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]"
             :class="{ 'pointer-events-none opacity-40': !paginator.next_page_url }"
         >
-            <ChevronsRight class="h-5 w-5" />
+            <ChevronRight class="h-5 w-5" />
         </Link>
     </nav>
 </template>

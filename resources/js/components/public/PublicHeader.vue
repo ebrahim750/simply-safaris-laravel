@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Search, X } from 'lucide-vue-next';
 import { about, contact, home } from '@/routes';
 import destinations from '@/routes/destinations';
 import tours from '@/routes/tours';
@@ -22,6 +23,7 @@ const headerLower = ref<HTMLElement | null>(null);
 const isHeaderFixed = ref(false);
 const isHeaderSmall = ref(false);
 const headerSpacerHeight = ref(0);
+const searchInput = ref<HTMLInputElement | null>(null);
 
 let headerOffsetTop = 0;
 let headerHeight = 0;
@@ -34,6 +36,12 @@ const closeMobileMenu = () => {
 const closeHeaderDropdowns = () => {
     languageOpen.value = false;
     searchOpen.value = false;
+};
+
+const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        searchOpen.value = false;
+    }
 };
 
 const toggleDropdown = (slug: string) => {
@@ -75,16 +83,26 @@ const refreshStickyHeader = () => {
     handleStickyHeader();
 };
 
+watch(searchOpen, (open) => {
+    if (open) {
+        nextTick(() => {
+            searchInput.value?.focus();
+        });
+    }
+});
+
 onMounted(async () => {
     await nextTick();
     refreshStickyHeader();
     window.addEventListener('scroll', handleStickyHeader, { passive: true });
     window.addEventListener('resize', refreshStickyHeader);
+    window.addEventListener('keydown', handleEscape);
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleStickyHeader);
     window.removeEventListener('resize', refreshStickyHeader);
+    window.removeEventListener('keydown', handleEscape);
 });
 </script>
 
@@ -265,42 +283,15 @@ onUnmounted(() => {
                                 </div>
                                 <div class="header-account align-center flex">
                                     <div class="search-mobie relative">
-                                        <div class="dropdown">
-                                            <button
-                                                type="button"
-                                                class="show-search"
-                                                :class="{ show: searchOpen }"
-                                                aria-label="Toggle search"
-                                                @click="
-                                                    searchOpen = !searchOpen
-                                                "
-                                            >
-                                                <i class="icon-Vector5"></i>
-                                            </button>
-                                            <ul
-                                                class="dropdown-menu top-search"
-                                                :class="{ show: searchOpen }"
-                                            >
-                                                <form
-                                                    id="search-bar-widget"
-                                                    :action="home().url"
-                                                    @submit="
-                                                        closeHeaderDropdowns
-                                                    "
-                                                >
-                                                    <input
-                                                        type="text"
-                                                        name="search"
-                                                        placeholder="Search here..."
-                                                    />
-                                                    <button type="submit">
-                                                        <i
-                                                            class="icon-search-2"
-                                                        ></i>
-                                                    </button>
-                                                </form>
-                                            </ul>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            class="show-search"
+                                            :class="{ show: searchOpen }"
+                                            aria-label="Toggle search"
+                                            @click="searchOpen = !searchOpen"
+                                        >
+                                            <i class="icon-Vector5"></i>
+                                        </button>
                                     </div>
                                     <div class="language">
                                         <div
@@ -344,6 +335,70 @@ onUnmounted(() => {
                 :style="{ height: `${headerSpacerHeight}px` }"
             ></div>
         </div>
+
+        <!-- Search Overlay Backdrop -->
+        <Transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="searchOpen"
+                class="fixed inset-0 z-[9998] bg-black/60"
+                @click="searchOpen = false"
+            ></div>
+        </Transition>
+
+        <!-- Search Overlay Panel -->
+        <Transition
+            enter-active-class="transition ease-out duration-500"
+            enter-from-class="-translate-y-full"
+            enter-to-class="translate-y-0"
+            leave-active-class="transition ease-in duration-300"
+            leave-from-class="translate-y-0"
+            leave-to-class="-translate-y-full"
+        >
+            <div
+                v-if="searchOpen"
+                class="fixed inset-x-0 top-0 z-[9999] flex h-[75vh] flex-col bg-white shadow-2xl"
+            >
+                <div class="flex justify-end px-10 py-8 lg:px-20 lg:py-14">
+                    <div
+                        role="button"
+                        tabindex="0"
+                        class="cursor-pointer p-2 text-gray-400 transition-colors hover:text-gray-900"
+                        @click="searchOpen = false"
+                        @keydown.enter="searchOpen = false"
+                    >
+                        <X class="h-7 w-7" stroke-width="1.5" />
+                    </div>
+                </div>
+
+                <div class="flex flex-1 items-center justify-center px-6 lg:px-16">
+                    <div class="w-full max-w-5xl">
+                        <label class="mb-6 block text-sm font-medium uppercase tracking-widest text-gray-400">
+                            What are you looking for?
+                        </label>
+                        <div class="relative">
+                            <input
+                                ref="searchInput"
+                                type="text"
+                                placeholder="Search tours..."
+                                class="w-full !rounded-none !border-0 !border-b-2 !border-gray-200 !bg-transparent py-6 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:!border-gray-900 focus:!outline-none focus:!ring-0 focus:!shadow-none lg:pr-14 lg:text-5xl"
+                            />
+                            <Search
+                                class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-300 lg:right-6 lg:h-6 lg:w-6"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-16 lg:h-24"></div>
+            </div>
+        </Transition>
     </header>
 </template>
 
@@ -392,10 +447,6 @@ onUnmounted(() => {
 
 .header-account .language .nice-select > img {
     margin-right: 0;
-}
-
-.dropdown-menu.top-search.show {
-    display: block;
 }
 
 @media (max-width: 1570px) {

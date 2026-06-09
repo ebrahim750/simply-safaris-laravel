@@ -110,15 +110,15 @@ function clearFilters(): void {
                 <div class="col-lg-3">
                     <form action="/" class="sider-bar-tour-package">
                         <div class="widget-filter mb-40">
-                            <div class="flex items-center justify-between mb-4">
-                                <h6 class="title-tour">Filter Tours</h6>
+                            <div class="flex items-center justify-between gap-2">
+                                <h6 class="title-tour !mb-0 whitespace-nowrap">Filter Tours</h6>
                                 <button
-                                    v-if="hasActiveFilters"
                                     type="button"
-                                    class="text-xs font-medium text-[#4DA528] bg-[#4DA528]/10 hover:bg-[#4DA528]/20 rounded-full px-3 py-1 transition-colors"
+                                    class="shrink-0 whitespace-nowrap font-medium !text-red-500 !border-red-500 bg-transparent hover:!bg-red-50 rounded-md px-2 py-0.5 my-1 transition-colors btn-clear-filter"
+                                    :class="{ 'opacity-0 pointer-events-none': !hasActiveFilters }"
                                     @click="clearFilters"
                                 >
-                                    Clear active filters
+                                    Clear filter
                                 </button>
                             </div>
                             <div class="group-select-wrap">
@@ -608,6 +608,10 @@ function clearFilters(): void {
 .activity-item,
 .category-item {
     padding: 6px 0;
+}
+
+.btn-clear-filter {
+    font-size: 13px !important;
 }
 
 .filter-badge {
