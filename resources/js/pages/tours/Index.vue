@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { MapPin, Compass, CalendarDays } from 'lucide-vue-next';
+import { MapPin, Bike, CalendarDays, Tag } from 'lucide-vue-next';
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { ref } from 'vue';
 import { home } from '@/routes';
@@ -8,6 +8,7 @@ import tourRoutes from '@/routes/tours';
 import Pagination from '@/components/Pagination.vue';
 
 const priceRange = ref([100, 5000]);
+const durationRange = ref([1, 30]);
 
 interface Tour {
     id: number;
@@ -43,9 +44,13 @@ defineProps<{
         country_code: string | null;
         places: Array<{ id: number; name: string }>;
     }>;
+    activities: Array<{ id: number; name: string }>;
+    categories: Array<{ id: number; name: string }>;
 }>();
 
 const isDestinationOpen = ref(false);
+const isActivitiesOpen = ref(false);
+const isCategoriesOpen = ref(false);
 </script>
 
 <template>
@@ -78,7 +83,7 @@ const isDestinationOpen = ref(false);
                 <div class="col-lg-3">
                     <form action="/" class="sider-bar-tour-package">
                         <div class="widget-filter mb-40">
-                            <h6 class="title-tour">Search by Filter</h6>
+                            <h6 class="title-tour">Filter Tours</h6>
                             <div class="group-select-wrap">
                                 <div class="destination-accordion mb-22">
                                     <button
@@ -135,15 +140,70 @@ const isDestinationOpen = ref(false);
                                         </div>
                                     </div>
                                 </div>
-                                <fieldset class="group-select relative mb-22">
-                                    <i class="icon-Vector-22"></i>
-                                    <div class="search-bar-group relative">
-                                        <label>Activities</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">Booking Type</span>
+                                <div class="destination-accordion mb-22">
+                                    <button
+                                        type="button"
+                                        class="accordion-trigger"
+                                        @click="isCategoriesOpen = !isCategoriesOpen"
+                                    >
+                                        <Tag class="filter-icon" />
+                                        <div class="search-bar-group relative">
+                                            <label>Categories</label>
+                                            <span class="current">Tour Type</span>
+                                        </div>
+                                        <span
+                                            class="trigger-chevron"
+                                            :class="{ 'is-open': isCategoriesOpen }"
+                                        >&#9662;</span>
+                                    </button>
+                                    <div v-show="isCategoriesOpen" class="accordion-panel">
+                                        <div
+                                            v-for="category in categories"
+                                            :key="category.id"
+                                            class="category-item group-check-box-wrap"
+                                        >
+                                            <div class="checkbox">
+                                                <input
+                                                    :id="'category-' + category.id"
+                                                    type="checkbox"
+                                                />
+                                                <label :for="'category-' + category.id">{{ category.name }}</label>
+                                            </div>
                                         </div>
                                     </div>
-                                </fieldset>
+                                </div>
+                                <div class="destination-accordion mb-22">
+                                    <button
+                                        type="button"
+                                        class="accordion-trigger"
+                                        @click="isActivitiesOpen = !isActivitiesOpen"
+                                    >
+                                        <Bike class="filter-icon" />
+                                        <div class="search-bar-group relative">
+                                            <label>Activities</label>
+                                            <span class="current">Booking Type</span>
+                                        </div>
+                                        <span
+                                            class="trigger-chevron"
+                                            :class="{ 'is-open': isActivitiesOpen }"
+                                        >&#9662;</span>
+                                    </button>
+                                    <div v-show="isActivitiesOpen" class="accordion-panel">
+                                        <div
+                                            v-for="activity in activities"
+                                            :key="activity.id"
+                                            class="activity-item group-check-box-wrap"
+                                        >
+                                            <div class="checkbox">
+                                                <input
+                                                    :id="'activity-' + activity.id"
+                                                    type="checkbox"
+                                                />
+                                                <label :for="'activity-' + activity.id">{{ activity.name }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <fieldset class="group-select relative mb-40">
                                     <h6 class="title-tour">Filter By Price</h6>
                                     <div class="widget widget-price">
@@ -175,49 +235,39 @@ const isDestinationOpen = ref(false);
                                         </div>
                                     </div>
                                 </fieldset>
-                                <fieldset class="group-select relative input-npd">
-                                    <div class="search-bar-group relative">
-                                        <label>Any</label>
-                                        <div class="nice-select" tabindex="0">
-                                            <span class="current">Duration</span>
+                                <fieldset class="group-select relative mb-40">
+                                    <h6 class="title-tour">Filter By Duration</h6>
+                                    <div class="widget widget-price">
+                                        <div class="slider-labels flex-two">
+                                            <span>Min</span>
+                                            <span>Max</span>
+                                        </div>
+                                        <SliderRoot
+                                            v-model="durationRange"
+                                            class="range-slider"
+                                            :min="1"
+                                            :max="30"
+                                            :step="1"
+                                            :min-steps-between-thumbs="1"
+                                        >
+                                            <SliderTrack class="slider-track">
+                                                <SliderRange class="slider-fill" />
+                                            </SliderTrack>
+                                            <SliderThumb
+                                                v-for="(_, index) in durationRange"
+                                                :key="index"
+                                                class="slider-thumb"
+                                                :aria-label="index === 0 ? 'Minimum duration' : 'Maximum duration'"
+                                            />
+                                        </SliderRoot>
+                                        <div class="slider-labels flex-two">
+                                            <span>{{ durationRange[0] }} {{ durationRange[0] === 1 ? 'day' : 'days' }}</span>
+                                            <span>{{ durationRange[1] }} {{ durationRange[1] === 1 ? 'day' : 'days' }}</span>
                                         </div>
                                     </div>
                                 </fieldset>
                             </div>
-                            <div class="group-check-box-wrap mt-30">
-                                <div class="checkbox">
-                                    <input id="check4-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check4-bar">Accepts Credit Cards</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check5-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check5-bar">Car Parking</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check6-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check6-bar">Free Coupons</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check7-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check7-bar">Laundry Service</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check8-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check8-bar">Outdoor Seating</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check9-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check9-bar">Reservations</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check10-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check10-bar">Restaurant</label>
-                                </div>
-                                <div class="checkbox">
-                                    <input id="check11-bar" type="checkbox" name="check" value="check" />
-                                    <label for="check11-bar">Smoking Allowed</label>
-                                </div>
-                            </div>
+
                         </div>
                     </form>
                 </div>
@@ -505,6 +555,18 @@ const isDestinationOpen = ref(false);
 .country-places {
     padding-left: 28px;
     padding-bottom: 8px;
+}
+
+.activity-item,
+.category-item {
+    padding: 6px 0;
+}
+
+.destination-accordion .activity-item.group-check-box-wrap input[type="checkbox"] + label,
+.destination-accordion .category-item.group-check-box-wrap input[type="checkbox"] + label {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #4f545a !important;
 }
 
 .destination-accordion .country-places.group-check-box-wrap input[type="checkbox"] + label {

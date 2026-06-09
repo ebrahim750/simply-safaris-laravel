@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Country;
 use App\Models\Tour;
+use App\Models\TourActivity;
+use App\Models\TourCategory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
@@ -32,9 +34,19 @@ class TourController extends Controller
                 'places' => $country->places->map(fn ($place) => ['id' => $place->id, 'name' => $place->name])->all(),
             ]);
 
+        $activities = TourActivity::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $categories = TourCategory::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('tours/Index', [
             'tours' => $tours,
             'countries' => $countries,
+            'activities' => $activities,
+            'categories' => $categories,
         ]);
     }
 
