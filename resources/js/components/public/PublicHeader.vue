@@ -412,7 +412,10 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="flex flex-1 items-center justify-center px-6 lg:px-16">
+                <div
+                    class="flex flex-1 justify-center px-6 transition-all duration-500 lg:px-16"
+                    :class="suggestions.length > 0 || isLoading ? 'items-start pt-12 lg:pt-20' : 'items-center'"
+                >
                     <div class="w-full max-w-5xl">
                         <label class="mb-6 block text-sm font-medium uppercase tracking-widest text-gray-400">
                             What are you looking for?
@@ -439,7 +442,7 @@ onUnmounted(() => {
 
                         <div
                             v-if="suggestions.length > 0"
-                            class="mt-6 max-h-72 overflow-y-auto overflow-x-hidden rounded-none border border-gray-100 bg-white"
+                            class="mt-6 max-h-[50vh] overflow-y-auto overflow-x-hidden rounded-none border border-gray-100 bg-white"
                         >
                             <Link
                                 v-for="suggestion in suggestions"
@@ -478,7 +481,7 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="h-16 lg:h-24"></div>
+
             </div>
         </Transition>
     </header>
