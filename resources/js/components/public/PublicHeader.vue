@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Search, X } from 'lucide-vue-next';
+import { CalendarDays, Loader2, MapPin, Search, X } from 'lucide-vue-next';
+import { debounce } from 'lodash-es';
 import { about, contact, home } from '@/routes';
 import destinations from '@/routes/destinations';
 import tours from '@/routes/tours';
@@ -24,6 +25,17 @@ const isHeaderFixed = ref(false);
 const isHeaderSmall = ref(false);
 const headerSpacerHeight = ref(0);
 const searchInput = ref<HTMLInputElement | null>(null);
+const searchQuery = ref('');
+const suggestions = ref<Array<{
+    id: number;
+    name: string;
+    url: string;
+    main_image: string;
+    duration_days: number;
+    price: string;
+    places: Array<{ name: string; country: string | null }>;
+}>>([]);
+const isLoading = ref(false);
 
 let headerOffsetTop = 0;
 let headerHeight = 0;
@@ -83,11 +95,34 @@ const refreshStickyHeader = () => {
     handleStickyHeader();
 };
 
+const fetchSuggestions = debounce(async (query: string) => {
+    if (!query.trim()) {
+        suggestions.value = [];
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const response = await fetch(`/tours/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        suggestions.value = data.results;
+    } finally {
+        isLoading.value = false;
+    }
+}, 1000);
+
+watch(searchQuery, (newValue) => {
+    fetchSuggestions(newValue);
+});
+
 watch(searchOpen, (open) => {
     if (open) {
         nextTick(() => {
             searchInput.value?.focus();
         });
+    } else {
+        searchQuery.value = '';
+        suggestions.value = [];
     }
 });
 
@@ -385,6 +420,7 @@ onUnmounted(() => {
                         <div class="relative">
                             <input
                                 ref="searchInput"
+                                v-model="searchQuery"
                                 type="text"
                                 placeholder="Search tours..."
                                 class="w-full !rounded-none !border-0 !border-b-2 !border-gray-200 !bg-transparent py-6 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:!border-gray-900 focus:!outline-none focus:!ring-0 focus:!shadow-none lg:pr-14 lg:text-5xl"
@@ -392,6 +428,52 @@ onUnmounted(() => {
                             <Search
                                 class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-300 lg:right-6 lg:h-6 lg:w-6"
                             />
+                        </div>
+
+                        <div class="mt-8 flex min-h-[3rem] justify-center">
+                            <Loader2
+                                v-if="isLoading"
+                                class="h-10 w-10 animate-spin text-gray-400"
+                            />
+                        </div>
+
+                        <div
+                            v-if="suggestions.length > 0"
+                            class="mt-6 max-h-72 overflow-y-auto overflow-x-hidden rounded-none border border-gray-100 bg-white"
+                        >
+                            <Link
+                                v-for="suggestion in suggestions"
+                                :key="suggestion.id"
+                                :href="suggestion.url"
+                                class="flex items-center gap-4 border-b border-gray-100 px-5 py-3 transition-colors last:border-b-0 hover:bg-gray-50"
+                                @click="searchOpen = false"
+                            >
+                                <div class="h-14 w-20 shrink-0 overflow-hidden rounded-md">
+                                    <img
+                                        :src="suggestion.main_image"
+                                        :alt="suggestion.name"
+                                        class="!h-14 !w-20 object-cover"
+                                    />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-base font-semibold text-gray-900">
+                                        {{ suggestion.name }}
+                                    </p>
+                                    <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 truncate !text-[13px] text-gray-500">
+                                        <span v-if="suggestion.places.length > 0" class="inline-flex items-center gap-1">
+                                            <MapPin class="h-3.5 w-3.5 shrink-0 text-[#4DA528]" />
+                                            {{ [...new Set(suggestion.places.map((p) => p.country).filter(Boolean))].join(', ') }}
+                                        </span>
+                                        <span v-if="suggestion.duration_days" class="inline-flex items-center gap-1">
+                                            <CalendarDays class="h-3.5 w-3.5 shrink-0 text-[#4DA528]" />
+                                            {{ suggestion.duration_days }} {{ suggestion.duration_days === 1 ? 'day' : 'days' }}
+                                        </span>
+                                    </p>
+                                    <p class="mt-1 text-sm font-semibold text-gray-800">
+                                        {{ suggestion.price }}
+                                    </p>
+                                </div>
+                            </Link>
                         </div>
                     </div>
                 </div>

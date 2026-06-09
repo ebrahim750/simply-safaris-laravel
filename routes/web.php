@@ -24,6 +24,7 @@ Route::get('/destinations', [DestinationController::class, 'index'])->name('dest
 Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
 
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
+Route::get('/tours/search', [TourController::class, 'search'])->name('tours.search');
 Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
 
 Route::middleware(['auth'])->group(function () {
@@ -85,4 +86,3 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
 });
 
 require __DIR__.'/settings.php';
-

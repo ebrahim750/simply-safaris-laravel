@@ -6,6 +6,7 @@ use App\Models\Country;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
@@ -47,6 +48,37 @@ class TourController extends Controller
             'countries' => $countries,
             'activities' => $activities,
             'categories' => $categories,
+        ]);
+    }
+
+    public function search(): JsonResponse
+    {
+        $query = request('q', '');
+
+        if (blank($query)) {
+            return response()->json(['results' => []]);
+        }
+
+        $tours = Tour::query()
+            ->where('is_hidden', false)
+            ->where('name', 'like', '%'.$query.'%')
+            ->limit(8)
+            ->with(['places:id,name,country_id', 'places.country:id,name'])
+            ->get(['id', 'name', 'slug', 'main_image', 'duration_days', 'price']);
+
+        return response()->json([
+            'results' => $tours->map(fn (Tour $tour): array => [
+                'id' => $tour->id,
+                'name' => $tour->name,
+                'url' => route('tours.show', $tour),
+                'main_image' => $this->resolveImageUrl($tour->main_image) ?? '/images/defaults/600x400.png',
+                'duration_days' => $tour->duration_days,
+                'price' => Number::currency($tour->price, precision: 0),
+                'places' => $tour->places->map(fn ($p): array => [
+                    'name' => $p->name,
+                    'country' => $p->country?->name,
+                ])->all(),
+            ])->all(),
         ]);
     }
 
