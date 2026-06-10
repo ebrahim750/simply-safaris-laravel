@@ -2,6 +2,11 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { home } from '@/routes';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 defineProps<{
     tour: {
@@ -149,24 +154,44 @@ function setTab(id: string): void {
                                 </div>
                             </div>
 
-                            <div class="row mb-40 image-gallery-single">
-                                <div class="col-12 col-sm-6">
-                                    <img
-                                        src="/template/images/destination/1.jpg"
-                                        alt="image"
-                                    />
-                                </div>
-                                <div class="col-6 col-sm-3">
-                                    <img
-                                        src="/template/images/destination/2.jpg"
-                                        alt="image"
-                                    />
-                                </div>
-                                <div class="col-6 col-sm-3">
-                                    <img
-                                        src="/template/images/destination/3.jpg"
-                                        alt="image"
-                                    />
+                            <div class="row mb-40">
+                                <div class="col-lg-12">
+                                    <Swiper
+                                        v-if="tour.gallery_images.length > 0"
+                                        :modules="[Navigation, Pagination]"
+                                        navigation
+                                        :pagination="{ clickable: true }"
+                                        :slides-per-view="4"
+                                        :space-between="16"
+                                        :breakpoints="{
+                                            320: { slidesPerView: 1, spaceBetween: 12 },
+                                            640: { slidesPerView: 2, spaceBetween: 12 },
+                                            992: { slidesPerView: 3, spaceBetween: 16 },
+                                            1200: { slidesPerView: 4, spaceBetween: 16 },
+                                        }"
+                                        class="tour-gallery-swiper"
+                                    >
+                                        <SwiperSlide
+                                            v-for="(
+                                                img, index
+                                            ) in tour.gallery_images"
+                                            :key="index"
+                                        >
+                                            <img
+                                                :src="img"
+                                                :alt="`${tour.name} gallery image ${index + 1}`"
+                                            />
+                                        </SwiperSlide>
+                                    </Swiper>
+                                    <div
+                                        v-else
+                                        class="gallery-placeholder"
+                                    >
+                                        <img
+                                            src="/template/images/destination/1.jpg"
+                                            alt="image"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -2363,5 +2388,39 @@ function setTab(id: string): void {
 }
 .tf-container.w-1456 {
     max-width: 1475px;
+}
+
+.tour-gallery-swiper img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.tour-gallery-swiper :deep(.swiper-button-next),
+.tour-gallery-swiper :deep(.swiper-button-prev) {
+    width: 36px;
+    height: 36px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    color: #081e2a;
+}
+
+.tour-gallery-swiper :deep(.swiper-button-next::after),
+.tour-gallery-swiper :deep(.swiper-button-prev::after) {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.tour-gallery-swiper :deep(.swiper-pagination-bullet-active) {
+    background: #4da528;
+}
+
+.gallery-placeholder img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 </style>
