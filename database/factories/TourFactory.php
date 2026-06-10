@@ -23,12 +23,10 @@ class TourFactory extends Factory
         return [
             'name' => fake()->sentence(3),
             'price' => fake()->randomFloat(2, 50, 5000),
-            'main_image' => fake()->imageUrl(1200, 800, 'travel'),
-            'gallery_images' => [
-                fake()->imageUrl(1200, 800, 'travel'),
-                fake()->imageUrl(1200, 800, 'travel'),
-                fake()->imageUrl(1200, 800, 'travel'),
-            ],
+            'main_image' => 'https://picsum.photos/seed/'.fake()->uuid().'/1200/800',
+            'gallery_images' => collect(range(1, 10))
+                ->map(fn () => 'https://picsum.photos/seed/'.fake()->uuid().'/1200/800')
+                ->all(),
             'external_url' => fake()->optional()->url(),
             'external_link_button_text' => fake()->optional()->words(2, true),
             'show_external_booking' => fake()->boolean(),

@@ -139,7 +139,8 @@ class TourController extends Controller
                 'name' => $tour->name,
                 'main_image' => $this->resolveImageUrl($tour->main_image),
                 'gallery_images' => collect($tour->gallery_images ?? [])
-                    ->map(fn (string $path): string => $this->resolveImageUrl($path))
+                    ->map(fn (string $path): ?string => $this->resolveImageUrl($path))
+                    ->filter()
                     ->values()
                     ->all(),
                 'price' => Number::currency($tour->price, precision: 0),
