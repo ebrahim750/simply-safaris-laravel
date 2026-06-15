@@ -58,6 +58,8 @@ class UpdateTourRequest extends FormRequest
             'main_image' => ['nullable', File::image()->max(10 * 1024)],
             'gallery_images' => ['nullable', 'array'],
             'gallery_images.*' => ['required', File::image()->max(10 * 1024)],
+            'kept_gallery_images' => ['nullable', 'array'],
+            'kept_gallery_images.*' => ['required', 'string'],
             'external_url' => ['nullable', 'url', 'max:255'],
             'external_link_button_text' => ['nullable', 'string', 'max:255'],
             'show_external_booking' => ['required', 'boolean'],

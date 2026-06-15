@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Plus, Trash2, UploadCloudIcon, X } from 'lucide-vue-next';
+import { ExternalLink, Plus, Trash2, UploadCloudIcon, X } from 'lucide-vue-next';
+import { Spinner } from '@/components/ui/spinner';
 import { computed, ref } from 'vue';
 import {
     edit as editTour,
@@ -30,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { tours as adminTours } from '@/routes/admin';
+import { show as viewTour } from '@/routes/tours';
 
 type TourOption = {
     id: number;
@@ -51,6 +53,10 @@ type ItineraryItemForm = {
 type TextRowForm = {
     text: string;
 };
+
+type GalleryItem =
+    | { kind: 'existing'; url: string }
+    | { kind: 'new'; file: File; preview: string };
 
 type Tour = {
     id: number;
@@ -103,6 +109,7 @@ const form = useForm({
     price: String(Math.floor(props.tour.price)),
     main_image: null as File | null,
     gallery_images: [] as File[],
+    kept_gallery_images: [] as string[],
     external_url: props.tour.external_url ?? '',
     external_link_button_text: props.tour.external_link_button_text ?? '',
     show_external_booking: props.tour.show_external_booking,
@@ -121,7 +128,9 @@ const form = useForm({
 });
 
 const mainImagePreview = ref<string | null>(props.tour.main_image);
-const galleryImagePreviews = ref<string[]>([...props.tour.gallery_images]);
+const galleryItems = ref<GalleryItem[]>(
+    props.tour.gallery_images.map((url) => ({ kind: 'existing', url })),
+);
 const draggedGalleryIndex = ref<number | null>(null);
 const pricingDialogOpen = ref(false);
 const categorySearch = ref('');
@@ -235,23 +244,25 @@ function removeMainImage(): void {
 function handleGalleryImagesChange(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
 
-    form.gallery_images = [...form.gallery_images, ...files];
-    galleryImagePreviews.value = [
-        ...galleryImagePreviews.value,
-        ...files.map((file) => URL.createObjectURL(file)),
-    ];
+    for (const file of files) {
+        galleryItems.value.push({
+            kind: 'new',
+            file,
+            preview: URL.createObjectURL(file),
+        });
+    }
 
     (event.target as HTMLInputElement).value = '';
 }
 
 function removeGalleryImage(index: number): void {
-    const preview = galleryImagePreviews.value[index];
-    // Only revoke if it's a blob URL (newly uploaded), not an existing server URL
-    if (preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview);
+    const item = galleryItems.value[index];
+
+    if (item.kind === 'new') {
+        URL.revokeObjectURL(item.preview);
     }
-    galleryImagePreviews.value.splice(index, 1);
-    form.gallery_images.splice(index, 1);
+
+    galleryItems.value.splice(index, 1);
 }
 
 function onGalleryDragStart(event: DragEvent, index: number): void {
@@ -275,16 +286,11 @@ function onGalleryDrop(event: DragEvent, targetIndex: number): void {
         return;
     }
 
-    const files = [...form.gallery_images];
-    const previews = [...galleryImagePreviews.value];
-    const [movedFile] = files.splice(sourceIndex, 1);
-    const [movedPreview] = previews.splice(sourceIndex, 1);
+    const items = [...galleryItems.value];
+    const [moved] = items.splice(sourceIndex, 1);
+    items.splice(targetIndex, 0, moved);
 
-    files.splice(targetIndex, 0, movedFile);
-    previews.splice(targetIndex, 0, movedPreview);
-
-    form.gallery_images = files;
-    galleryImagePreviews.value = previews;
+    galleryItems.value = items;
     draggedGalleryIndex.value = null;
 }
 
@@ -324,6 +330,14 @@ function fieldError(key: string): string | undefined {
 }
 
 function submit(): void {
+    form.gallery_images = galleryItems.value
+        .filter((item): item is GalleryItem & { kind: 'new' } => item.kind === 'new')
+        .map((item) => item.file);
+
+    form.kept_gallery_images = galleryItems.value
+        .filter((item): item is GalleryItem & { kind: 'existing' } => item.kind === 'existing')
+        .map((item) => item.url);
+
     form.patch(updateTour.url({ tour: props.tour.id }), {
         preserveScroll: true,
         forceFormData: true,
@@ -343,16 +357,41 @@ function submit(): void {
                 description="Update tour details, media, and related content."
             />
 
-            <div class="flex gap-2">
-                <Button as-child variant="outline">
-                    <Link :href="adminTours()">Cancel</Link>
-                </Button>
+            <div class="flex flex-col items-end gap-4">
+                <div class="flex gap-2">
+                    <Button
+                        as-child
+                        variant="outline"
+                        :disabled="form.processing"
+                    >
+                        <Link :href="adminTours()">Cancel</Link>
+                    </Button>
+                    <Button
+                        type="button"
+                        :disabled="form.processing"
+                        @click="submit"
+                    >
+                        <Spinner
+                            v-if="form.processing"
+                            class="size-4"
+                        />
+                        Save changes
+                    </Button>
+                </div>
                 <Button
-                    type="button"
-                    :disabled="form.processing"
-                    @click="submit"
+                    as-child
+                    variant="ghost"
+                    size="sm"
+                    class="text-muted-foreground hover:text-foreground"
                 >
-                    Save changes
+                    <a
+                        :href="viewTour.url({ tour: props.tour.id })"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View tour on website
+                        <ExternalLink class="size-4" />
+                    </a>
                 </Button>
             </div>
         </div>
@@ -525,12 +564,12 @@ function submit(): void {
                                         >Gallery images</Label
                                     >
                                     <span
-                                        v-if="galleryImagePreviews.length"
+                                        v-if="galleryItems.length"
                                         class="text-xs text-muted-foreground"
                                     >
-                                        {{ galleryImagePreviews.length }}
+                                        {{ galleryItems.length }}
                                         image{{
-                                            galleryImagePreviews.length === 1
+                                            galleryItems.length === 1
                                                 ? ''
                                                 : 's'
                                         }}
@@ -538,14 +577,12 @@ function submit(): void {
                                 </div>
 
                                 <div
-                                    v-if="galleryImagePreviews.length"
+                                    v-if="galleryItems.length"
                                     class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6"
                                 >
                                     <div
-                                        v-for="(
-                                            preview, index
-                                        ) in galleryImagePreviews"
-                                        :key="preview"
+                                        v-for="(item, index) in galleryItems"
+                                        :key="item.kind === 'existing' ? item.url : item.preview"
                                         draggable="true"
                                         class="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-border bg-muted"
                                         @dragstart="
@@ -555,8 +592,8 @@ function submit(): void {
                                         @drop="onGalleryDrop($event, index)"
                                     >
                                         <img
-                                            :src="preview"
-                                            :alt="`Gallery image preview ${index + 1}`"
+                                            :src="item.kind === 'existing' ? item.url : item.preview"
+                                            :alt="`Gallery image ${index + 1}`"
                                             class="h-full w-full object-cover transition-opacity"
                                             :class="
                                                 draggedGalleryIndex === index

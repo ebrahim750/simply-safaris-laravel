@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Rinvex\Country\CountryLoaderException;
 
 class DestinationController extends Controller
 {
@@ -141,48 +142,62 @@ class DestinationController extends Controller
      */
     private function resolveCountryData(?string $countryCode): array
     {
+        $empty = ['languages' => null, 'currency' => null, 'driving_side' => null, 'lat' => null, 'lng' => null];
+
         if (blank($countryCode)) {
-            return ['languages' => null, 'currency' => null, 'driving_side' => null, 'lat' => null, 'lng' => null];
+            return $empty;
         }
 
         try {
-            $response = Http::connectTimeout(3)
-                ->timeout(6)
-                ->get('https://restcountries.com/v3.1/alpha/'.strtolower($countryCode).'?fields=languages,currencies,car,latlng');
-
-            if (! $response->successful()) {
-                return ['languages' => null, 'currency' => null, 'driving_side' => null, 'lat' => null, 'lng' => null];
-            }
-
-            $data = $response->json();
-
-            $languages = null;
-            if (filled($data['languages'] ?? null)) {
-                $languages = implode(', ', array_values($data['languages']));
-            }
-
-            $currency = null;
-            if (filled($data['currencies'] ?? null)) {
-                $parts = [];
-                foreach ($data['currencies'] as $code => $info) {
-                    $name = is_array($info) ? ($info['name'] ?? $code) : $code;
-                    $parts[] = "{$name} ({$code})";
-                }
-                $currency = implode(', ', $parts);
-            }
-
-            $drivingSide = null;
-            if (filled($data['car']['side'] ?? null)) {
-                $drivingSide = 'On the '.ucfirst((string) $data['car']['side']);
-            }
-
-            $lat = is_array($data['latlng'] ?? null) && count($data['latlng']) >= 2 ? (float) $data['latlng'][0] : null;
-            $lng = is_array($data['latlng'] ?? null) && count($data['latlng']) >= 2 ? (float) $data['latlng'][1] : null;
-
-            return ['languages' => $languages, 'currency' => $currency, 'driving_side' => $drivingSide, 'lat' => $lat, 'lng' => $lng];
-        } catch (\Throwable) {
-            return ['languages' => null, 'currency' => null, 'driving_side' => null, 'lat' => null, 'lng' => null];
+            $country = country(strtolower($countryCode));
+        } catch (CountryLoaderException) {
+            return $empty;
         }
+
+        $languages = $country->getLanguages();
+        $languagesDisplay = filled($languages)
+            ? implode(', ', array_values((array) $languages))
+            : null;
+
+        $currencies = $country->getCurrencies();
+        $currencyDisplay = null;
+        if (filled($currencies)) {
+            $parts = [];
+            foreach ((array) $currencies as $code => $info) {
+                $name = is_array($info) ? ($info['iso_4217_name'] ?? $code) : $code;
+                $parts[] = "{$name} ({$code})";
+            }
+            $currencyDisplay = implode(', ', $parts);
+        }
+
+        return [
+            'languages' => $languagesDisplay,
+            'currency' => $currencyDisplay,
+            'driving_side' => $this->resolveDrivingSide($countryCode),
+            'lat' => (float) $country->getLatitudeDesc(),
+            'lng' => (float) $country->getLongitudeDesc(),
+        ];
+    }
+
+    private function resolveDrivingSide(?string $countryCode): ?string
+    {
+        if (blank($countryCode)) {
+            return null;
+        }
+
+        $path = database_path('data/country-driving-sides.json');
+        if (! file_exists($path)) {
+            return null;
+        }
+
+        $data = json_decode(file_get_contents($path), true);
+        if (! is_array($data) || ! isset($data[strtolower($countryCode)])) {
+            return null;
+        }
+
+        $side = $data[strtolower($countryCode)];
+
+        return filled($side) ? (string) $side : null;
     }
 
     /**
@@ -234,10 +249,14 @@ class DestinationController extends Controller
         }
 
         $cacheKey = 'climate.'.strtolower($countryCode);
+        $fallbackKey = 'climate.fallback.'.strtolower($countryCode);
+
         $cached = Cache::get($cacheKey);
         if (is_array($cached)) {
             return $cached;
         }
+
+        $year = now()->subYear()->year;
 
         try {
             $response = Http::connectTimeout(3)
@@ -245,21 +264,21 @@ class DestinationController extends Controller
                 ->get('https://archive-api.open-meteo.com/v1/archive', [
                     'latitude' => $lat,
                     'longitude' => $lng,
-                    'start_date' => '2023-01-01',
-                    'end_date' => '2023-12-31',
+                    'start_date' => "{$year}-01-01",
+                    'end_date' => "{$year}-12-31",
                     'daily' => 'temperature_2m_max,precipitation_sum,sunshine_duration',
                     'timezone' => 'auto',
                 ]);
 
             if (! $response->successful()) {
-                return null;
+                return $this->resolveStaleClimate($fallbackKey);
             }
 
             $data = $response->json();
             $daily = $data['daily'] ?? null;
 
             if (! is_array($daily) || empty($daily['time'] ?? [])) {
-                return null;
+                return $this->resolveStaleClimate($fallbackKey);
             }
 
             $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -316,12 +335,23 @@ class DestinationController extends Controller
                 'sea_temp' => $seaTemp,
             ];
 
-            Cache::put($cacheKey, $result, now()->addDay());
+            Cache::put($cacheKey, $result, now()->addMonth());
+            Cache::put($fallbackKey, $result, now()->addYear());
 
             return $result;
         } catch (\Throwable) {
-            return null;
+            return $this->resolveStaleClimate($fallbackKey);
         }
+    }
+
+    /**
+     * @return array{months: array<string>, max_temp: array<int|null>, sunshine_hours: array<int|null>, rainfall_days: array<int|null>, sea_temp: array<int|null>|null}|null
+     */
+    private function resolveStaleClimate(string $fallbackKey): ?array
+    {
+        $stale = Cache::get($fallbackKey);
+
+        return is_array($stale) ? $stale : null;
     }
 
     /**

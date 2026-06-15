@@ -242,14 +242,28 @@ class TourController extends Controller
                 ])->save();
             }
 
-            if ($request->hasFile('gallery_images')) {
-                if ($tour->gallery_images) {
-                    foreach ($tour->gallery_images as $path) {
+            if ($request->has('kept_gallery_images') || $request->hasFile('gallery_images')) {
+                $existingPaths = $tour->gallery_images ?? [];
+                $keptPaths = $this->normalizeGalleryPaths(
+                    $request->input('kept_gallery_images', [])
+                );
+
+                foreach ($existingPaths as $path) {
+                    if (! in_array($path, $keptPaths, true)) {
                         Storage::disk('public')->delete($path);
                     }
                 }
+
+                $newPaths = [];
+                if ($request->hasFile('gallery_images')) {
+                    $newPaths = $this->storeGalleryImages(
+                        $request->file('gallery_images', []),
+                        $tourFolder
+                    ) ?? [];
+                }
+
                 $tour->forceFill([
-                    'gallery_images' => $this->storeGalleryImages($request->file('gallery_images', []), $tourFolder),
+                    'gallery_images' => array_values(array_merge($keptPaths, $newPaths)),
                 ])->save();
             }
 
@@ -275,7 +289,7 @@ class TourController extends Controller
             ));
         });
 
-        return to_route('admin.tours')
+        return to_route('admin.tours.edit', $tour)
             ->with('status', 'Tour updated.');
     }
 
@@ -345,6 +359,28 @@ class TourController extends Controller
             fn (UploadedFile $file): string => $this->storeImage($file, $directory.'/gallery'),
             $files,
         ));
+    }
+
+    /**
+     * @param  array<int, string>  $urls
+     * @return array<int, string>
+     */
+    private function normalizeGalleryPaths(array $urls): array
+    {
+        $publicUrl = Storage::disk('public')->url('');
+        $paths = [];
+
+        foreach ($urls as $url) {
+            if (Str::startsWith($url, $publicUrl)) {
+                $paths[] = Str::after($url, $publicUrl);
+            } elseif (Str::startsWith($url, '/storage/')) {
+                $paths[] = Str::after($url, '/storage/');
+            } else {
+                $paths[] = $url;
+            }
+        }
+
+        return $paths;
     }
 
     /**

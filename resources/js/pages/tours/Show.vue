@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { home } from '@/routes';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Navigation, Pagination } from 'swiper/modules';
+import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-defineProps<{
+const props = defineProps<{
     tour: {
         id: number;
         name: string;
@@ -43,6 +43,95 @@ const tabs = [
 
 function setTab(id: string): void {
     activeTab.value = id;
+}
+
+const useSwiper = ref(true);
+let swiperInstance: any = null;
+
+function onSwiperInit(swiper: any): void {
+    swiperInstance = swiper;
+}
+
+function swiperSlideNext(): void {
+    swiperInstance?.slideNext();
+}
+
+function swiperSlidePrev(): void {
+    swiperInstance?.slidePrev();
+}
+
+// ── Custom gallery carousel ──────────────────────────────────────────
+const currentIndex = ref(0);
+const slidesPerView = ref(4);
+const isDragging = ref(false);
+const dragStartX = ref(0);
+
+function updateSlidesPerView(): void {
+    const w = window.innerWidth;
+    if (w < 640) {
+        slidesPerView.value = 1;
+    } else if (w < 992) {
+        slidesPerView.value = 2;
+    } else if (w < 1200) {
+        slidesPerView.value = 3;
+    } else {
+        slidesPerView.value = 4;
+    }
+}
+
+onMounted(() => {
+    updateSlidesPerView();
+    window.addEventListener('resize', updateSlidesPerView);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateSlidesPerView);
+});
+
+const slidePercent = computed(() => 100 / slidesPerView.value);
+const maxIndex = computed(() =>
+    Math.max(0, (props.tour?.gallery_images?.length ?? 0) - slidesPerView.value),
+);
+const dotCount = computed(() => maxIndex.value + 1);
+
+const trackStyle = computed(() => ({
+    transform: `translateX(-${currentIndex.value * slidePercent.value}%)`,
+    transition: isDragging.value ? 'none' : 'transform 0.35s ease-out',
+}));
+
+function carouselNext(): void {
+    if (currentIndex.value < maxIndex.value) {
+        currentIndex.value++;
+    }
+}
+
+function carouselPrev(): void {
+    if (currentIndex.value > 0) {
+        currentIndex.value--;
+    }
+}
+
+function carouselGoTo(index: number): void {
+    currentIndex.value = Math.min(index, maxIndex.value);
+}
+
+function onDragStart(e: PointerEvent): void {
+    isDragging.value = true;
+    dragStartX.value = e.clientX;
+    (e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId);
+}
+
+function onDragEnd(e: PointerEvent): void {
+    if (!isDragging.value) return;
+    isDragging.value = false;
+    const diff = dragStartX.value - e.clientX;
+    const threshold = 50;
+    if (diff > threshold) {
+        carouselNext();
+    } else if (diff < -threshold) {
+        carouselPrev();
+    }
+    (e.currentTarget as HTMLElement)?.releasePointerCapture?.(e.pointerId);
 }
 </script>
 
@@ -154,42 +243,168 @@ function setTab(id: string): void {
                                 </div>
                             </div>
 
-                            <div class="row mb-40">
-                                <div class="col-lg-12">
-                                    <Swiper
-                                        v-if="tour.gallery_images.length > 0"
-                                        :modules="[Navigation, Pagination]"
-                                        navigation
-                                        :pagination="{ clickable: true }"
-                                        :slides-per-view="4"
-                                        :space-between="16"
-                                        :breakpoints="{
-                                            320: { slidesPerView: 1, spaceBetween: 12 },
-                                            640: { slidesPerView: 2, spaceBetween: 12 },
-                                            992: { slidesPerView: 3, spaceBetween: 16 },
-                                            1200: { slidesPerView: 4, spaceBetween: 16 },
-                                        }"
-                                        class="tour-gallery-swiper"
-                                    >
-                                        <SwiperSlide
-                                            v-for="(
-                                                img, index
-                                            ) in tour.gallery_images"
-                                            :key="index"
-                                        >
-                                            <img
-                                                :src="img"
-                                                :alt="`${tour.name} gallery image ${index + 1}`"
-                                            />
-                                        </SwiperSlide>
-                                    </Swiper>
-                                    <div
-                                        v-else
-                                        class="gallery-placeholder"
+                            <!-- Swiper v12 carousel -->
+                            <div
+                                v-if="tour.gallery_images.length > 0 && useSwiper"
+                                class="mb-40 tour-gallery-swiper-wrap"
+                            >
+                                <Swiper
+                                    :modules="[Autoplay, Pagination]"
+                                    :pagination="{ clickable: true }"
+                                    :slides-per-view="4"
+                                    :space-between="16"
+                                    :grab-cursor="true"
+                                    :breakpoints="{
+                                        320: { slidesPerView: 1, spaceBetween: 12 },
+                                        640: { slidesPerView: 2, spaceBetween: 12 },
+                                        992: { slidesPerView: 3, spaceBetween: 16 },
+                                        1200: { slidesPerView: 4, spaceBetween: 16 },
+                                    }"
+                                    :loop="tour.gallery_images.length > 4"
+                                    :autoplay="{ delay: 3000, disableOnInteraction: true }"
+                                    class="tour-gallery-swiper"
+                                    @swiper="onSwiperInit"
+                                >
+                                    <SwiperSlide
+                                        v-for="(
+                                            img, index
+                                        ) in tour.gallery_images"
+                                        :key="index"
                                     >
                                         <img
-                                            src="/template/images/destination/1.jpg"
-                                            alt="image"
+                                            :src="img"
+                                            :alt="`${tour.name} gallery image ${index + 1}`"
+                                            class="swiper-slide-img"
+                                        />
+                                    </SwiperSlide>
+                                </Swiper>
+
+                                <!-- Custom navigation arrows -->
+                                <button
+                                    v-if="tour.gallery_images.length > 1"
+                                    class="swiper-custom-arrow swiper-custom-prev"
+                                    @click="swiperSlidePrev"
+                                >
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                </button>
+                                <button
+                                    v-if="tour.gallery_images.length > 1"
+                                    class="swiper-custom-arrow swiper-custom-next"
+                                    @click="swiperSlideNext"
+                                >
+                                    <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Custom Vue carousel (fallback) -->
+                            <div
+                                v-if="tour.gallery_images.length > 0 && !useSwiper"
+                                class="mb-40"
+                            >
+                                <div class="tour-gallery-carousel">
+                                    <div class="carousel-track-wrapper">
+                                        <div
+                                            class="carousel-track"
+                                            :style="trackStyle"
+                                            @pointerdown="onDragStart"
+                                            @pointerup="onDragEnd"
+                                            @pointerleave="onDragEnd"
+                                        >
+                                            <div
+                                                v-for="(
+                                                    img, index
+                                                ) in tour.gallery_images"
+                                                :key="index"
+                                                class="carousel-slide"
+                                            >
+                                                <div class="carousel-slide-inner">
+                                                    <img
+                                                        :src="img"
+                                                        :alt="`${tour.name} gallery image ${index + 1}`"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Navigation arrows -->
+                                    <button
+                                        v-if="maxIndex > 0"
+                                        class="carousel-arrow carousel-prev"
+                                        :disabled="currentIndex <= 0"
+                                        @click="carouselPrev"
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <polyline
+                                                points="15 18 9 12 15 6"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        v-if="maxIndex > 0"
+                                        class="carousel-arrow carousel-next"
+                                        :disabled="currentIndex >= maxIndex"
+                                        @click="carouselNext"
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <polyline points="9 18 15 12 9 6" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Dot pagination -->
+                                    <div
+                                        v-if="dotCount > 1"
+                                        class="carousel-dots"
+                                    >
+                                        <button
+                                            v-for="(_, dotIndex) in dotCount"
+                                            :key="dotIndex"
+                                            class="carousel-dot"
+                                            :class="{
+                                                active:
+                                                    currentIndex === dotIndex,
+                                            }"
+                                            @click="carouselGoTo(dotIndex)"
                                         />
                                     </div>
                                 </div>
@@ -2390,37 +2605,193 @@ function setTab(id: string): void {
     max-width: 1475px;
 }
 
-.tour-gallery-swiper img {
+.tour-gallery-carousel {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 36px;
+}
+
+.carousel-track-wrapper {
+    overflow: hidden;
+    cursor: grab;
+}
+
+.carousel-track-wrapper:active {
+    cursor: grabbing;
+}
+
+.carousel-track {
+    display: flex;
+    will-change: transform;
+}
+
+.carousel-slide {
+    flex: 0 0 25%;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.carousel-slide-inner {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.carousel-slide-inner img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 1199px) {
+    .carousel-slide {
+        flex: 0 0 33.333%;
+    }
+}
+
+@media (max-width: 991px) {
+    .carousel-slide {
+        flex: 0 0 50%;
+    }
+}
+
+@media (max-width: 639px) {
+    .carousel-slide {
+        flex: 0 0 100%;
+        padding: 0 4px;
+    }
+}
+
+/* Arrows */
+.carousel-arrow {
+    position: absolute;
+    top: calc(50% - 15px);
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: #ffffff;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    color: #081e2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: opacity 0.2s;
+}
+
+.carousel-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.carousel-prev {
+    left: 4px;
+}
+
+.carousel-next {
+    right: 4px;
+}
+
+/* Dots */
+.carousel-dots {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+}
+
+.carousel-dot.active {
+    background: #4da528;
+}
+
+/* Swiper overrides */
+.tour-gallery-swiper-wrap {
+    position: relative;
+}
+
+.tour-gallery-swiper {
+    overflow: hidden;
+    padding-bottom: 30px;
+}
+
+.tour-gallery-swiper .swiper-slide-img {
     width: 100%;
     height: 180px;
     object-fit: cover;
     border-radius: 8px;
+    display: block;
 }
 
-.tour-gallery-swiper :deep(.swiper-button-next),
-.tour-gallery-swiper :deep(.swiper-button-prev) {
-    width: 36px;
-    height: 36px;
-    background: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    color: #081e2a;
-}
-
-.tour-gallery-swiper :deep(.swiper-button-next::after),
-.tour-gallery-swiper :deep(.swiper-button-prev::after) {
-    font-size: 14px;
-    font-weight: 700;
+.tour-gallery-swiper :deep(.swiper-pagination) {
+    bottom: 0;
 }
 
 .tour-gallery-swiper :deep(.swiper-pagination-bullet-active) {
     background: #4da528;
 }
 
-.gallery-placeholder img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 8px;
+/* Custom Swiper navigation arrows */
+.swiper-custom-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+    color: #081e2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease, background 0.2s;
 }
+
+.tour-gallery-swiper-wrap:hover .swiper-custom-arrow {
+    opacity: 1;
+}
+
+.swiper-custom-arrow:hover {
+    background: #ffffff;
+}
+
+.swiper-custom-prev {
+    left: 8px;
+}
+
+.swiper-custom-next {
+    right: 8px;
+}
+
+/* Always show arrows on touch devices */
+@media (hover: none) {
+    .swiper-custom-arrow {
+        opacity: 0.9;
+    }
+}
+
 </style>

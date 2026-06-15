@@ -118,7 +118,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
 - Use array shape type definitions in PHPDoc blocks.
 
-
+=== tests rules ===
 
 # Test Enforcement
 
@@ -213,7 +213,6 @@ Vue components must have a single root element.
 # Database modifications
 
 - When creating any modifications to the db use the same migration file, for example you add a seperate col on users table dont create a seperate migration file just for the col. This is because we are still in dev. So i can run "php artisan migrate:fresh --seed" to see the new changes
-
 
 ## Build & Dev Server
 

@@ -10,11 +10,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Rinvex\Country\CountryLoader;
 use Throwable;
 
 class DestinationCountryController extends Controller
@@ -151,7 +151,7 @@ class DestinationCountryController extends Controller
     }
 
     /**
-     * @return Collection<int, array{name: string, official_name: string|null, code: string, flag_svg: string|null, flag_png: string|null}>
+     * @return Collection<int, array{name: string, official_name: string|null, code: string, flag_svg: string, flag_png: string}>
      */
     private function getCountryCatalog(): Collection
     {
@@ -171,27 +171,17 @@ class DestinationCountryController extends Controller
         }
 
         try {
-            $response = Http::connectTimeout(3)
-                ->timeout(6)
-                ->get('https://restcountries.com/v3.1/all?fields=name,cca2,flags');
+            $countries = CountryLoader::countries();
 
-            if (! $response->successful()) {
-                return collect();
-            }
-
-            $countryCatalog = $response->collect()
-                ->map(fn (mixed $item): array => [
-                    'name' => trim((string) data_get($item, 'name.common')),
-                    'official_name' => filled(data_get($item, 'name.official'))
-                        ? trim((string) data_get($item, 'name.official'))
+            $countryCatalog = collect($countries)
+                ->map(fn (array $country, string $code): array => [
+                    'name' => trim((string) ($country['name'] ?? '')),
+                    'official_name' => filled($country['official_name'] ?? null)
+                        ? trim((string) $country['official_name'])
                         : null,
-                    'code' => Str::lower((string) data_get($item, 'cca2')),
-                    'flag_svg' => filled(data_get($item, 'flags.svg'))
-                        ? (string) data_get($item, 'flags.svg')
-                        : null,
-                    'flag_png' => filled(data_get($item, 'flags.png'))
-                        ? (string) data_get($item, 'flags.png')
-                        : null,
+                    'code' => Str::lower($code),
+                    'flag_svg' => 'https://flagcdn.com/'.Str::lower($code).'.svg',
+                    'flag_png' => 'https://flagcdn.com/w40/'.Str::lower($code).'.png',
                 ])
                 ->filter(fn (array $item): bool => filled($item['name']) && filled($item['code']))
                 ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
