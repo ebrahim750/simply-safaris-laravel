@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ContactSubmission;
 use App\Models\Tour;
 use App\Models\TourEnquiry;
 use App\Models\User;
@@ -12,12 +13,18 @@ test('admin users can view the contact form submissions page', function () {
     $adminUser = User::factory()->create([
         'account_type' => 'admin',
     ]);
+    $submission = ContactSubmission::factory()->create([
+        'name' => 'Jane Doe',
+    ]);
 
     $this->actingAs($adminUser)
         ->get(route('admin.form-submissions.contact'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/form-submissions/Contact')
+            ->has('submissions.data', 1)
+            ->where('submissions.data.0.id', $submission->id)
+            ->where('submissions.data.0.name', 'Jane Doe')
         );
 });
 
@@ -93,6 +100,55 @@ test('admin users can search tour form submissions', function () {
         );
 });
 
+test('admin users can search contact form submissions', function () {
+    $adminUser = User::factory()->create([
+        'account_type' => 'admin',
+    ]);
+    ContactSubmission::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'phone' => '0701000000',
+    ]);
+    ContactSubmission::factory()->create([
+        'name' => 'Jane Smith',
+        'email' => 'jane@test.com',
+        'phone' => '0702000000',
+    ]);
+
+    $this->actingAs($adminUser)
+        ->get(route('admin.form-submissions.contact', ['search' => 'Jane']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/form-submissions/Contact')
+            ->has('submissions.data', 1)
+            ->where('submissions.data.0.name', 'Jane Smith')
+        );
+
+    $this->actingAs($adminUser)
+        ->get(route('admin.form-submissions.contact', ['search' => '0702000000']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('submissions.data', 1)
+            ->where('submissions.data.0.phone', '0702000000')
+        );
+});
+
+test('admin users can delete a contact submission', function () {
+    $adminUser = User::factory()->create([
+        'account_type' => 'admin',
+    ]);
+    $submission = ContactSubmission::factory()->create();
+
+    $this->actingAs($adminUser)
+        ->delete(route('admin.form-submissions.contact.destroy', $submission))
+        ->assertRedirect(route('admin.form-submissions.contact'))
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseMissing('contact_submissions', [
+        'id' => $submission->id,
+    ]);
+});
+
 test('admin users can delete a tour enquiry', function () {
     $adminUser = User::factory()->create([
         'account_type' => 'admin',
@@ -117,6 +173,7 @@ test('non-admin users cannot access form submissions pages', function () {
         'account_type' => 'user',
     ]);
     $enquiry = TourEnquiry::factory()->create();
+    $submission = ContactSubmission::factory()->create();
 
     $this->actingAs($regularUser)
         ->get(route('admin.form-submissions.contact'))
@@ -124,6 +181,10 @@ test('non-admin users cannot access form submissions pages', function () {
 
     $this->actingAs($regularUser)
         ->get(route('admin.form-submissions.tour'))
+        ->assertForbidden();
+
+    $this->actingAs($regularUser)
+        ->delete(route('admin.form-submissions.contact.destroy', $submission))
         ->assertForbidden();
 
     $this->actingAs($regularUser)

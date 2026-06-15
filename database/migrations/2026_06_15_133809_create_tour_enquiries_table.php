@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('adults');
             $table->string('children')->nullable();
             $table->text('message')->nullable();
+            $table->ipAddress('ip_address')->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamps();
         });
     }

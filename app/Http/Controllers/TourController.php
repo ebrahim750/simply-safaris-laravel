@@ -198,7 +198,10 @@ class TourController extends Controller
             }
         }
 
-        $enquiry = $tour->enquiries()->create($validated);
+        $enquiry = $tour->enquiries()->create(array_merge($validated, [
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]));
 
         $siteSettings = SiteSetting::query()->first();
 

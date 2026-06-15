@@ -21,6 +21,8 @@ class TourEnquiry extends Model
         'adults',
         'children',
         'message',
+        'ip_address',
+        'user_agent',
     ];
 
     protected function casts(): array

@@ -70,6 +70,7 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::patch('admin/destinations/places/{place}', [DestinationPlaceController::class, 'update'])->name('admin.destinations.places.update');
         Route::delete('admin/destinations/places/{place}', [DestinationPlaceController::class, 'destroy'])->name('admin.destinations.places.destroy');
         Route::get('admin/form-submissions/contact', [FormSubmissionController::class, 'contact'])->name('admin.form-submissions.contact');
+        Route::delete('admin/form-submissions/contact/{contact_submission}', [FormSubmissionController::class, 'destroyContactSubmission'])->name('admin.form-submissions.contact.destroy');
         Route::get('admin/form-submissions/tour', [FormSubmissionController::class, 'tour'])->name('admin.form-submissions.tour');
         Route::delete('admin/form-submissions/tour/{tour_enquiry}', [FormSubmissionController::class, 'destroyTourEnquiry'])->name('admin.form-submissions.tour.destroy');
     });

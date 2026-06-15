@@ -35,7 +35,12 @@ const isHeaderStuck = ref(false);
 const headerSpacerHeight = ref(0);
 const searchInput = ref<HTMLInputElement | null>(null);
 const getSearchFromUrl = (): string => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
     const url = new URL(page.url, window.location.origin);
+
     return url.searchParams.get('search') || '';
 };
 

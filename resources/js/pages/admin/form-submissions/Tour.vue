@@ -201,6 +201,8 @@ type Enquiry = {
     adults: string;
     children: string | null;
     message: string | null;
+    ip_address: string | null;
+    user_agent: string | null;
     created_at: string;
 };
 
@@ -288,6 +290,20 @@ defineProps<{
                         <span class="text-muted-foreground">Message</span>
                         <span class="col-span-2 font-medium">
                             {{ selectedEnquiry.message ?? '-' }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <span class="text-muted-foreground">IP Address</span>
+                        <span class="col-span-2 font-medium">
+                            {{ selectedEnquiry.ip_address ?? '-' }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <span class="text-muted-foreground">User Agent</span>
+                        <span
+                            class="col-span-2 max-h-32 overflow-auto font-medium"
+                        >
+                            {{ selectedEnquiry.user_agent ?? '-' }}
                         </span>
                     </div>
                 </div>

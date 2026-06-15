@@ -97,7 +97,7 @@ onMounted(() => {
         </div>
 
         <form v-else @submit.prevent="submit">
-            <div class="input-wrap mb-20">
+            <div class="input-wrap">
                 <label for="name">Name</label>
                 <input
                     id="name"
@@ -110,7 +110,7 @@ onMounted(() => {
                 <InputError :message="form.errors.name" />
             </div>
 
-            <div class="input-wrap mb-20">
+            <div class="input-wrap">
                 <label for="email">Email</label>
                 <input
                     id="email"
@@ -123,7 +123,7 @@ onMounted(() => {
                 <InputError :message="form.errors.email" />
             </div>
 
-            <div class="input-wrap mb-20">
+            <div class="input-wrap">
                 <label for="phone">Phone Number</label>
                 <input
                     id="phone"
@@ -136,7 +136,7 @@ onMounted(() => {
                 <InputError :message="form.errors.phone" />
             </div>
 
-            <div class="input-wrap mb-20">
+            <div class="input-wrap">
                 <label for="booking-date">Preferred Date of Booking</label>
                 <input
                     id="booking-date"
@@ -189,7 +189,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="input-wrap mb-30">
+            <div class="input-wrap">
                 <label for="message">
                     Your Message
                     <span class="optional-label">(optional)</span>
@@ -204,7 +204,7 @@ onMounted(() => {
                 <InputError :message="form.errors.message" />
             </div>
 
-            <div v-if="!isLocal" class="mb-20">
+            <div v-if="!isLocal" class="mb-30">
                 <div
                     class="cf-turnstile"
                     :data-sitekey="turnstileSiteKey"
@@ -232,8 +232,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.form-book-tour > .input-wrap {
-    margin-bottom: 20px;
+.form-book-tour .input-wrap {
+    margin-bottom: 30px;
 }
 
 .form-book-tour .row .input-wrap {

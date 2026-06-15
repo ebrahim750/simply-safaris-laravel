@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, Form } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { CircleCheck, Loader2Icon } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import { useScrollAnimate } from '@/composables/useScrollAnimate';
 import { home } from '@/routes';
 import { store as contactStore } from '@/routes/contact';
@@ -13,7 +15,42 @@ defineProps<{
 
 useScrollAnimate();
 
+const submitted = ref(false);
+
+const form = useForm({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+    'cf-turnstile-response': '',
+});
+
+function submit(): void {
+    form.post(contactStore.url(), {
+        preserveScroll: true,
+        onSuccess: () => {
+            submitted.value = true;
+            form.reset();
+        },
+    });
+}
+
+declare global {
+    interface Window {
+        turnstileCallback: (token: string) => void;
+        turnstileExpiredCallback: () => void;
+    }
+}
+
 onMounted(() => {
+    window.turnstileCallback = (token: string): void => {
+        form['cf-turnstile-response'] = token;
+    };
+
+    window.turnstileExpiredCallback = (): void => {
+        form['cf-turnstile-response'] = '';
+    };
+
     const existingScript = document.querySelector(
         'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]',
     );
@@ -130,74 +167,101 @@ onMounted(() => {
                 </div>
                 <div class="col-md-6 wow fadeInRight">
                     <div class="contact-us-wrap bg-4">
-                        <div class="inner-header mb-60">
-                            <h2 class="title">Fill Up The Form</h2>
+                        <div
+                            v-if="submitted || status"
+                            class="flex flex-col items-center justify-center gap-4 py-8 text-center"
+                        >
+                            <CircleCheck class="size-20 text-green-600" />
+                            <h3 class="title" style="margin-bottom: 0">
+                                We Have Received Your Message
+                            </h3>
                             <p class="des">
-                                Your email address will not be published.
-                                Required fields are marked *
+                                {{ status || "We'll get back to you shortly." }}
                             </p>
                         </div>
-                        <Form
-                            method="post"
-                            :action="contactStore.url()"
-                            id="form-contact-us"
-                        >
-                            <div
-                                v-if="status"
-                                class="mb-20 text-sm text-green-600"
-                            >
-                                {{ status }}
-                            </div>
 
+                        <form
+                            v-else
+                            id="form-contact-us"
+                            @submit.prevent="submit"
+                        >
                             <div class="input-wrap relative">
                                 <i class="icon-user-1-1"></i>
                                 <input
+                                    v-model="form.name"
                                     type="text"
                                     name="name"
                                     placeholder="Your Name*"
                                     required
                                 />
+                                <InputError :message="form.errors.name" />
                             </div>
                             <div class="input-wrap relative">
                                 <i class="icon-Group-51"></i>
                                 <input
+                                    v-model="form.email"
                                     type="email"
                                     name="email"
                                     placeholder="Email Address*"
                                     required
                                 />
+                                <InputError :message="form.errors.email" />
                             </div>
                             <div class="input-wrap relative">
                                 <i class="icon-call-1"></i>
                                 <input
+                                    v-model="form.phone"
                                     type="tel"
                                     name="phone"
                                     placeholder="Phone Number*"
                                     required
                                 />
+                                <InputError :message="form.errors.phone" />
                             </div>
                             <div class="input-wrap relative">
                                 <i class="icon-content"></i>
                                 <textarea
+                                    v-model="form.message"
                                     name="message"
                                     rows="7"
                                     cols="30"
                                     placeholder="Enter Your Message here*"
                                     required
                                 ></textarea>
+                                <InputError :message="form.errors.message" />
                             </div>
 
                             <div v-if="!isLocal" class="mb-20">
                                 <div
                                     class="cf-turnstile"
                                     :data-sitekey="turnstileSiteKey"
+                                    data-callback="turnstileCallback"
+                                    data-expired-callback="turnstileExpiredCallback"
                                 ></div>
+                                <InputError
+                                    :message="
+                                        form.errors['cf-turnstile-response']
+                                    "
+                                />
                             </div>
 
-                            <button type="submit" class="btn-submit-contact">
-                                <i class="icon-Group-121"></i> Get In Touch
+                            <button
+                                type="submit"
+                                class="btn-submit-contact"
+                                :disabled="form.processing"
+                            >
+                                <Loader2Icon
+                                    v-if="form.processing"
+                                    class="mr-2 inline-block size-4 animate-spin"
+                                />
+                                <i v-else class="icon-Group-121"></i>
+                                {{
+                                    form.processing
+                                        ? 'Submitting...'
+                                        : 'Get In Touch'
+                                }}
                             </button>
-                        </Form>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -24,6 +24,8 @@ class TourEnquiryFactory extends Factory
             'adults' => fake()->numberBetween(1, 10),
             'children' => fake()->optional()->numberBetween(0, 10),
             'message' => fake()->optional()->paragraph(),
+            'ip_address' => fake()->ipv4(),
+            'user_agent' => fake()->userAgent(),
         ];
     }
 }
