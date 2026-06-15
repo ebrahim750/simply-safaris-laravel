@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
 use App\Http\Controllers\Admin\TourController as AdminTourController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
 use App\Http\Controllers\RootAccess\GeneralSiteSettingsController;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('home');
 Route::inertia('/about', 'About')->name('about');
-Route::inertia('/contact', 'Contact')->name('contact');
+Route::get('/contact', [ContactController::class, 'contact'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
 Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
@@ -26,6 +28,7 @@ Route::get('/destinations/{country:slug}', [DestinationController::class, 'showC
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/search', [TourController::class, 'search'])->name('tours.search');
 Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
+Route::post('/tours/{tour}/enquiry', [TourController::class, 'enquiry'])->name('tours.enquiry');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');

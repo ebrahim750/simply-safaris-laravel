@@ -7,10 +7,13 @@ use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -158,7 +161,43 @@ class TourController extends Controller
                 'inclusions' => $tour->inclusions->map(fn ($i) => ['text' => $i->text])->all(),
                 'exclusions' => $tour->exclusions->map(fn ($e) => ['text' => $e->text])->all(),
             ],
+            'turnstileSiteKey' => config('services.cf_turnstile.site_key'),
+            'isLocal' => app()->environment('local'),
         ]);
+    }
+
+    public function enquiry(Request $request, Tour $tour): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:255'],
+            'booking_date' => ['required', 'date', 'after_or_equal:today'],
+            'adults' => ['required', 'string', 'max:10'],
+            'children' => ['nullable', 'string', 'max:10'],
+            'message' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        if (! app()->environment('local')) {
+            $turnstileResponse = Http::timeout(5)->asForm()->post(
+                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                [
+                    'secret' => config('services.cf_turnstile.secret'),
+                    'response' => $request->input('cf-turnstile-response'),
+                    'remoteip' => $request->ip(),
+                ]
+            );
+
+            if (! $turnstileResponse->json('success')) {
+                throw ValidationException::withMessages([
+                    'cf-turnstile-response' => ['Please complete the security challenge.'],
+                ]);
+            }
+        }
+
+        // TODO: send enquiry notification/email
+
+        return redirect()->back()->with('status', 'Your enquiry has been submitted. We will get back to you soon.');
     }
 
     /**

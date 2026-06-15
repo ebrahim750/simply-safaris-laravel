@@ -1,9 +1,33 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { home } from '@/routes';
+import { Head, Link, Form } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 import { useScrollAnimate } from '@/composables/useScrollAnimate';
+import { home } from '@/routes';
+import { store as contactStore } from '@/routes/contact';
+
+defineProps<{
+    turnstileSiteKey: string;
+    isLocal: boolean;
+    status?: string;
+}>();
 
 useScrollAnimate();
+
+onMounted(() => {
+    const existingScript = document.querySelector(
+        'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]',
+    );
+
+    if (existingScript) {
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+});
 </script>
 
 <template>
@@ -19,7 +43,11 @@ useScrollAnimate();
                         <li><Link :href="home()">Home</Link></li>
                         <li><span>Contact Us</span></li>
                     </ul>
-                    <img class="bcrumb-ab" src="/template/images/page/mask-bcrumb.png" alt="" />
+                    <img
+                        class="bcrumb-ab"
+                        src="/template/images/page/mask-bcrumb.png"
+                        alt=""
+                    />
                 </div>
             </div>
         </div>
@@ -32,7 +60,10 @@ useScrollAnimate();
                 <div class="col-md-4 wow fadeInUp">
                     <div class="box-contact center">
                         <div class="icon">
-                            <i class="icon-Layer-19" style="font-size: 48px; color: #4DA528;"></i>
+                            <i
+                                class="icon-Layer-19"
+                                style="font-size: 48px; color: #4da528"
+                            ></i>
                         </div>
                         <span>Address</span>
                         <p class="des">
@@ -44,7 +75,10 @@ useScrollAnimate();
                 <div class="col-md-4 wow fadeInUp" data-wow-delay="0.1s">
                     <div class="box-contact center">
                         <div class="icon">
-                            <i class="icon-Group-9" style="font-size: 48px; color: #4DA528;"></i>
+                            <i
+                                class="icon-Group-9"
+                                style="font-size: 48px; color: #4da528"
+                            ></i>
                         </div>
                         <span>Phone Number</span>
                         <p class="des">
@@ -56,7 +90,10 @@ useScrollAnimate();
                 <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
                     <div class="box-contact center">
                         <div class="icon">
-                            <i class="icon-noun-mail-5780740-1" style="font-size: 48px; color: #4DA528;"></i>
+                            <i
+                                class="icon-noun-mail-5780740-1"
+                                style="font-size: 48px; color: #4da528"
+                            ></i>
                         </div>
                         <span>Mail Address</span>
                         <p class="des">
@@ -73,7 +110,9 @@ useScrollAnimate();
                         <div class="inner-header mb-45">
                             <h2 class="title">Get in touch</h2>
                             <p class="des">
-                                Have questions about our safari tours? Reach out and our team will be happy to help you plan your perfect adventure.
+                                Have questions about our safari tours? Reach out
+                                and our team will be happy to help you plan your
+                                perfect adventure.
                             </p>
                         </div>
                         <div class="map relative">
@@ -81,7 +120,7 @@ useScrollAnimate();
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2!2d-73.98!3d40.75!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQ1JzAwLjAiTiA3M8KwNTgnNDguMCJX!5e0!3m2!1sen!2sus!4v1"
                                 width="100%"
                                 height="400"
-                                style="border:0; border-radius: 12px;"
+                                style="border: 0; border-radius: 12px"
                                 :allowfullscreen="true"
                                 loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"
@@ -94,17 +133,48 @@ useScrollAnimate();
                         <div class="inner-header mb-60">
                             <h2 class="title">Fill Up The Form</h2>
                             <p class="des">
-                                Your email address will not be published. Required fields are marked *
+                                Your email address will not be published.
+                                Required fields are marked *
                             </p>
                         </div>
-                        <form action="#" id="form-contact-us">
+                        <Form
+                            method="post"
+                            :action="contactStore.url()"
+                            id="form-contact-us"
+                        >
+                            <div
+                                v-if="status"
+                                class="mb-20 text-sm text-green-600"
+                            >
+                                {{ status }}
+                            </div>
+
                             <div class="input-wrap relative">
                                 <i class="icon-user-1-1"></i>
-                                <input type="text" placeholder="Your Name*" />
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Your Name*"
+                                    required
+                                />
                             </div>
                             <div class="input-wrap relative">
                                 <i class="icon-Group-51"></i>
-                                <input type="email" placeholder="Email Address*" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email Address*"
+                                    required
+                                />
+                            </div>
+                            <div class="input-wrap relative">
+                                <i class="icon-call-1"></i>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    placeholder="Phone Number*"
+                                    required
+                                />
                             </div>
                             <div class="input-wrap relative">
                                 <i class="icon-content"></i>
@@ -112,13 +182,22 @@ useScrollAnimate();
                                     name="message"
                                     rows="7"
                                     cols="30"
-                                    placeholder="Enter Your Message here"
+                                    placeholder="Enter Your Message here*"
+                                    required
                                 ></textarea>
                             </div>
+
+                            <div v-if="!isLocal" class="mb-20">
+                                <div
+                                    class="cf-turnstile"
+                                    :data-sitekey="turnstileSiteKey"
+                                ></div>
+                            </div>
+
                             <button type="submit" class="btn-submit-contact">
                                 <i class="icon-Group-121"></i> Get In Touch
                             </button>
-                        </form>
+                        </Form>
                     </div>
                 </div>
             </div>
@@ -128,17 +207,31 @@ useScrollAnimate();
     <!-- CTA Section -->
     <section class="mb--93 bg-1">
         <div class="tf-container">
-            <div class="callt-to-action flex-two z-index3 relative wow fadeInUp">
+            <div
+                class="callt-to-action flex-two z-index3 wow fadeInUp relative"
+            >
                 <div class="callt-to-action-content flex-three">
                     <div class="image">
-                        <img src="/template/images/page/ready.png" alt="Image" />
+                        <img
+                            src="/template/images/page/ready.png"
+                            alt="Image"
+                        />
                     </div>
                     <div class="content">
-                        <h2 class="title-call">Ready to adventure and enjoy natural</h2>
-                        <p class="des">Explore the world's most breathtaking safari destinations with us</p>
+                        <h2 class="title-call">
+                            Ready to adventure and enjoy natural
+                        </h2>
+                        <p class="des">
+                            Explore the world's most breathtaking safari
+                            destinations with us
+                        </p>
                     </div>
                 </div>
-                <img src="/template/images/page/vector4.png" alt="" class="shape-ab" />
+                <img
+                    src="/template/images/page/vector4.png"
+                    alt=""
+                    class="shape-ab"
+                />
                 <div class="callt-to-action-button">
                     <a href="#" class="get-call">Let's get started</a>
                 </div>

@@ -4,6 +4,7 @@ import { CheckCircle, XCircle } from 'lucide-vue-next';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import TourEnquiryForm from '@/components/TourEnquiryForm.vue';
 import { usePhotoSwipe } from '@/composables/usePhotoSwipe';
 import { home } from '@/routes';
 import 'swiper/css';
@@ -31,7 +32,12 @@ const props = defineProps<{
         inclusions: Array<{ text: string }>;
         exclusions: Array<{ text: string }>;
     };
+    turnstileSiteKey: string;
+    isLocal: boolean;
+    status?: string;
 }>();
+
+const enquiryAction = computed(() => `/tours/${props.tour.id}/enquiry`);
 
 const activeTab = ref('overview');
 
@@ -193,6 +199,13 @@ function onDragEnd(e: PointerEvent): void {
 <template>
     <Head :title="tour.name" />
 
+    <div
+        v-if="status"
+        class="mb-4 text-center text-sm font-medium text-green-600"
+    >
+        {{ status }}
+    </div>
+
     <!-- Hero -->
     <section
         class="breadcumb-section hero-section"
@@ -218,10 +231,245 @@ function onDragEnd(e: PointerEvent): void {
         </div>
     </section>
 
-    <!-- Tabs -->
+    <!-- Tour single -->
     <section class="tour-single">
         <div class="tf-container">
+            <!-- Persistent meta + gallery (full width, above tabs) -->
             <div class="row">
+                <div class="col-lg-12">
+                    <div class="row mb-50">
+                        <div class="col-lg-12">
+                            <div class="inner-heading-wrap flex-two">
+                                <div class="inner-heading">
+                                    <div class="tour-meta-grid">
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                countryLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                countryValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                destinationLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                destinationValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label"
+                                                >Duration</span
+                                            >
+                                            <span class="tour-meta-value">{{
+                                                durationValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                categoryLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                categoryValue
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="inner-price">
+                                    <p>
+                                        <span style="margin-right: 4px"
+                                            >From</span
+                                        >
+                                        <span class="price-sale text-main">{{
+                                            tour.price
+                                        }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Swiper v12 carousel -->
+                    <div
+                        v-if="tour.gallery_images.length > 0 && useSwiper"
+                        class="tour-gallery-swiper-wrap mb-40"
+                    >
+                        <Swiper
+                            :modules="[Autoplay, Pagination]"
+                            :pagination="{ clickable: true }"
+                            :slides-per-view="4"
+                            :space-between="16"
+                            :grab-cursor="true"
+                            :breakpoints="{
+                                320: {
+                                    slidesPerView: 1,
+                                    spaceBetween: 12,
+                                },
+                                640: {
+                                    slidesPerView: 2,
+                                    spaceBetween: 12,
+                                },
+                                992: {
+                                    slidesPerView: 3,
+                                    spaceBetween: 16,
+                                },
+                                1200: {
+                                    slidesPerView: 4,
+                                    spaceBetween: 16,
+                                },
+                            }"
+                            :loop="tour.gallery_images.length > 4"
+                            :autoplay="{
+                                delay: 3000,
+                                disableOnInteraction: true,
+                            }"
+                            class="tour-gallery-swiper"
+                            @swiper="onSwiperInit"
+                        >
+                            <SwiperSlide
+                                v-for="(img, index) in tour.gallery_images"
+                                :key="index"
+                                class="cursor-pointer"
+                                @click="openAt(index)"
+                            >
+                                <img
+                                    :src="img"
+                                    :alt="`${tour.name} gallery image ${index + 1}`"
+                                    class="swiper-slide-img"
+                                />
+                            </SwiperSlide>
+                        </Swiper>
+
+                        <!-- Custom navigation arrows -->
+                        <button
+                            v-if="tour.gallery_images.length > 1"
+                            class="swiper-custom-arrow swiper-custom-prev"
+                            @click="swiperSlidePrev"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
+                        </button>
+                        <button
+                            v-if="tour.gallery_images.length > 1"
+                            class="swiper-custom-arrow swiper-custom-next"
+                            @click="swiperSlideNext"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Custom Vue carousel (fallback) -->
+                    <div
+                        v-if="tour.gallery_images.length > 0 && !useSwiper"
+                        class="mb-40"
+                    >
+                        <div class="tour-gallery-carousel">
+                            <div class="carousel-track-wrapper">
+                                <div
+                                    class="carousel-track"
+                                    :style="trackStyle"
+                                    @pointerdown="onDragStart"
+                                    @pointerup="onDragEnd"
+                                    @pointerleave="onDragEnd"
+                                >
+                                    <div
+                                        v-for="(
+                                            img, index
+                                        ) in tour.gallery_images"
+                                        :key="index"
+                                        class="carousel-slide"
+                                    >
+                                        <div class="carousel-slide-inner">
+                                            <img
+                                                :src="img"
+                                                :alt="`${tour.name} gallery image ${index + 1}`"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Navigation arrows -->
+                            <button
+                                v-if="maxIndex > 0"
+                                class="carousel-arrow carousel-prev"
+                                :disabled="currentIndex <= 0"
+                                @click="carouselPrev"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+                            <button
+                                v-if="maxIndex > 0"
+                                class="carousel-arrow carousel-next"
+                                :disabled="currentIndex >= maxIndex"
+                                @click="carouselNext"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+
+                            <!-- Dot pagination -->
+                            <div v-if="dotCount > 1" class="carousel-dots">
+                                <button
+                                    v-for="(_, dotIndex) in dotCount"
+                                    :key="dotIndex"
+                                    class="carousel-dot"
+                                    :class="{
+                                        active: currentIndex === dotIndex,
+                                    }"
+                                    @click="carouselGoTo(dotIndex)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs nav -->
+            <div class="row pd-main">
                 <div class="col-lg-12">
                     <ul
                         class="nav justify-content-between tab-tour-single"
@@ -251,8 +499,9 @@ function onDragEnd(e: PointerEvent): void {
                 </div>
             </div>
 
-            <div class="row pd-main">
-                <div class="col-lg-12">
+            <!-- Tab content + sidebar -->
+            <div class="row">
+                <div class="col-lg-8">
                     <div class="tab-content">
                         <!-- Overview Tab -->
                         <div
@@ -261,274 +510,8 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <div class="row mb-50">
-                                <div class="col-lg-12">
-                                    <div class="inner-heading-wrap flex-two">
-                                        <div class="inner-heading">
-                                            <div class="tour-meta-grid">
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            countryLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            countryValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            destinationLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            destinationValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >Duration</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            durationValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            categoryLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            categoryValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="inner-price">
-                                            <p>
-                                                <span style="margin-right: 4px"
-                                                    >From</span
-                                                >
-                                                <span
-                                                    class="price-sale text-main"
-                                                    >{{ tour.price }}</span
-                                                >
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Swiper v12 carousel -->
-                            <div
-                                v-if="
-                                    tour.gallery_images.length > 0 && useSwiper
-                                "
-                                class="tour-gallery-swiper-wrap mb-40"
-                            >
-                                <Swiper
-                                    :modules="[Autoplay, Pagination]"
-                                    :pagination="{ clickable: true }"
-                                    :slides-per-view="4"
-                                    :space-between="16"
-                                    :grab-cursor="true"
-                                    :breakpoints="{
-                                        320: {
-                                            slidesPerView: 1,
-                                            spaceBetween: 12,
-                                        },
-                                        640: {
-                                            slidesPerView: 2,
-                                            spaceBetween: 12,
-                                        },
-                                        992: {
-                                            slidesPerView: 3,
-                                            spaceBetween: 16,
-                                        },
-                                        1200: {
-                                            slidesPerView: 4,
-                                            spaceBetween: 16,
-                                        },
-                                    }"
-                                    :loop="tour.gallery_images.length > 4"
-                                    :autoplay="{
-                                        delay: 3000,
-                                        disableOnInteraction: true,
-                                    }"
-                                    class="tour-gallery-swiper"
-                                    @swiper="onSwiperInit"
-                                >
-                                    <SwiperSlide
-                                        v-for="(
-                                            img, index
-                                        ) in tour.gallery_images"
-                                        :key="index"
-                                        class="cursor-pointer"
-                                        @click="openAt(index)"
-                                    >
-                                        <img
-                                            :src="img"
-                                            :alt="`${tour.name} gallery image ${index + 1}`"
-                                            class="swiper-slide-img"
-                                        />
-                                    </SwiperSlide>
-                                </Swiper>
-
-                                <!-- Custom navigation arrows -->
-                                <button
-                                    v-if="tour.gallery_images.length > 1"
-                                    class="swiper-custom-arrow swiper-custom-prev"
-                                    @click="swiperSlidePrev"
-                                >
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <polyline points="15 18 9 12 15 6" />
-                                    </svg>
-                                </button>
-                                <button
-                                    v-if="tour.gallery_images.length > 1"
-                                    class="swiper-custom-arrow swiper-custom-next"
-                                    @click="swiperSlideNext"
-                                >
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Custom Vue carousel (fallback) -->
-                            <div
-                                v-if="
-                                    tour.gallery_images.length > 0 && !useSwiper
-                                "
-                                class="mb-40"
-                            >
-                                <div class="tour-gallery-carousel">
-                                    <div class="carousel-track-wrapper">
-                                        <div
-                                            class="carousel-track"
-                                            :style="trackStyle"
-                                            @pointerdown="onDragStart"
-                                            @pointerup="onDragEnd"
-                                            @pointerleave="onDragEnd"
-                                        >
-                                            <div
-                                                v-for="(
-                                                    img, index
-                                                ) in tour.gallery_images"
-                                                :key="index"
-                                                class="carousel-slide"
-                                            >
-                                                <div
-                                                    class="carousel-slide-inner"
-                                                >
-                                                    <img
-                                                        :src="img"
-                                                        :alt="`${tour.name} gallery image ${index + 1}`"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Navigation arrows -->
-                                    <button
-                                        v-if="maxIndex > 0"
-                                        class="carousel-arrow carousel-prev"
-                                        :disabled="currentIndex <= 0"
-                                        @click="carouselPrev"
-                                    >
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <polyline
-                                                points="15 18 9 12 15 6"
-                                            />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        v-if="maxIndex > 0"
-                                        class="carousel-arrow carousel-next"
-                                        :disabled="currentIndex >= maxIndex"
-                                        @click="carouselNext"
-                                    >
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <polyline points="9 18 15 12 9 6" />
-                                        </svg>
-                                    </button>
-
-                                    <!-- Dot pagination -->
-                                    <div
-                                        v-if="dotCount > 1"
-                                        class="carousel-dots"
-                                    >
-                                        <button
-                                            v-for="(_, dotIndex) in dotCount"
-                                            :key="dotIndex"
-                                            class="carousel-dot"
-                                            :class="{
-                                                active:
-                                                    currentIndex === dotIndex,
-                                            }"
-                                            @click="carouselGoTo(dotIndex)"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="row">
-                                <div class="col-lg-8">
+                                <div class="col-lg-12">
                                     <div class="information-content-tour">
                                         <div
                                             v-if="tour.overview"
@@ -578,355 +561,6 @@ function onDragEnd(e: PointerEvent): void {
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Sidebar -->
-                                <div class="col-lg-4">
-                                    <div class="side-bar-right">
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Enquiry & Quote
-                                            </h6>
-                                            <p class="sidebar-subtitle mb-20">
-                                                Request a booking for this tour
-                                            </p>
-                                            <form
-                                                action="/"
-                                                id="form-book-tour"
-                                            >
-                                                <div class="input-wrap mb-30">
-                                                    <input type="date" />
-                                                </div>
-                                                <div class="flex-two mb-30">
-                                                    <span class="label"
-                                                        >Time:</span
-                                                    >
-                                                    <div class="radio">
-                                                        <input
-                                                            id="first"
-                                                            type="radio"
-                                                            name="numbers"
-                                                            value="first"
-                                                            checked
-                                                        />
-                                                        <label for="first"
-                                                            >14.00</label
-                                                        >
-                                                        <input
-                                                            id="second"
-                                                            type="radio"
-                                                            name="numbers"
-                                                            value="second"
-                                                        />
-                                                        <label for="second"
-                                                            >16.00</label
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="input-wrap-sellect mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Tickets:</span
-                                                    >
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Children (0-12
-                                                            years)$129.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Youth (13-17
-                                                            years)$169.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two">
-                                                        <p>
-                                                            Adult (18+)
-                                                            years)$189.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button type="submit">
-                                                    Submit
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Book With Confidence
-                                            </h6>
-                                            <ul class="category-confidence">
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-customer-service-1"
-                                                    ></i>
-                                                    <span
-                                                        >Customer care available
-                                                        24/7</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-Vector-6"
-                                                    ></i>
-                                                    <span
-                                                        >Hand-picked Tours &
-                                                        Activities</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-insurance-1"
-                                                    ></i>
-                                                    <span
-                                                        >Free Travel
-                                                        Insureance</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-price-tag-1-1"
-                                                    ></i>
-                                                    <span
-                                                        >No-hassle best price
-                                                        guarantee</span
-                                                    >
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h4 class="block-heading">
-                                                Recent News
-                                            </h4>
-                                            <div class="recent-post-list">
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog1.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog2.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog3.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -937,398 +571,39 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div class="planing-content-tour">
-                                        <h3 class="title-plan">Tour Plan :</h3>
+                            <div class="planing-content-tour">
+                                <h3 class="title-plan">Tour Plan :</h3>
+                                <div
+                                    v-for="(
+                                        item, index
+                                    ) in tour.itinerary_items"
+                                    :key="index"
+                                    class="tour-planing-section flex"
+                                >
+                                    <div class="number-box flex-five">
+                                        {{ String(index + 1).padStart(2, '0') }}
+                                    </div>
+                                    <div class="content-box">
+                                        <h5 class="title">
+                                            {{ item.title }}
+                                        </h5>
                                         <div
-                                            v-for="(
-                                                item, index
-                                            ) in tour.itinerary_items"
-                                            :key="index"
-                                            class="tour-planing-section flex"
-                                        >
-                                            <div class="number-box flex-five">
-                                                {{
-                                                    String(index + 1).padStart(
-                                                        2,
-                                                        '0',
-                                                    )
-                                                }}
-                                            </div>
-                                            <div class="content-box">
-                                                <h5 class="title">
-                                                    {{ item.title }}
-                                                </h5>
-                                                <div
-                                                    v-if="item.content"
-                                                    class="des"
-                                                    v-html="item.content"
-                                                ></div>
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            v-if="
-                                                tour.itinerary_items.length ===
-                                                0
-                                            "
-                                            class="tour-planing-section flex"
-                                        >
-                                            <div class="content-box">
-                                                <p class="des">
-                                                    No itinerary items available
-                                                    for this tour.
-                                                </p>
-                                            </div>
-                                        </div>
+                                            v-if="item.content"
+                                            class="des"
+                                            v-html="item.content"
+                                        ></div>
                                     </div>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="side-bar-right">
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Enquiry & Quote
-                                            </h6>
-                                            <p class="sidebar-subtitle mb-20">
-                                                Request a booking for this tour
-                                            </p>
-                                            <form
-                                                action="/"
-                                                id="form-book-tour"
-                                            >
-                                                <div class="input-wrap mb-30">
-                                                    <input type="date" />
-                                                </div>
-                                                <div class="flex-two mb-30">
-                                                    <span class="label"
-                                                        >Time:</span
-                                                    >
-                                                    <div class="radio">
-                                                        <input
-                                                            id="first-it"
-                                                            type="radio"
-                                                            name="numbers-it"
-                                                            value="first"
-                                                            checked
-                                                        />
-                                                        <label for="first-it"
-                                                            >14.00</label
-                                                        >
-                                                        <input
-                                                            id="second-it"
-                                                            type="radio"
-                                                            name="numbers-it"
-                                                            value="second"
-                                                        />
-                                                        <label for="second-it"
-                                                            >16.00</label
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="input-wrap-sellect mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Tickets:</span
-                                                    >
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Children (0-12
-                                                            years)$129.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Youth (13-17
-                                                            years)$169.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two">
-                                                        <p>
-                                                            Adult (18+)
-                                                            years)$189.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
 
-                                                <button type="submit">
-                                                    Submit
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Book With Confidence
-                                            </h6>
-                                            <ul class="category-confidence">
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-customer-service-1"
-                                                    ></i>
-                                                    <span
-                                                        >Customer care available
-                                                        24/7</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-Vector-6"
-                                                    ></i>
-                                                    <span
-                                                        >Hand-picked Tours &
-                                                        Activities</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-insurance-1"
-                                                    ></i>
-                                                    <span
-                                                        >Free Travel
-                                                        Insureance</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-price-tag-1-1"
-                                                    ></i>
-                                                    <span
-                                                        >No-hassle best price
-                                                        guarantee</span
-                                                    >
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h4 class="block-heading">
-                                                Recent News
-                                            </h4>
-                                            <div class="recent-post-list">
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog1.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog2.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog3.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div
+                                    v-if="tour.itinerary_items.length === 0"
+                                    class="tour-planing-section flex"
+                                >
+                                    <div class="content-box">
+                                        <p class="des">
+                                            No itinerary items available for
+                                            this tour.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1341,418 +616,57 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div class="expect-wrap mb-70">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h5 class="mb-18">
-                                                    Whats Included
-                                                </h5>
-                                                <ul
-                                                    v-if="
-                                                        tour.inclusions.length >
-                                                        0
-                                                    "
-                                                    class="listing-clude"
-                                                >
-                                                    <li
-                                                        v-for="(
-                                                            inclusion, index
-                                                        ) in tour.inclusions"
-                                                        :key="index"
-                                                        class="flex-three"
-                                                    >
-                                                        <CheckCircle
-                                                            class="clude-icon included-icon"
-                                                        />
-                                                        <p>
-                                                            {{ inclusion.text }}
-                                                        </p>
-                                                    </li>
-                                                </ul>
-                                                <p v-else class="des">
-                                                    No inclusions listed.
-                                                </p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h5 class="mb-18">
-                                                    Whats Excluded
-                                                </h5>
-                                                <ul
-                                                    v-if="
-                                                        tour.exclusions.length >
-                                                        0
-                                                    "
-                                                    class="listing-clude"
-                                                >
-                                                    <li
-                                                        v-for="(
-                                                            exclusion, index
-                                                        ) in tour.exclusions"
-                                                        :key="index"
-                                                        class="flex-three"
-                                                    >
-                                                        <XCircle
-                                                            class="clude-icon excluded-icon"
-                                                        />
-                                                        <p>
-                                                            {{ exclusion.text }}
-                                                        </p>
-                                                    </li>
-                                                </ul>
-                                                <p v-else class="des">
-                                                    No exclusions listed.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4">
-                                    <div class="side-bar-right">
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Enquiry & Quote
-                                            </h6>
-                                            <p class="sidebar-subtitle mb-20">
-                                                Request a booking for this tour
-                                            </p>
-                                            <form
-                                                action="/"
-                                                id="form-book-tour"
+                            <div class="expect-wrap mb-70">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-18">Whats Included</h5>
+                                        <ul
+                                            v-if="tour.inclusions.length > 0"
+                                            class="listing-clude"
+                                        >
+                                            <li
+                                                v-for="(
+                                                    inclusion, index
+                                                ) in tour.inclusions"
+                                                :key="index"
+                                                class="flex-three"
                                             >
-                                                <div class="input-wrap mb-30">
-                                                    <input type="date" />
-                                                </div>
-                                                <div class="flex-two mb-30">
-                                                    <span class="label"
-                                                        >Time:</span
-                                                    >
-                                                    <div class="radio">
-                                                        <input
-                                                            id="first-loc"
-                                                            type="radio"
-                                                            name="numbers-loc"
-                                                            value="first"
-                                                            checked
-                                                        />
-                                                        <label for="first-loc"
-                                                            >14.00</label
-                                                        >
-                                                        <input
-                                                            id="second-loc"
-                                                            type="radio"
-                                                            name="numbers-loc"
-                                                            value="second"
-                                                        />
-                                                        <label for="second-loc"
-                                                            >16.00</label
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="input-wrap-sellect mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Tickets:</span
-                                                    >
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Children (0-12
-                                                            years)$129.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Youth (13-17
-                                                            years)$169.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two">
-                                                        <p>
-                                                            Adult (18+)
-                                                            years)$189.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button type="submit">
-                                                    Submit
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Book With Confidence
-                                            </h6>
-                                            <ul class="category-confidence">
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-customer-service-1"
-                                                    ></i>
-                                                    <span
-                                                        >Customer care available
-                                                        24/7</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-Vector-6"
-                                                    ></i>
-                                                    <span
-                                                        >Hand-picked Tours &
-                                                        Activities</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-insurance-1"
-                                                    ></i>
-                                                    <span
-                                                        >Free Travel
-                                                        Insureance</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-price-tag-1-1"
-                                                    ></i>
-                                                    <span
-                                                        >No-hassle best price
-                                                        guarantee</span
-                                                    >
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h4 class="block-heading">
-                                                Recent News
-                                            </h4>
-                                            <div class="recent-post-list">
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog1.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog2.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog3.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                                <CheckCircle
+                                                    class="clude-icon included-icon"
+                                                />
+                                                <p>
+                                                    {{ inclusion.text }}
+                                                </p>
+                                            </li>
+                                        </ul>
+                                        <p v-else class="des">
+                                            No inclusions listed.
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5 class="mb-18">Whats Excluded</h5>
+                                        <ul
+                                            v-if="tour.exclusions.length > 0"
+                                            class="listing-clude"
+                                        >
+                                            <li
+                                                v-for="(
+                                                    exclusion, index
+                                                ) in tour.exclusions"
+                                                :key="index"
+                                                class="flex-three"
+                                            >
+                                                <XCircle
+                                                    class="clude-icon excluded-icon"
+                                                />
+                                                <p>
+                                                    {{ exclusion.text }}
+                                                </p>
+                                            </li>
+                                        </ul>
+                                        <p v-else class="des">
+                                            No exclusions listed.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1765,379 +679,24 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div class="review-content-tour">
-                                        <div
-                                            v-if="tour.pricing_detailed"
-                                            class="description-wrap mb-40"
-                                        >
-                                            <span class="description"
-                                                >Detailed Pricing:</span
-                                            >
-                                            <div
-                                                class="des"
-                                                v-html="tour.pricing_detailed"
-                                            ></div>
-                                        </div>
-                                        <div
-                                            v-else
-                                            class="description-wrap mb-40"
-                                        >
-                                            <p class="des">
-                                                Detailed pricing information is
-                                                not available for this tour.
-                                            </p>
-                                        </div>
-                                    </div>
+                            <div class="review-content-tour">
+                                <div
+                                    v-if="tour.pricing_detailed"
+                                    class="description-wrap mb-40"
+                                >
+                                    <span class="description"
+                                        >Detailed Pricing:</span
+                                    >
+                                    <div
+                                        class="des"
+                                        v-html="tour.pricing_detailed"
+                                    ></div>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="side-bar-right">
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Enquiry & Quote
-                                            </h6>
-                                            <p class="sidebar-subtitle mb-20">
-                                                Request a booking for this tour
-                                            </p>
-                                            <form
-                                                action="/"
-                                                id="form-book-tour"
-                                            >
-                                                <div class="input-wrap mb-30">
-                                                    <input type="date" />
-                                                </div>
-                                                <div class="flex-two mb-30">
-                                                    <span class="label"
-                                                        >Time:</span
-                                                    >
-                                                    <div class="radio">
-                                                        <input
-                                                            id="first-rates"
-                                                            type="radio"
-                                                            name="numbers-rates"
-                                                            value="first"
-                                                            checked
-                                                        />
-                                                        <label for="first-rates"
-                                                            >14.00</label
-                                                        >
-                                                        <input
-                                                            id="second-rates"
-                                                            type="radio"
-                                                            name="numbers-rates"
-                                                            value="second"
-                                                        />
-                                                        <label
-                                                            for="second-rates"
-                                                            >16.00</label
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="input-wrap-sellect mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Tickets:</span
-                                                    >
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Children (0-12
-                                                            years)$129.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Youth (13-17
-                                                            years)$169.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two">
-                                                        <p>
-                                                            Adult (18+)
-                                                            years)$189.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button type="submit">
-                                                    Submit
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Book With Confidence
-                                            </h6>
-                                            <ul class="category-confidence">
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-customer-service-1"
-                                                    ></i>
-                                                    <span
-                                                        >Customer care available
-                                                        24/7</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-Vector-6"
-                                                    ></i>
-                                                    <span
-                                                        >Hand-picked Tours &
-                                                        Activities</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-insurance-1"
-                                                    ></i>
-                                                    <span
-                                                        >Free Travel
-                                                        Insureance</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-price-tag-1-1"
-                                                    ></i>
-                                                    <span
-                                                        >No-hassle best price
-                                                        guarantee</span
-                                                    >
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h4 class="block-heading">
-                                                Recent News
-                                            </h4>
-                                            <div class="recent-post-list">
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog1.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog2.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog3.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div v-else class="description-wrap mb-40">
+                                    <p class="des">
+                                        Detailed pricing information is not
+                                        available for this tour.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -2149,382 +708,155 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div class="gallery-content-tour">
-                                        <div
-                                            v-for="(
-                                                img, index
-                                            ) in tour.gallery_images"
-                                            :key="index"
-                                            class="gallery-item cursor-pointer"
-                                            @click="openAt(index)"
-                                        >
-                                            <img
-                                                :src="img"
-                                                :alt="`${tour.name} gallery image ${index + 1}`"
-                                                class="gallery-item-img"
-                                            />
+                            <div class="gallery-content-tour">
+                                <div
+                                    v-for="(img, index) in tour.gallery_images"
+                                    :key="index"
+                                    class="gallery-item cursor-pointer"
+                                    @click="openAt(index)"
+                                >
+                                    <img
+                                        :src="img"
+                                        :alt="`${tour.name} gallery image ${index + 1}`"
+                                        class="gallery-item-img"
+                                    />
+                                </div>
+                                <div
+                                    v-if="tour.gallery_images.length === 0"
+                                    class="gallery-item"
+                                >
+                                    <img
+                                        src="/template/images/gallery/gallery.jpg"
+                                        alt="image"
+                                        class="gallery-item-img"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="side-bar-right">
+                        <div class="sidebar-widget">
+                            <h6 class="block-heading !mb-0">Enquiry & Quote</h6>
+                            <p class="sidebar-subtitle mb-22">
+                                Request a booking for this tour
+                            </p>
+                            <TourEnquiryForm
+                                :action="enquiryAction"
+                                :is-local="isLocal"
+                                :turnstile-site-key="turnstileSiteKey"
+                                :status="status"
+                            />
+                        </div>
+                        <div class="sidebar-widget">
+                            <h6 class="block-heading">Book With Confidence</h6>
+                            <ul class="category-confidence">
+                                <li class="flex-three">
+                                    <i class="icon-customer-service-1"></i>
+                                    <span>Customer care available 24/7</span>
+                                </li>
+                                <li class="flex-three">
+                                    <i class="icon-Vector-6"></i>
+                                    <span>Hand-picked Tours & Activities</span>
+                                </li>
+                                <li class="flex-three">
+                                    <i class="icon-insurance-1"></i>
+                                    <span>Free Travel Insureance</span>
+                                </li>
+                                <li class="flex-three">
+                                    <i class="icon-price-tag-1-1"></i>
+                                    <span>No-hassle best price guarantee</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="sidebar-widget">
+                            <h4 class="block-heading">Recent News</h4>
+                            <div class="recent-post-list">
+                                <div class="list-recent flex-three">
+                                    <a href="#" class="recent-image">
+                                        <img
+                                            src="/template/images/blog/re-blog1.jpg"
+                                            alt="Image"
+                                        />
+                                    </a>
+                                    <div class="recent-info">
+                                        <div class="start">
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
                                         </div>
-                                        <div
-                                            v-if="
-                                                tour.gallery_images.length === 0
-                                            "
-                                            class="gallery-item"
-                                        >
-                                            <img
-                                                src="/template/images/gallery/gallery.jpg"
-                                                alt="image"
-                                                class="gallery-item-img"
-                                            />
-                                        </div>
+                                        <h4 class="title">
+                                            <a href="#"
+                                                >Walking the Amalfi Coast</a
+                                            >
+                                        </h4>
+                                        <p>
+                                            From
+                                            <span class="text-main"
+                                                >$129.00</span
+                                            >
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="side-bar-right">
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Enquiry & Quote
-                                            </h6>
-                                            <p class="sidebar-subtitle mb-20">
-                                                Request a booking for this tour
-                                            </p>
-                                            <form
-                                                action="/"
-                                                id="form-book-tour"
+                                <div class="list-recent flex-three">
+                                    <a href="#" class="recent-image">
+                                        <img
+                                            src="/template/images/blog/re-blog2.jpg"
+                                            alt="Image"
+                                        />
+                                    </a>
+                                    <div class="recent-info">
+                                        <div class="start">
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                        </div>
+                                        <h4 class="title">
+                                            <a href="#"
+                                                >Walking the Amalfi Coast</a
                                             >
-                                                <div class="input-wrap mb-30">
-                                                    <input type="date" />
-                                                </div>
-                                                <div class="flex-two mb-30">
-                                                    <span class="label"
-                                                        >Time:</span
-                                                    >
-                                                    <div class="radio">
-                                                        <input
-                                                            id="first-gal"
-                                                            type="radio"
-                                                            name="numbers-gal"
-                                                            value="first"
-                                                            checked
-                                                        />
-                                                        <label for="first-gal"
-                                                            >14.00</label
-                                                        >
-                                                        <input
-                                                            id="second-gal"
-                                                            type="radio"
-                                                            name="numbers-gal"
-                                                            value="second"
-                                                        />
-                                                        <label for="second-gal"
-                                                            >16.00</label
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="input-wrap-sellect mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Tickets:</span
-                                                    >
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Children (0-12
-                                                            years)$129.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two mb-15">
-                                                        <p>
-                                                            Youth (13-17
-                                                            years)$169.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-two">
-                                                        <p>
-                                                            Adult (18+)
-                                                            years)$189.00
-                                                        </p>
-                                                        <div
-                                                            class="nice-select"
-                                                            tabindex="0"
-                                                        >
-                                                            <span
-                                                                class="current"
-                                                                >1</span
-                                                            >
-                                                            <ul class="list">
-                                                                <li
-                                                                    data-value=""
-                                                                    class="option selected focus"
-                                                                >
-                                                                    1
-                                                                </li>
-                                                                <li
-                                                                    data-value="2"
-                                                                    class="option"
-                                                                >
-                                                                    2
-                                                                </li>
-                                                                <li
-                                                                    data-value="3"
-                                                                    class="option"
-                                                                >
-                                                                    3
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button type="submit">
-                                                    Submit
-                                                </button>
-                                            </form>
+                                        </h4>
+                                        <p>
+                                            From
+                                            <span class="text-main"
+                                                >$129.00</span
+                                            >
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="list-recent flex-three">
+                                    <a href="#" class="recent-image">
+                                        <img
+                                            src="/template/images/blog/re-blog3.jpg"
+                                            alt="Image"
+                                        />
+                                    </a>
+                                    <div class="recent-info">
+                                        <div class="start">
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
+                                            <i class="icon-Star"></i>
                                         </div>
-                                        <div class="sidebar-widget">
-                                            <h6 class="block-heading">
-                                                Book With Confidence
-                                            </h6>
-                                            <ul class="category-confidence">
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-customer-service-1"
-                                                    ></i>
-                                                    <span
-                                                        >Customer care available
-                                                        24/7</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-Vector-6"
-                                                    ></i>
-                                                    <span
-                                                        >Hand-picked Tours &
-                                                        Activities</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-insurance-1"
-                                                    ></i>
-                                                    <span
-                                                        >Free Travel
-                                                        Insureance</span
-                                                    >
-                                                </li>
-                                                <li class="flex-three">
-                                                    <i
-                                                        class="icon-price-tag-1-1"
-                                                    ></i>
-                                                    <span
-                                                        >No-hassle best price
-                                                        guarantee</span
-                                                    >
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="sidebar-widget">
-                                            <h4 class="block-heading">
-                                                Recent News
-                                            </h4>
-                                            <div class="recent-post-list">
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog1.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog2.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    class="list-recent flex-three"
-                                                >
-                                                    <a
-                                                        href="#"
-                                                        class="recent-image"
-                                                    >
-                                                        <img
-                                                            src="/template/images/blog/re-blog3.jpg"
-                                                            alt="Image"
-                                                        />
-                                                    </a>
-                                                    <div class="recent-info">
-                                                        <div class="start">
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                            <i
-                                                                class="icon-Star"
-                                                            ></i>
-                                                        </div>
-                                                        <h4 class="title">
-                                                            <a href="#"
-                                                                >Walking the
-                                                                Amalfi Coast</a
-                                                            >
-                                                        </h4>
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="text-main"
-                                                                >$129.00</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <h4 class="title">
+                                            <a href="#"
+                                                >Walking the Amalfi Coast</a
+                                            >
+                                        </h4>
+                                        <p>
+                                            From
+                                            <span class="text-main"
+                                                >$129.00</span
+                                            >
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -2851,6 +1183,12 @@ function onDragEnd(e: PointerEvent): void {
 .sidebar-subtitle {
     font-size: 14px;
     line-height: 20px;
+    color: #6b7280;
+}
+
+.optional-label {
+    text-transform: lowercase;
+    font-size: 0.85em;
     color: #6b7280;
 }
 
