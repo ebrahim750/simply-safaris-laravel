@@ -54,6 +54,7 @@ const suggestions = ref<
 const isLoading = ref(false);
 
 let headerStuckOffset = 0;
+let headerResizeObserver: ResizeObserver | null = null;
 
 const closeMobileMenu = () => {
     mobileMenuOpen.value = false;
@@ -90,14 +91,12 @@ const refreshHeader = () => {
         return;
     }
 
-    const wasStuck = isHeaderStuck.value;
-    isHeaderStuck.value = false;
-
-    const bounds = headerLower.value.getBoundingClientRect();
-    headerStuckOffset = bounds.top + window.scrollY + bounds.height;
     headerSpacerHeight.value = headerLower.value.offsetHeight;
 
-    isHeaderStuck.value = wasStuck;
+    if (!isHeaderStuck.value) {
+        const bounds = headerLower.value.getBoundingClientRect();
+        headerStuckOffset = bounds.top + window.scrollY;
+    }
 };
 
 const handleScroll = () => {
@@ -151,18 +150,30 @@ watch(
     },
 );
 
+watch(isHeaderStuck, (stuck) => {
+    if (!stuck) {
+        refreshHeader();
+    }
+});
+
 onMounted(async () => {
     await nextTick();
     refreshHeader();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', refreshHeader);
     window.addEventListener('keydown', handleEscape);
+
+    if (headerLower.value) {
+        headerResizeObserver = new ResizeObserver(() => {
+            refreshHeader();
+        });
+        headerResizeObserver.observe(headerLower.value);
+    }
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
-    window.removeEventListener('resize', refreshHeader);
     window.removeEventListener('keydown', handleEscape);
+    headerResizeObserver?.disconnect();
 });
 </script>
 
@@ -364,9 +375,10 @@ onUnmounted(() => {
                                                                     tours.index(
                                                                         {
                                                                             query: {
-                                                                                categories: [
-                                                                                    category.id,
-                                                                                ],
+                                                                                categories:
+                                                                                    [
+                                                                                        category.id,
+                                                                                    ],
                                                                             },
                                                                         },
                                                                     ).url
@@ -687,12 +699,24 @@ onUnmounted(() => {
 
 /* Keep the Destinations dropdown open briefly when moving to submenus */
 .home3-header-lower .main-menu .navigation > li.dropdown2 > ul,
-.home3-header-lower .main-menu .navigation > li.dropdown2 > ul > li.dropdown2 > ul {
+.home3-header-lower
+    .main-menu
+    .navigation
+    > li.dropdown2
+    > ul
+    > li.dropdown2
+    > ul {
     transition-delay: 180ms;
 }
 
 .home3-header-lower .main-menu .navigation > li.dropdown2:hover > ul,
-.home3-header-lower .main-menu .navigation > li.dropdown2 > ul > li.dropdown2:hover > ul {
+.home3-header-lower
+    .main-menu
+    .navigation
+    > li.dropdown2
+    > ul
+    > li.dropdown2:hover
+    > ul {
     transition-delay: 0ms;
 }
 
@@ -716,7 +740,9 @@ onUnmounted(() => {
     opacity: 1;
     visibility: visible;
     background-color: #ffffff;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1), inset 0px 1px 0px #ECECEC;
+    box-shadow:
+        0px 4px 8px rgba(0, 0, 0, 0.1),
+        inset 0px 1px 0px #ececec;
     padding-left: 201px;
     padding-right: 306px;
     transition: none;
