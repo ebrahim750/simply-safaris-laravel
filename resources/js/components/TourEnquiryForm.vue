@@ -9,6 +9,21 @@ defineProps<{
     status?: string;
 }>();
 
+const minDate = (() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return tomorrow.toISOString().split('T')[0];
+})();
+
+function openDatePicker(event: MouseEvent): void {
+    const input = event.currentTarget as HTMLInputElement;
+
+    if ('showPicker' in input && typeof input.showPicker === 'function') {
+        input.showPicker();
+    }
+}
+
 onMounted(() => {
     const existingScript = document.querySelector(
         'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]',
@@ -67,7 +82,14 @@ onMounted(() => {
 
         <div class="input-wrap mb-20">
             <label for="booking-date">Preferred Date of Booking</label>
-            <input id="booking-date" type="date" name="booking_date" required />
+            <input
+                id="booking-date"
+                type="date"
+                name="booking_date"
+                :min="minDate"
+                required
+                @click="openDatePicker"
+            />
         </div>
 
         <div class="row mb-30">

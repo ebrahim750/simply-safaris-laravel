@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('admin_logo_path_light')->nullable();
             $table->string('admin_logo_path_dark')->nullable();
             $table->string('favicon_path')->nullable();
+            $table->text('form_emails')->nullable();
+            $table->boolean('form_emails_enabled')->default(false);
             $table->timestamps();
         });
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DestinationCountryController;
 use App\Http\Controllers\Admin\DestinationPlaceController;
+use App\Http\Controllers\Admin\FormSubmissionController;
 use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
 use App\Http\Controllers\Admin\TourController as AdminTourController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
+use App\Http\Controllers\RootAccess\EmailSiteSettingsController;
 use App\Http\Controllers\RootAccess\GeneralSiteSettingsController;
 use App\Http\Controllers\RootAccess\LogoSiteSettingsController;
 use App\Http\Controllers\RootAccess\ProdTestController;
@@ -67,6 +69,8 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::get('admin/destinations/places/{place}/edit', [DestinationPlaceController::class, 'edit'])->name('admin.destinations.places.edit');
         Route::patch('admin/destinations/places/{place}', [DestinationPlaceController::class, 'update'])->name('admin.destinations.places.update');
         Route::delete('admin/destinations/places/{place}', [DestinationPlaceController::class, 'destroy'])->name('admin.destinations.places.destroy');
+        Route::get('admin/form-submissions/contact', [FormSubmissionController::class, 'contact'])->name('admin.form-submissions.contact');
+        Route::get('admin/form-submissions/tour', [FormSubmissionController::class, 'tour'])->name('admin.form-submissions.tour');
     });
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
@@ -79,6 +83,8 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::delete('root-access/site-settings/logo', [LogoSiteSettingsController::class, 'remove'])->name('root-access.site-settings.logo.remove');
         Route::get('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'index'])->name('root-access.site-settings.colors');
         Route::put('root-access/site-settings/colors', [ColorSiteSettingsController::class, 'update'])->name('root-access.site-settings.colors.update');
+        Route::get('root-access/site-settings/emails', [EmailSiteSettingsController::class, 'index'])->name('root-access.site-settings.emails');
+        Route::put('root-access/site-settings/emails', [EmailSiteSettingsController::class, 'update'])->name('root-access.site-settings.emails.update');
         Route::get('root-access/users', [UserController::class, 'index'])->name('root-access.users');
         Route::post('root-access/users', [UserController::class, 'store'])->name('root-access.users.store');
         Route::patch('root-access/users/{user}', [UserController::class, 'update'])->name('root-access.users.update');

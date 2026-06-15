@@ -35,6 +35,11 @@ const tabs = [
         description: 'Configure site color palette',
         href: '/root-access/site-settings/colors',
     },
+    {
+        label: 'Emails',
+        description: 'Configure form notification emails',
+        href: '/root-access/site-settings/emails',
+    },
 ];
 </script>
 
@@ -47,7 +52,7 @@ const tabs = [
             description="Manage the singleton site settings record from the root access area."
         />
 
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 md:grid-cols-4">
             <Link
                 v-for="tab in tabs"
                 :key="tab.label"

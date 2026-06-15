@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    ClipboardList,
     LayoutGrid,
     Map,
     MapPin,
@@ -30,6 +31,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard } from '@/routes';
 import { tours as adminTours } from '@/routes/admin';
 import adminDestinationsRoutes from '@/routes/admin/destinations';
+import adminFormSubmissionsRoutes from '@/routes/admin/form-submissions';
 import adminToursRoutes from '@/routes/admin/tours';
 import {
     prodTest as rootAccessProdTest,
@@ -42,9 +44,11 @@ const adminToursCategories = adminToursRoutes.categories;
 const adminToursActivities = adminToursRoutes.activities;
 const adminDestinationsCountries = adminDestinationsRoutes.countries;
 const adminDestinationsPlaces = adminDestinationsRoutes.places;
+const adminFormSubmissionsContact = adminFormSubmissionsRoutes.contact;
+const adminFormSubmissionsTour = adminFormSubmissionsRoutes.tour;
 
 const page = usePage();
-const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+const { isCurrentOrParentUrl } = useCurrentUrl();
 const isRootUser = computed(() => page.props.auth.user.account_type === 'root');
 const isAdminOrRoot = computed(() =>
     ['root', 'admin'].includes(page.props.auth.user.account_type),
@@ -54,6 +58,11 @@ const isDestinationsExpanded = computed(
     () =>
         isCurrentOrParentUrl(adminDestinationsCountries().url) ||
         isCurrentOrParentUrl(adminDestinationsPlaces().url),
+);
+const isFormSubmissionsExpanded = computed(
+    () =>
+        isCurrentOrParentUrl(adminFormSubmissionsContact().url) ||
+        isCurrentOrParentUrl(adminFormSubmissionsTour().url),
 );
 
 const mainNavItems: NavItem[] = [
@@ -191,6 +200,57 @@ const rootAccessNavItems: NavItem[] = [
                                 >
                                     <Link :href="adminDestinationsPlaces()">
                                         Places
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            as-child
+                            :is-active="
+                                isCurrentOrParentUrl(
+                                    adminFormSubmissionsContact().url,
+                                ) ||
+                                isCurrentOrParentUrl(
+                                    adminFormSubmissionsTour().url,
+                                )
+                            "
+                            tooltip="Form Submissions"
+                        >
+                            <Link :href="adminFormSubmissionsContact()">
+                                <ClipboardList />
+                                <span>Form Submissions</span>
+                            </Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuSub v-if="isFormSubmissionsExpanded">
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                    as-child
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminFormSubmissionsContact().url,
+                                        )
+                                    "
+                                    tooltip="Contact Form"
+                                >
+                                    <Link :href="adminFormSubmissionsContact()">
+                                        Contact Form
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                    as-child
+                                    :is-active="
+                                        isCurrentOrParentUrl(
+                                            adminFormSubmissionsTour().url,
+                                        )
+                                    "
+                                    tooltip="Tour Form"
+                                >
+                                    <Link :href="adminFormSubmissionsTour()">
+                                        Tour Form
                                     </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>

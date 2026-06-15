@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TourEnquirySubmitted;
 use App\Models\Country;
+use App\Models\SiteSetting;
 use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
@@ -10,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
@@ -172,7 +175,7 @@ class TourController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:255'],
-            'booking_date' => ['required', 'date', 'after_or_equal:today'],
+            'booking_date' => ['required', 'date', 'after:today'],
             'adults' => ['required', 'string', 'max:10'],
             'children' => ['nullable', 'string', 'max:10'],
             'message' => ['nullable', 'string', 'max:5000'],
@@ -195,7 +198,28 @@ class TourController extends Controller
             }
         }
 
-        // TODO: send enquiry notification/email
+        $enquiry = $tour->enquiries()->create($validated);
+
+        $siteSettings = SiteSetting::query()->first();
+
+        if (
+            $siteSettings
+            && $siteSettings->form_emails_enabled
+            && filled($siteSettings->form_emails)
+        ) {
+            $recipients = collect(explode(',', $siteSettings->form_emails))
+                ->map(fn (string $email): string => trim($email))
+                ->filter(fn (string $email): bool => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
+                ->values()
+                ->all();
+
+            if (count($recipients) > 0) {
+                Mail::to($recipients)->queue(new TourEnquirySubmitted(
+                    enquiry: $enquiry,
+                    tour: $tour,
+                ));
+            }
+        }
 
         return redirect()->back()->with('status', 'Your enquiry has been submitted. We will get back to you soon.');
     }

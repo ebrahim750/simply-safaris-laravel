@@ -29,6 +29,11 @@ class Tour extends Model
     /** @use HasFactory<TourFactory> */
     use HasFactory;
 
+    public function enquiries(): HasMany
+    {
+        return $this->hasMany(TourEnquiry::class)->latest();
+    }
+
     public function itineraryItems(): HasMany
     {
         return $this->hasMany(TourItineraryItem::class)->orderBy('position');
