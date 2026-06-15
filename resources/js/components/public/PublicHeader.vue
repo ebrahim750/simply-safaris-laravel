@@ -23,6 +23,13 @@ const destinationsData = computed(
             places: Array<{ id: number; name: string; slug: string }>;
         }>,
 );
+const tourCategories = computed(
+    () =>
+        page.props.tourCategories as Array<{
+            id: number;
+            name: string;
+        }>,
+);
 const headerLower = ref<HTMLElement | null>(null);
 const isHeaderFixed = ref(false);
 const isHeaderSmall = ref(false);
@@ -344,6 +351,7 @@ onUnmounted(() => {
                                                     </ul>
                                                 </li>
                                                 <li
+                                                    class="dropdown2"
                                                     :class="{
                                                         current:
                                                             $page.url ===
@@ -355,6 +363,32 @@ onUnmounted(() => {
                                                         @click="closeMobileMenu"
                                                         >Tours</Link
                                                     >
+                                                    <ul>
+                                                        <li
+                                                            v-for="category in tourCategories"
+                                                            :key="category.id"
+                                                        >
+                                                            <Link
+                                                                :href="
+                                                                    tours.index(
+                                                                        {
+                                                                            query: {
+                                                                                categories: [
+                                                                                    category.id,
+                                                                                ],
+                                                                            },
+                                                                        },
+                                                                    ).url
+                                                                "
+                                                                @click="
+                                                                    closeMobileMenu
+                                                                "
+                                                                >{{
+                                                                    category.name
+                                                                }}</Link
+                                                            >
+                                                        </li>
+                                                    </ul>
                                                 </li>
                                                 <li
                                                     :class="{
@@ -650,6 +684,25 @@ onUnmounted(() => {
         padding-left: 15px;
         padding-right: 15px;
     }
+}
+
+.home3-header-lower .main-menu .navigation > li {
+    margin-right: 40px;
+}
+
+.home3-header-lower .main-menu .navigation > li:last-child {
+    margin-right: 0;
+}
+
+/* Keep the Destinations dropdown open briefly when moving to submenus */
+.home3-header-lower .main-menu .navigation > li.dropdown2 > ul,
+.home3-header-lower .main-menu .navigation > li.dropdown2 > ul > li.dropdown2 > ul {
+    transition-delay: 180ms;
+}
+
+.home3-header-lower .main-menu .navigation > li.dropdown2:hover > ul,
+.home3-header-lower .main-menu .navigation > li.dropdown2 > ul > li.dropdown2:hover > ul {
+    transition-delay: 0ms;
 }
 
 @media (max-width: 991px) {

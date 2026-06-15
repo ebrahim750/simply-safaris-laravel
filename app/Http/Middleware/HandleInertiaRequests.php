@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Country;
 use App\Models\Place;
 use App\Models\SiteSetting;
+use App\Models\TourCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,8 @@ class HandleInertiaRequests extends Middleware
         View::share('siteName', $siteName);
 
         $destinations = [];
+        $tourCategories = [];
+
         if (Schema::hasTable('countries')) {
             $destinations = Country::query()
                 ->with(['places' => fn ($query) => $query->select('id', 'country_id', 'name', 'slug')->orderBy('name')])
@@ -83,6 +86,13 @@ class HandleInertiaRequests extends Middleware
                         'slug' => $place->slug,
                     ])->all(),
                 ])
+                ->all();
+        }
+
+        if (Schema::hasTable('tour_categories')) {
+            $tourCategories = TourCategory::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
                 ->all();
         }
 
@@ -104,6 +114,7 @@ class HandleInertiaRequests extends Middleware
                 'adminLogoDarkUrl' => $adminLogoDarkUrl,
             ],
             'destinations' => $destinations,
+            'tourCategories' => $tourCategories,
         ];
     }
 }

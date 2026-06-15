@@ -64,7 +64,7 @@ const durationValue = computed(() =>
 );
 
 const categoryLabel = computed(() =>
-    props.tour.categories.length > 1 ? 'Categories' : 'Category',
+    props.tour.categories.length > 1 ? 'Tour Categories' : 'Tour Category',
 );
 
 const categoryValue = computed(() =>
@@ -584,8 +584,11 @@ function onDragEnd(e: PointerEvent): void {
                                     <div class="side-bar-right">
                                         <div class="sidebar-widget">
                                             <h6 class="block-heading">
-                                                Book This Tour
+                                                Enquiry & Quote
                                             </h6>
+                                            <p class="sidebar-subtitle mb-20">
+                                                Request a booking for this tour
+                                            </p>
                                             <form
                                                 action="/"
                                                 id="form-book-tour"
@@ -731,74 +734,9 @@ function onDragEnd(e: PointerEvent): void {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="input-wrap-checkbox mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Add Extra</span
-                                                    >
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check"
-                                                            type="checkbox"
-                                                            name="check"
-                                                            value="check"
-                                                        />
-                                                        <label for="check"
-                                                            >Service per
-                                                            booking</label
-                                                        >
-                                                    </div>
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check1"
-                                                            type="checkbox"
-                                                            name="check"
-                                                            value="check"
-                                                        />
-                                                        <label for="check1"
-                                                            >Service per
-                                                            person</label
-                                                        >
-                                                    </div>
-                                                    <div class="extra">
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Adult:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$18.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Youth:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Children:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two mb-40">
-                                                    <span class="label"
-                                                        >Total:</span
-                                                    >
-                                                    <span
-                                                        class="total text-main"
-                                                        >$130.00</span
-                                                    >
-                                                </div>
+
                                                 <button type="submit">
-                                                    Procced Booking
+                                                    Submit
                                                 </button>
                                             </form>
                                         </div>
@@ -1050,8 +988,11 @@ function onDragEnd(e: PointerEvent): void {
                                     <div class="side-bar-right">
                                         <div class="sidebar-widget">
                                             <h6 class="block-heading">
-                                                Book This Tour
+                                                Enquiry & Quote
                                             </h6>
+                                            <p class="sidebar-subtitle mb-20">
+                                                Request a booking for this tour
+                                            </p>
                                             <form
                                                 action="/"
                                                 id="form-book-tour"
@@ -1197,74 +1138,9 @@ function onDragEnd(e: PointerEvent): void {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="input-wrap-checkbox mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Add Extra</span
-                                                    >
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check-it"
-                                                            type="checkbox"
-                                                            name="check-it"
-                                                            value="check"
-                                                        />
-                                                        <label for="check-it"
-                                                            >Service per
-                                                            booking</label
-                                                        >
-                                                    </div>
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check1-it"
-                                                            type="checkbox"
-                                                            name="check-it"
-                                                            value="check"
-                                                        />
-                                                        <label for="check1-it"
-                                                            >Service per
-                                                            person</label
-                                                        >
-                                                    </div>
-                                                    <div class="extra">
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Adult:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$18.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Youth:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Children:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two mb-40">
-                                                    <span class="label"
-                                                        >Total:</span
-                                                    >
-                                                    <span
-                                                        class="total text-main"
-                                                        >$130.00</span
-                                                    >
-                                                </div>
+
                                                 <button type="submit">
-                                                    Procced Booking
+                                                    Submit
                                                 </button>
                                             </form>
                                         </div>
@@ -1468,9 +1344,6 @@ function onDragEnd(e: PointerEvent): void {
                             <div class="row">
                                 <div class="col-lg-8">
                                     <div class="expect-wrap mb-70">
-                                        <h4 class="title mb-40">
-                                            Included/Exclude
-                                        </h4>
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <h5 class="mb-18">
@@ -1539,8 +1412,11 @@ function onDragEnd(e: PointerEvent): void {
                                     <div class="side-bar-right">
                                         <div class="sidebar-widget">
                                             <h6 class="block-heading">
-                                                Book This Tour
+                                                Enquiry & Quote
                                             </h6>
+                                            <p class="sidebar-subtitle mb-20">
+                                                Request a booking for this tour
+                                            </p>
                                             <form
                                                 action="/"
                                                 id="form-book-tour"
@@ -1686,74 +1562,9 @@ function onDragEnd(e: PointerEvent): void {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="input-wrap-checkbox mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Add Extra</span
-                                                    >
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check-loc"
-                                                            type="checkbox"
-                                                            name="check-loc"
-                                                            value="check"
-                                                        />
-                                                        <label for="check-loc"
-                                                            >Service per
-                                                            booking</label
-                                                        >
-                                                    </div>
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check1-loc"
-                                                            type="checkbox"
-                                                            name="check-loc"
-                                                            value="check"
-                                                        />
-                                                        <label for="check1-loc"
-                                                            >Service per
-                                                            person</label
-                                                        >
-                                                    </div>
-                                                    <div class="extra">
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Adult:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$18.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Youth:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Children:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two mb-40">
-                                                    <span class="label"
-                                                        >Total:</span
-                                                    >
-                                                    <span
-                                                        class="total text-main"
-                                                        >$130.00</span
-                                                    >
-                                                </div>
+
                                                 <button type="submit">
-                                                    Procced Booking
+                                                    Submit
                                                 </button>
                                             </form>
                                         </div>
@@ -1984,8 +1795,11 @@ function onDragEnd(e: PointerEvent): void {
                                     <div class="side-bar-right">
                                         <div class="sidebar-widget">
                                             <h6 class="block-heading">
-                                                Book This Tour
+                                                Enquiry & Quote
                                             </h6>
+                                            <p class="sidebar-subtitle mb-20">
+                                                Request a booking for this tour
+                                            </p>
                                             <form
                                                 action="/"
                                                 id="form-book-tour"
@@ -2132,75 +1946,9 @@ function onDragEnd(e: PointerEvent): void {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="input-wrap-checkbox mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Add Extra</span
-                                                    >
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check-rates"
-                                                            type="checkbox"
-                                                            name="check-rates"
-                                                            value="check"
-                                                        />
-                                                        <label for="check-rates"
-                                                            >Service per
-                                                            booking</label
-                                                        >
-                                                    </div>
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check1-rates"
-                                                            type="checkbox"
-                                                            name="check-rates"
-                                                            value="check"
-                                                        />
-                                                        <label
-                                                            for="check1-rates"
-                                                            >Service per
-                                                            person</label
-                                                        >
-                                                    </div>
-                                                    <div class="extra">
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Adult:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$18.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Youth:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Children:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two mb-40">
-                                                    <span class="label"
-                                                        >Total:</span
-                                                    >
-                                                    <span
-                                                        class="total text-main"
-                                                        >$130.00</span
-                                                    >
-                                                </div>
+
                                                 <button type="submit">
-                                                    Procced Booking
+                                                    Submit
                                                 </button>
                                             </form>
                                         </div>
@@ -2409,29 +2157,25 @@ function onDragEnd(e: PointerEvent): void {
                                                 img, index
                                             ) in tour.gallery_images"
                                             :key="index"
-                                            :class="`image-gallery${(index % 6) + 1} image cursor-pointer`"
+                                            class="gallery-item cursor-pointer"
                                             @click="openAt(index)"
                                         >
                                             <img
                                                 :src="img"
                                                 :alt="`${tour.name} gallery image ${index + 1}`"
-                                                :class="
-                                                    index % 2 === 0
-                                                        ? 'item1'
-                                                        : 'item2'
-                                                "
+                                                class="gallery-item-img"
                                             />
                                         </div>
                                         <div
                                             v-if="
                                                 tour.gallery_images.length === 0
                                             "
-                                            class="image-gallery1 image"
+                                            class="gallery-item"
                                         >
                                             <img
                                                 src="/template/images/gallery/gallery.jpg"
                                                 alt="image"
-                                                class="item1"
+                                                class="gallery-item-img"
                                             />
                                         </div>
                                     </div>
@@ -2440,8 +2184,11 @@ function onDragEnd(e: PointerEvent): void {
                                     <div class="side-bar-right">
                                         <div class="sidebar-widget">
                                             <h6 class="block-heading">
-                                                Book This Tour
+                                                Enquiry & Quote
                                             </h6>
+                                            <p class="sidebar-subtitle mb-20">
+                                                Request a booking for this tour
+                                            </p>
                                             <form
                                                 action="/"
                                                 id="form-book-tour"
@@ -2587,74 +2334,9 @@ function onDragEnd(e: PointerEvent): void {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="input-wrap-checkbox mb-30"
-                                                >
-                                                    <span class="label"
-                                                        >Add Extra</span
-                                                    >
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check-gal"
-                                                            type="checkbox"
-                                                            name="check-gal"
-                                                            value="check"
-                                                        />
-                                                        <label for="check-gal"
-                                                            >Service per
-                                                            booking</label
-                                                        >
-                                                    </div>
-                                                    <div class="checkbox">
-                                                        <input
-                                                            id="check1-gal"
-                                                            type="checkbox"
-                                                            name="check-gal"
-                                                            value="check"
-                                                        />
-                                                        <label for="check1-gal"
-                                                            >Service per
-                                                            person</label
-                                                        >
-                                                    </div>
-                                                    <div class="extra">
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Adult:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$18.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Youth:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                        <div class="flex-three">
-                                                            <span class="name"
-                                                                >Children:</span
-                                                            >
-                                                            <span class="price"
-                                                                >$16.00</span
-                                                            >
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two mb-40">
-                                                    <span class="label"
-                                                        >Total:</span
-                                                    >
-                                                    <span
-                                                        class="total text-main"
-                                                        >$130.00</span
-                                                    >
-                                                </div>
+
                                                 <button type="submit">
-                                                    Procced Booking
+                                                    Submit
                                                 </button>
                                             </form>
                                         </div>
@@ -3134,6 +2816,42 @@ function onDragEnd(e: PointerEvent): void {
     .tour-meta-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.gallery-content-tour {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.gallery-item {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.gallery-item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 991px) {
+    .gallery-content-tour {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .gallery-content-tour {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sidebar-subtitle {
+    font-size: 14px;
+    line-height: 20px;
+    color: #6b7280;
 }
 
 .activities-grid {
