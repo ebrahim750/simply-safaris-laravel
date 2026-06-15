@@ -131,7 +131,7 @@ class TourController extends Controller
 
     public function show(Tour $tour): Response
     {
-        $tour->load(['categories:id,name', 'activities:id,name', 'places:id,name', 'itineraryItems', 'inclusions', 'exclusions']);
+        $tour->load(['categories:id,name', 'activities:id,name', 'places:id,name,country_id', 'places.country:id,name', 'itineraryItems', 'inclusions', 'exclusions']);
 
         return Inertia::render('tours/Show', [
             'tour' => [

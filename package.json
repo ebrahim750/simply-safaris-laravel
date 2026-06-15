@@ -58,6 +58,7 @@
         "jsvectormap": "^1.7.0",
         "laravel-vite-plugin": "^3.0.0",
         "lucide-vue-next": "^0.468.0",
+        "photoswipe": "^5.4.4",
         "reka-ui": "^2.6.1",
         "swiper": "^12.2.0",
         "tailwind-merge": "^3.2.0",

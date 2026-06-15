@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { home } from '@/routes';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { Swiper, SwiperSlide } from 'swiper/vue';
+import { CheckCircle, XCircle } from 'lucide-vue-next';
 import { Autoplay, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { usePhotoSwipe } from '@/composables/usePhotoSwipe';
+import { home } from '@/routes';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -36,7 +38,7 @@ const activeTab = ref('overview');
 const tabs = [
     { id: 'overview', label: 'Overview', icon: 'icon-Vector-51' },
     { id: 'itinerary', label: 'Itinerary', icon: 'icon-destination-2-1' },
-    { id: 'location', label: 'Location share', icon: 'icon-map-1' },
+    { id: 'inclusions', label: 'Inclusions', icon: 'icon-checkmark-outline' },
     { id: 'rates', label: 'Rates', icon: 'icon-price-tag-1' },
     { id: 'gallery', label: 'Gallery', icon: 'icon-image-gallery-1' },
 ];
@@ -44,6 +46,50 @@ const tabs = [
 function setTab(id: string): void {
     activeTab.value = id;
 }
+
+const destinationLabel = computed(() =>
+    props.tour.places.length > 1 ? 'Destinations' : 'Destination',
+);
+
+const destinationValue = computed(() =>
+    props.tour.places.length > 0
+        ? props.tour.places.map((place) => place.name).join(', ')
+        : 'N/A',
+);
+
+const durationValue = computed(() =>
+    props.tour.duration_days
+        ? `${props.tour.duration_days} ${props.tour.duration_days === 1 ? 'day' : 'days'}`
+        : 'N/A',
+);
+
+const categoryLabel = computed(() =>
+    props.tour.categories.length > 1 ? 'Categories' : 'Category',
+);
+
+const categoryValue = computed(() =>
+    props.tour.categories.length > 0
+        ? props.tour.categories.map((category) => category.name).join(', ')
+        : 'N/A',
+);
+
+const countries = computed(() => {
+    const allCountries = props.tour.places
+        .map((place) => place.country)
+        .filter((country): country is string => Boolean(country));
+
+    return [...new Set(allCountries)];
+});
+
+const countryLabel = computed(() =>
+    countries.value.length > 1 ? 'Countries' : 'Country',
+);
+
+const countryValue = computed(() =>
+    countries.value.length > 0 ? countries.value.join(', ') : 'N/A',
+);
+
+const { openAt } = usePhotoSwipe(props.tour.gallery_images, props.tour.name);
 
 const useSwiper = ref(true);
 let swiperInstance: any = null;
@@ -68,6 +114,7 @@ const dragStartX = ref(0);
 
 function updateSlidesPerView(): void {
     const w = window.innerWidth;
+
     if (w < 640) {
         slidesPerView.value = 1;
     } else if (w < 992) {
@@ -90,7 +137,10 @@ onUnmounted(() => {
 
 const slidePercent = computed(() => 100 / slidesPerView.value);
 const maxIndex = computed(() =>
-    Math.max(0, (props.tour?.gallery_images?.length ?? 0) - slidesPerView.value),
+    Math.max(
+        0,
+        (props.tour?.gallery_images?.length ?? 0) - slidesPerView.value,
+    ),
 );
 const dotCount = computed(() => maxIndex.value + 1);
 
@@ -122,15 +172,20 @@ function onDragStart(e: PointerEvent): void {
 }
 
 function onDragEnd(e: PointerEvent): void {
-    if (!isDragging.value) return;
+    if (!isDragging.value) {
+        return;
+    }
+
     isDragging.value = false;
     const diff = dragStartX.value - e.clientX;
     const threshold = 50;
+
     if (diff > threshold) {
         carouselNext();
     } else if (diff < -threshold) {
         carouselPrev();
     }
+
     (e.currentTarget as HTMLElement)?.releasePointerCapture?.(e.pointerId);
 }
 </script>
@@ -154,9 +209,10 @@ function onDragEnd(e: PointerEvent): void {
                     <ul class="breadcumb-list flex-five">
                         <li><Link :href="home()">Home</Link></li>
                         <li><Link href="/tours">Tours</Link></li>
-                        <li><span>{{ tour.name }}</span></li>
+                        <li>
+                            <span>{{ tour.name }}</span>
+                        </li>
                     </ul>
-
                 </div>
             </div>
         </div>
@@ -209,34 +265,72 @@ function onDragEnd(e: PointerEvent): void {
                                 <div class="col-lg-12">
                                     <div class="inner-heading-wrap flex-two">
                                         <div class="inner-heading">
-                                            <h2 class="title">{{ tour.name }}</h2>
-                                            <ul class="flex-three list-wrap-heading">
-                                                <li
-                                                    v-if="tour.duration_days"
-                                                    class="flex-three"
-                                                >
-                                                    <i class="icon-time-left"></i>
+                                            <div class="tour-meta-grid">
+                                                <div class="tour-meta-item">
                                                     <span
-                                                        >{{ tour.duration_days }}
-                                                        {{
-                                                            tour.duration_days === 1
-                                                                ? 'day'
-                                                                : 'days'
+                                                        class="tour-meta-label"
+                                                        >{{
+                                                            destinationLabel
                                                         }}</span
                                                     >
-                                                </li>
-                                                <li
-                                                    v-if="tour.places.length > 0"
-                                                    class="flex-three"
-                                                >
-                                                    <i class="icon-18"></i>
-                                                    <span>{{ tour.places.map((p) => p.name).join(', ') }}</span>
-                                                </li>
-                                            </ul>
+                                                    <span
+                                                        class="tour-meta-value"
+                                                        >{{
+                                                            destinationValue
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <div class="tour-meta-item">
+                                                    <span
+                                                        class="tour-meta-label"
+                                                        >Duration</span
+                                                    >
+                                                    <span
+                                                        class="tour-meta-value"
+                                                        >{{
+                                                            durationValue
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <div class="tour-meta-item">
+                                                    <span
+                                                        class="tour-meta-label"
+                                                        >{{
+                                                            categoryLabel
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        class="tour-meta-value"
+                                                        >{{
+                                                            categoryValue
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <div class="tour-meta-item">
+                                                    <span
+                                                        class="tour-meta-label"
+                                                        >{{
+                                                            countryLabel
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        class="tour-meta-value"
+                                                        >{{
+                                                            countryValue
+                                                        }}</span
+                                                    >
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="inner-price">
                                             <p>
-                                                <span style="margin-right: 4px">From</span> <span class="price-sale text-main">{{ tour.price }}</span>
+                                                <span style="margin-right: 4px"
+                                                    >From</span
+                                                >
+                                                <span
+                                                    class="price-sale text-main"
+                                                    >{{ tour.price }}</span
+                                                >
                                             </p>
                                         </div>
                                     </div>
@@ -245,8 +339,10 @@ function onDragEnd(e: PointerEvent): void {
 
                             <!-- Swiper v12 carousel -->
                             <div
-                                v-if="tour.gallery_images.length > 0 && useSwiper"
-                                class="mb-40 tour-gallery-swiper-wrap"
+                                v-if="
+                                    tour.gallery_images.length > 0 && useSwiper
+                                "
+                                class="tour-gallery-swiper-wrap mb-40"
                             >
                                 <Swiper
                                     :modules="[Autoplay, Pagination]"
@@ -255,13 +351,28 @@ function onDragEnd(e: PointerEvent): void {
                                     :space-between="16"
                                     :grab-cursor="true"
                                     :breakpoints="{
-                                        320: { slidesPerView: 1, spaceBetween: 12 },
-                                        640: { slidesPerView: 2, spaceBetween: 12 },
-                                        992: { slidesPerView: 3, spaceBetween: 16 },
-                                        1200: { slidesPerView: 4, spaceBetween: 16 },
+                                        320: {
+                                            slidesPerView: 1,
+                                            spaceBetween: 12,
+                                        },
+                                        640: {
+                                            slidesPerView: 2,
+                                            spaceBetween: 12,
+                                        },
+                                        992: {
+                                            slidesPerView: 3,
+                                            spaceBetween: 16,
+                                        },
+                                        1200: {
+                                            slidesPerView: 4,
+                                            spaceBetween: 16,
+                                        },
                                     }"
                                     :loop="tour.gallery_images.length > 4"
-                                    :autoplay="{ delay: 3000, disableOnInteraction: true }"
+                                    :autoplay="{
+                                        delay: 3000,
+                                        disableOnInteraction: true,
+                                    }"
                                     class="tour-gallery-swiper"
                                     @swiper="onSwiperInit"
                                 >
@@ -270,6 +381,8 @@ function onDragEnd(e: PointerEvent): void {
                                             img, index
                                         ) in tour.gallery_images"
                                         :key="index"
+                                        class="cursor-pointer"
+                                        @click="openAt(index)"
                                     >
                                         <img
                                             :src="img"
@@ -320,7 +433,9 @@ function onDragEnd(e: PointerEvent): void {
 
                             <!-- Custom Vue carousel (fallback) -->
                             <div
-                                v-if="tour.gallery_images.length > 0 && !useSwiper"
+                                v-if="
+                                    tour.gallery_images.length > 0 && !useSwiper
+                                "
                                 class="mb-40"
                             >
                                 <div class="tour-gallery-carousel">
@@ -339,7 +454,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 :key="index"
                                                 class="carousel-slide"
                                             >
-                                                <div class="carousel-slide-inner">
+                                                <div
+                                                    class="carousel-slide-inner"
+                                                >
                                                     <img
                                                         :src="img"
                                                         :alt="`${tour.name} gallery image ${index + 1}`"
@@ -431,13 +548,13 @@ function onDragEnd(e: PointerEvent): void {
                                                 >Advance Facilities</span
                                             >
                                             <p class="des">
-                                                Leave your guidebooks at home and
-                                                dive into the local cultures that
-                                                make each destination so special.
-                                                We'll connect you with our
-                                                exclusive experiences. Each trip is
-                                                carefully crafted to let enjoy your
-                                                vacation.
+                                                Leave your guidebooks at home
+                                                and dive into the local cultures
+                                                that make each destination so
+                                                special. We'll connect you with
+                                                our exclusive experiences. Each
+                                                trip is carefully crafted to let
+                                                enjoy your vacation.
                                             </p>
                                         </div>
 
@@ -446,24 +563,30 @@ function onDragEnd(e: PointerEvent): void {
                                                 >What to Expect</span
                                             >
                                             <p class="des mb-18">
-                                                Leave your guidebooks at home and
-                                                dive into the local cultures that
-                                                make each destination so special.
-                                                We'll connect you with our
-                                                exclusive experiences. Each trip is
-                                                carefully crafted to let enjoy your
-                                                vacation.
+                                                Leave your guidebooks at home
+                                                and dive into the local cultures
+                                                that make each destination so
+                                                special. We'll connect you with
+                                                our exclusive experiences. Each
+                                                trip is carefully crafted to let
+                                                enjoy your vacation.
                                             </p>
                                             <ul class="listing-des">
-                                                <li><p>View the City Walls</p></li>
-                                                <li><p>Hiking in the forest</p></li>
+                                                <li>
+                                                    <p>View the City Walls</p>
+                                                </li>
+                                                <li>
+                                                    <p>Hiking in the forest</p>
+                                                </li>
                                                 <li>
                                                     <p>
                                                         Discover the famous view
                                                         point "The Lark"
                                                     </p>
                                                 </li>
-                                                <li><p>Sunset on the cruise</p></li>
+                                                <li>
+                                                    <p>Sunset on the cruise</p>
+                                                </li>
                                             </ul>
                                         </div>
 
@@ -472,17 +595,20 @@ function onDragEnd(e: PointerEvent): void {
                                                 What to Expect
                                             </h4>
                                             <div class="expect flex-three">
-                                                <span>Departure/Return Location</span>
+                                                <span
+                                                    >Departure/Return
+                                                    Location</span
+                                                >
                                                 <p>
-                                                    2 Taijichang St, Dongcheng Qu,
-                                                    Beijing Shi, China
+                                                    2 Taijichang St, Dongcheng
+                                                    Qu, Beijing Shi, China
                                                 </p>
                                             </div>
                                             <div class="expect flex-three">
                                                 <span>Departure Time</span>
                                                 <p>
-                                                    Please arrive by 9:15 AM for a
-                                                    departure at 9:30 AM
+                                                    Please arrive by 9:15 AM for
+                                                    a departure at 9:30 AM
                                                 </p>
                                             </div>
                                             <div class="expect flex-three">
@@ -499,140 +625,29 @@ function onDragEnd(e: PointerEvent): void {
                                             </div>
                                         </div>
 
-                                        <div class="expect-wrap mb-70">
-                                            <h4 class="title mb-40">
-                                                Included/Exclude
-                                            </h4>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <ul class="listing-clude">
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Pick and Drop
-                                                                Services
-                                                            </p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>1 Meal Per Day</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Cruise Dinner &
-                                                                Music Event
-                                                            </p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Visit 7 Best Places
-                                                                in the City With
-                                                                Group
-                                                            </p>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <ul class="listing-clude">
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Pick and Drop
-                                                                Services
-                                                            </p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>1 Meal Per Day</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Cruise Dinner &
-                                                                Music Event
-                                                            </p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-Vector-7"></i>
-                                                            <p>
-                                                                Visit 7 Best Places
-                                                                in the City With
-                                                                Group
-                                                            </p>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <div class="expect-wrap">
                                             <h4 class="title mb-40">
-                                                Tour Amenities
+                                                Tour Activities
                                             </h4>
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <ul class="listing-icon">
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Air Conditioning</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Microwave</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Central Heating</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Central Heating</p>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <ul class="listing-icon">
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Laundry</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Outdoor Shower</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Swimming Pool</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Wifi</p>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <ul class="listing-icon">
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Window Covering</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Refrigerator</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Alarm System</p>
-                                                        </li>
-                                                        <li class="flex-three">
-                                                            <i class="icon-10"></i>
-                                                            <p>Window Coverings</p>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
+                                            <ul
+                                                v-if="
+                                                    tour.activities.length > 0
+                                                "
+                                                class="listing-icon activities-grid"
+                                            >
+                                                <li
+                                                    v-for="activity in tour.activities"
+                                                    :key="activity.id"
+                                                    class="flex-three"
+                                                >
+                                                    <i class="icon-10"></i>
+                                                    <p>{{ activity.name }}</p>
+                                                </li>
+                                            </ul>
+                                            <p v-else class="des">
+                                                No activities listed for this
+                                                tour.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -644,12 +659,17 @@ function onDragEnd(e: PointerEvent): void {
                                             <h6 class="block-heading">
                                                 Book This Tour
                                             </h6>
-                                            <form action="/" id="form-book-tour">
+                                            <form
+                                                action="/"
+                                                id="form-book-tour"
+                                            >
                                                 <div class="input-wrap mb-30">
                                                     <input type="date" />
                                                 </div>
                                                 <div class="flex-two mb-30">
-                                                    <span class="label">Time:</span>
+                                                    <span class="label"
+                                                        >Time:</span
+                                                    >
                                                     <div class="radio">
                                                         <input
                                                             id="first"
@@ -687,7 +707,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -721,7 +742,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -755,7 +777,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -839,8 +862,11 @@ function onDragEnd(e: PointerEvent): void {
                                                     </div>
                                                 </div>
                                                 <div class="flex-two mb-40">
-                                                    <span class="label">Total:</span>
-                                                    <span class="total text-main"
+                                                    <span class="label"
+                                                        >Total:</span
+                                                    >
+                                                    <span
+                                                        class="total text-main"
                                                         >$130.00</span
                                                     >
                                                 </div>
@@ -864,14 +890,18 @@ function onDragEnd(e: PointerEvent): void {
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-Vector-6"></i>
+                                                    <i
+                                                        class="icon-Vector-6"
+                                                    ></i>
                                                     <span
                                                         >Hand-picked Tours &
                                                         Activities</span
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-insurance-1"></i>
+                                                    <i
+                                                        class="icon-insurance-1"
+                                                    ></i>
                                                     <span
                                                         >Free Travel
                                                         Insureance</span
@@ -893,7 +923,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 Recent News
                                             </h4>
                                             <div class="recent-post-list">
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -905,11 +937,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -919,13 +961,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -937,11 +982,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -951,13 +1006,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -969,11 +1027,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -983,7 +1051,8 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
@@ -1015,7 +1084,12 @@ function onDragEnd(e: PointerEvent): void {
                                             class="tour-planing-section flex"
                                         >
                                             <div class="number-box flex-five">
-                                                {{ String(index + 1).padStart(2, '0') }}
+                                                {{
+                                                    String(index + 1).padStart(
+                                                        2,
+                                                        '0',
+                                                    )
+                                                }}
                                             </div>
                                             <div class="content-box">
                                                 <h5 class="title">
@@ -1030,13 +1104,16 @@ function onDragEnd(e: PointerEvent): void {
                                         </div>
 
                                         <div
-                                            v-if="tour.itinerary_items.length === 0"
+                                            v-if="
+                                                tour.itinerary_items.length ===
+                                                0
+                                            "
                                             class="tour-planing-section flex"
                                         >
                                             <div class="content-box">
                                                 <p class="des">
-                                                    No itinerary items available for
-                                                    this tour.
+                                                    No itinerary items available
+                                                    for this tour.
                                                 </p>
                                             </div>
                                         </div>
@@ -1048,12 +1125,17 @@ function onDragEnd(e: PointerEvent): void {
                                             <h6 class="block-heading">
                                                 Book This Tour
                                             </h6>
-                                            <form action="/" id="form-book-tour">
+                                            <form
+                                                action="/"
+                                                id="form-book-tour"
+                                            >
                                                 <div class="input-wrap mb-30">
                                                     <input type="date" />
                                                 </div>
                                                 <div class="flex-two mb-30">
-                                                    <span class="label">Time:</span>
+                                                    <span class="label"
+                                                        >Time:</span
+                                                    >
                                                     <div class="radio">
                                                         <input
                                                             id="first-it"
@@ -1091,7 +1173,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1125,7 +1208,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1159,7 +1243,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1243,8 +1328,11 @@ function onDragEnd(e: PointerEvent): void {
                                                     </div>
                                                 </div>
                                                 <div class="flex-two mb-40">
-                                                    <span class="label">Total:</span>
-                                                    <span class="total text-main"
+                                                    <span class="label"
+                                                        >Total:</span
+                                                    >
+                                                    <span
+                                                        class="total text-main"
                                                         >$130.00</span
                                                     >
                                                 </div>
@@ -1268,14 +1356,18 @@ function onDragEnd(e: PointerEvent): void {
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-Vector-6"></i>
+                                                    <i
+                                                        class="icon-Vector-6"
+                                                    ></i>
                                                     <span
                                                         >Hand-picked Tours &
                                                         Activities</span
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-insurance-1"></i>
+                                                    <i
+                                                        class="icon-insurance-1"
+                                                    ></i>
                                                     <span
                                                         >Free Travel
                                                         Insureance</span
@@ -1297,7 +1389,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 Recent News
                                             </h4>
                                             <div class="recent-post-list">
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1309,11 +1403,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1323,13 +1427,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1341,11 +1448,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1355,13 +1472,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1373,11 +1493,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1387,7 +1517,8 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
@@ -1400,53 +1531,81 @@ function onDragEnd(e: PointerEvent): void {
                             </div>
                         </div>
 
-                        <!-- Location share Tab -->
+                        <!-- Inclusions Tab -->
                         <div
-                            v-show="activeTab === 'location'"
+                            v-show="activeTab === 'inclusions'"
                             class="tab-pane fade show active"
                             role="tabpanel"
                             tabindex="0"
                         >
                             <div class="row">
                                 <div class="col-lg-8">
-                                    <div class="localtion-content-tour">
-                                        <div class="map2 relative mb-32">
-                                            <div id="map2"></div>
-                                        </div>
-                                        <div class="flex-three map-list mb-50">
-                                            <i class="icon-18"></i>
-                                            <p>1421 San Pedro St, Los Angeles, CA</p>
-                                        </div>
-                                        <h3 class="title-location">
-                                            Description:
-                                        </h3>
-                                        <p class="des mb-22">
-                                            Description It is a long established
-                                            fact that a reader will be distrac by
-                                            any websites look for ways mornings
-                                            even of spring prevent AdBlock from
-                                            blocking annoying ads. As a result,
-                                            we've focused on improving our funct
-                                            walk so that we can overcome these
-                                            anti-ad blocking attempts. Of course,
-                                            you can help us continue improve our
-                                            ad blocking ability by reporting any
-                                            time you run into a website that won't
-                                            allow you to block the readable dine
-                                            content of a page when looking at its
-                                            layout. It is a long established fact
-                                        </p>
-                                        <ul class="listing-des">
-                                            <li><p>View the City Walls</p></li>
-                                            <li><p>Hiking in the forest</p></li>
-                                            <li>
-                                                <p>
-                                                    Discover the famous view point
-                                                    "The Lark"
+                                    <div class="expect-wrap mb-70">
+                                        <h4 class="title mb-40">
+                                            Included/Exclude
+                                        </h4>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h5 class="mb-18">
+                                                    Whats Included
+                                                </h5>
+                                                <ul
+                                                    v-if="
+                                                        tour.inclusions.length >
+                                                        0
+                                                    "
+                                                    class="listing-clude"
+                                                >
+                                                    <li
+                                                        v-for="(
+                                                            inclusion, index
+                                                        ) in tour.inclusions"
+                                                        :key="index"
+                                                        class="flex-three"
+                                                    >
+                                                        <CheckCircle
+                                                            class="clude-icon included-icon"
+                                                        />
+                                                        <p>
+                                                            {{ inclusion.text }}
+                                                        </p>
+                                                    </li>
+                                                </ul>
+                                                <p v-else class="des">
+                                                    No inclusions listed.
                                                 </p>
-                                            </li>
-                                            <li><p>Sunset on the cruise</p></li>
-                                        </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h5 class="mb-18">
+                                                    Whats Excluded
+                                                </h5>
+                                                <ul
+                                                    v-if="
+                                                        tour.exclusions.length >
+                                                        0
+                                                    "
+                                                    class="listing-clude"
+                                                >
+                                                    <li
+                                                        v-for="(
+                                                            exclusion, index
+                                                        ) in tour.exclusions"
+                                                        :key="index"
+                                                        class="flex-three"
+                                                    >
+                                                        <XCircle
+                                                            class="clude-icon excluded-icon"
+                                                        />
+                                                        <p>
+                                                            {{ exclusion.text }}
+                                                        </p>
+                                                    </li>
+                                                </ul>
+                                                <p v-else class="des">
+                                                    No exclusions listed.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
@@ -1455,12 +1614,17 @@ function onDragEnd(e: PointerEvent): void {
                                             <h6 class="block-heading">
                                                 Book This Tour
                                             </h6>
-                                            <form action="/" id="form-book-tour">
+                                            <form
+                                                action="/"
+                                                id="form-book-tour"
+                                            >
                                                 <div class="input-wrap mb-30">
                                                     <input type="date" />
                                                 </div>
                                                 <div class="flex-two mb-30">
-                                                    <span class="label">Time:</span>
+                                                    <span class="label"
+                                                        >Time:</span
+                                                    >
                                                     <div class="radio">
                                                         <input
                                                             id="first-loc"
@@ -1498,7 +1662,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1532,7 +1697,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1566,7 +1732,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1650,8 +1817,11 @@ function onDragEnd(e: PointerEvent): void {
                                                     </div>
                                                 </div>
                                                 <div class="flex-two mb-40">
-                                                    <span class="label">Total:</span>
-                                                    <span class="total text-main"
+                                                    <span class="label"
+                                                        >Total:</span
+                                                    >
+                                                    <span
+                                                        class="total text-main"
                                                         >$130.00</span
                                                     >
                                                 </div>
@@ -1675,14 +1845,18 @@ function onDragEnd(e: PointerEvent): void {
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-Vector-6"></i>
+                                                    <i
+                                                        class="icon-Vector-6"
+                                                    ></i>
                                                     <span
                                                         >Hand-picked Tours &
                                                         Activities</span
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-insurance-1"></i>
+                                                    <i
+                                                        class="icon-insurance-1"
+                                                    ></i>
                                                     <span
                                                         >Free Travel
                                                         Insureance</span
@@ -1704,7 +1878,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 Recent News
                                             </h4>
                                             <div class="recent-post-list">
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1716,11 +1892,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1730,13 +1916,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1748,11 +1937,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1762,13 +1961,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -1780,11 +1982,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -1794,7 +2006,8 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
@@ -1834,8 +2047,8 @@ function onDragEnd(e: PointerEvent): void {
                                             class="description-wrap mb-40"
                                         >
                                             <p class="des">
-                                                Detailed pricing information is not
-                                                available for this tour.
+                                                Detailed pricing information is
+                                                not available for this tour.
                                             </p>
                                         </div>
                                     </div>
@@ -1846,12 +2059,17 @@ function onDragEnd(e: PointerEvent): void {
                                             <h6 class="block-heading">
                                                 Book This Tour
                                             </h6>
-                                            <form action="/" id="form-book-tour">
+                                            <form
+                                                action="/"
+                                                id="form-book-tour"
+                                            >
                                                 <div class="input-wrap mb-30">
                                                     <input type="date" />
                                                 </div>
                                                 <div class="flex-two mb-30">
-                                                    <span class="label">Time:</span>
+                                                    <span class="label"
+                                                        >Time:</span
+                                                    >
                                                     <div class="radio">
                                                         <input
                                                             id="first-rates"
@@ -1869,7 +2087,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             name="numbers-rates"
                                                             value="second"
                                                         />
-                                                        <label for="second-rates"
+                                                        <label
+                                                            for="second-rates"
                                                             >16.00</label
                                                         >
                                                     </div>
@@ -1889,7 +2108,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1923,7 +2143,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -1957,7 +2178,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -2008,7 +2230,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             name="check-rates"
                                                             value="check"
                                                         />
-                                                        <label for="check1-rates"
+                                                        <label
+                                                            for="check1-rates"
                                                             >Service per
                                                             person</label
                                                         >
@@ -2041,8 +2264,11 @@ function onDragEnd(e: PointerEvent): void {
                                                     </div>
                                                 </div>
                                                 <div class="flex-two mb-40">
-                                                    <span class="label">Total:</span>
-                                                    <span class="total text-main"
+                                                    <span class="label"
+                                                        >Total:</span
+                                                    >
+                                                    <span
+                                                        class="total text-main"
                                                         >$130.00</span
                                                     >
                                                 </div>
@@ -2066,14 +2292,18 @@ function onDragEnd(e: PointerEvent): void {
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-Vector-6"></i>
+                                                    <i
+                                                        class="icon-Vector-6"
+                                                    ></i>
                                                     <span
                                                         >Hand-picked Tours &
                                                         Activities</span
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-insurance-1"></i>
+                                                    <i
+                                                        class="icon-insurance-1"
+                                                    ></i>
                                                     <span
                                                         >Free Travel
                                                         Insureance</span
@@ -2095,7 +2325,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 Recent News
                                             </h4>
                                             <div class="recent-post-list">
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2107,11 +2339,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2121,13 +2363,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2139,11 +2384,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2153,13 +2408,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2171,11 +2429,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2185,7 +2453,8 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
@@ -2213,16 +2482,23 @@ function onDragEnd(e: PointerEvent): void {
                                                 img, index
                                             ) in tour.gallery_images"
                                             :key="index"
-                                            :class="`image-gallery${(index % 6) + 1} image`"
+                                            :class="`image-gallery${(index % 6) + 1} image cursor-pointer`"
+                                            @click="openAt(index)"
                                         >
                                             <img
                                                 :src="img"
-                                                alt="image"
-                                                :class="index % 2 === 0 ? 'item1' : 'item2'"
+                                                :alt="`${tour.name} gallery image ${index + 1}`"
+                                                :class="
+                                                    index % 2 === 0
+                                                        ? 'item1'
+                                                        : 'item2'
+                                                "
                                             />
                                         </div>
                                         <div
-                                            v-if="tour.gallery_images.length === 0"
+                                            v-if="
+                                                tour.gallery_images.length === 0
+                                            "
                                             class="image-gallery1 image"
                                         >
                                             <img
@@ -2239,12 +2515,17 @@ function onDragEnd(e: PointerEvent): void {
                                             <h6 class="block-heading">
                                                 Book This Tour
                                             </h6>
-                                            <form action="/" id="form-book-tour">
+                                            <form
+                                                action="/"
+                                                id="form-book-tour"
+                                            >
                                                 <div class="input-wrap mb-30">
                                                     <input type="date" />
                                                 </div>
                                                 <div class="flex-two mb-30">
-                                                    <span class="label">Time:</span>
+                                                    <span class="label"
+                                                        >Time:</span
+                                                    >
                                                     <div class="radio">
                                                         <input
                                                             id="first-gal"
@@ -2282,7 +2563,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -2316,7 +2598,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -2350,7 +2633,8 @@ function onDragEnd(e: PointerEvent): void {
                                                             class="nice-select"
                                                             tabindex="0"
                                                         >
-                                                            <span class="current"
+                                                            <span
+                                                                class="current"
                                                                 >1</span
                                                             >
                                                             <ul class="list">
@@ -2434,8 +2718,11 @@ function onDragEnd(e: PointerEvent): void {
                                                     </div>
                                                 </div>
                                                 <div class="flex-two mb-40">
-                                                    <span class="label">Total:</span>
-                                                    <span class="total text-main"
+                                                    <span class="label"
+                                                        >Total:</span
+                                                    >
+                                                    <span
+                                                        class="total text-main"
                                                         >$130.00</span
                                                     >
                                                 </div>
@@ -2459,14 +2746,18 @@ function onDragEnd(e: PointerEvent): void {
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-Vector-6"></i>
+                                                    <i
+                                                        class="icon-Vector-6"
+                                                    ></i>
                                                     <span
                                                         >Hand-picked Tours &
                                                         Activities</span
                                                     >
                                                 </li>
                                                 <li class="flex-three">
-                                                    <i class="icon-insurance-1"></i>
+                                                    <i
+                                                        class="icon-insurance-1"
+                                                    ></i>
                                                     <span
                                                         >Free Travel
                                                         Insureance</span
@@ -2488,7 +2779,9 @@ function onDragEnd(e: PointerEvent): void {
                                                 Recent News
                                             </h4>
                                             <div class="recent-post-list">
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2500,11 +2793,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2514,13 +2817,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2532,11 +2838,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2546,13 +2862,16 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="list-recent flex-three">
+                                                <div
+                                                    class="list-recent flex-three"
+                                                >
                                                     <a
                                                         href="#"
                                                         class="recent-image"
@@ -2564,11 +2883,21 @@ function onDragEnd(e: PointerEvent): void {
                                                     </a>
                                                     <div class="recent-info">
                                                         <div class="start">
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
-                                                            <i class="icon-Star"></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
+                                                            <i
+                                                                class="icon-Star"
+                                                            ></i>
                                                         </div>
                                                         <h4 class="title">
                                                             <a href="#"
@@ -2578,7 +2907,8 @@ function onDragEnd(e: PointerEvent): void {
                                                         </h4>
                                                         <p>
                                                             From
-                                                            <span class="text-main"
+                                                            <span
+                                                                class="text-main"
                                                                 >$129.00</span
                                                             >
                                                         </p>
@@ -2749,10 +3079,14 @@ function onDragEnd(e: PointerEvent): void {
     background: #4da528;
 }
 
+.tour-gallery-swiper :deep(.swiper-pagination-bullet-active::before) {
+    display: none;
+}
+
 /* Custom Swiper navigation arrows */
 .swiper-custom-arrow {
     position: absolute;
-    top: 50%;
+    top: 42%;
     transform: translateY(-50%);
     width: 38px;
     height: 38px;
@@ -2768,7 +3102,9 @@ function onDragEnd(e: PointerEvent): void {
     cursor: pointer;
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.25s ease, background 0.2s;
+    transition:
+        opacity 0.25s ease,
+        background 0.2s;
 }
 
 .tour-gallery-swiper-wrap:hover .swiper-custom-arrow {
@@ -2794,4 +3130,95 @@ function onDragEnd(e: PointerEvent): void {
     }
 }
 
+/* Align tab icons consistently with their labels */
+.tab-tour-single .nav-link i {
+    vertical-align: middle;
+}
+
+.listing-clude li .clude-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 19px;
+    flex-shrink: 0;
+}
+
+.listing-clude li .included-icon {
+    color: #4da528;
+}
+
+.listing-clude li .excluded-icon {
+    color: #ff494f;
+}
+
+.tour-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.tour-meta-item {
+    padding: 0 24px;
+    border-right: 1px solid #e0e2e4;
+}
+
+.tour-meta-item:first-child {
+    padding-left: 0;
+}
+
+.tour-meta-item:last-child {
+    border-right: none;
+}
+
+.tour-meta-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.tour-meta-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #081e2a;
+}
+
+@media (max-width: 991px) {
+    .tour-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .tour-meta-item {
+        padding: 0;
+        border-right: none;
+    }
+}
+
+@media (max-width: 575px) {
+    .tour-meta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 30px;
+}
+
+@media (max-width: 991px) {
+    .activities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .activities-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
