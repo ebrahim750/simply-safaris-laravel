@@ -265,6 +265,241 @@ function onDragEnd(e: PointerEvent): void {
                 </div>
             </div>
 
+            <!-- Overview-only meta + carousel -->
+            <div v-show="activeTab === 'overview'" class="row">
+                <div class="col-lg-12">
+                    <!-- Meta + swiper -->
+                    <div class="row mb-50">
+                        <div class="col-lg-12">
+                            <div class="inner-heading-wrap flex-two">
+                                <div class="inner-heading">
+                                    <div class="tour-meta-grid">
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                countryLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                countryValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                destinationLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                destinationValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label"
+                                                >Duration</span
+                                            >
+                                            <span class="tour-meta-value">{{
+                                                durationValue
+                                            }}</span>
+                                        </div>
+                                        <div class="tour-meta-item">
+                                            <span class="tour-meta-label">{{
+                                                categoryLabel
+                                            }}</span>
+                                            <span class="tour-meta-value">{{
+                                                categoryValue
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="inner-price">
+                                    <p>
+                                        <span style="margin-right: 4px"
+                                            >From</span
+                                        >
+                                        <span class="price-sale text-main">{{
+                                            tour.price
+                                        }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Swiper v12 carousel -->
+                    <div
+                        v-if="tour.gallery_images.length > 0 && useSwiper"
+                        class="tour-gallery-swiper-wrap mb-40"
+                    >
+                        <Swiper
+                            :modules="[Autoplay, Pagination]"
+                            :pagination="{ clickable: true }"
+                            :slides-per-view="4"
+                            :space-between="16"
+                            :grab-cursor="true"
+                            :breakpoints="{
+                                320: {
+                                    slidesPerView: 1,
+                                    spaceBetween: 12,
+                                },
+                                640: {
+                                    slidesPerView: 2,
+                                    spaceBetween: 12,
+                                },
+                                992: {
+                                    slidesPerView: 3,
+                                    spaceBetween: 16,
+                                },
+                                1200: {
+                                    slidesPerView: 4,
+                                    spaceBetween: 16,
+                                },
+                            }"
+                            :loop="tour.gallery_images.length > 4"
+                            :autoplay="{
+                                delay: 3000,
+                                disableOnInteraction: true,
+                            }"
+                            class="tour-gallery-swiper"
+                            @swiper="onSwiperInit"
+                        >
+                            <SwiperSlide
+                                v-for="(img, index) in tour.gallery_images"
+                                :key="index"
+                                class="cursor-pointer"
+                                @click="openAt(index)"
+                            >
+                                <img
+                                    :src="img"
+                                    :alt="`${tour.name} gallery image ${index + 1}`"
+                                    class="swiper-slide-img"
+                                />
+                            </SwiperSlide>
+                        </Swiper>
+
+                        <!-- Custom navigation arrows -->
+                        <button
+                            v-if="tour.gallery_images.length > 1"
+                            class="swiper-custom-arrow swiper-custom-prev"
+                            @click="swiperSlidePrev"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
+                        </button>
+                        <button
+                            v-if="tour.gallery_images.length > 1"
+                            class="swiper-custom-arrow swiper-custom-next"
+                            @click="swiperSlideNext"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Custom Vue carousel (fallback) -->
+                    <div
+                        v-if="tour.gallery_images.length > 0 && !useSwiper"
+                        class="mb-40"
+                    >
+                        <div class="tour-gallery-carousel">
+                            <div class="carousel-track-wrapper">
+                                <div
+                                    class="carousel-track"
+                                    :style="trackStyle"
+                                    @pointerdown="onDragStart"
+                                    @pointerup="onDragEnd"
+                                    @pointerleave="onDragEnd"
+                                >
+                                    <div
+                                        v-for="(
+                                            img, index
+                                        ) in tour.gallery_images"
+                                        :key="index"
+                                        class="carousel-slide"
+                                    >
+                                        <div class="carousel-slide-inner">
+                                            <img
+                                                :src="img"
+                                                :alt="`${tour.name} gallery image ${index + 1}`"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Navigation arrows -->
+                            <button
+                                v-if="maxIndex > 0"
+                                class="carousel-arrow carousel-prev"
+                                :disabled="currentIndex <= 0"
+                                @click="carouselPrev"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+                            <button
+                                v-if="maxIndex > 0"
+                                class="carousel-arrow carousel-next"
+                                :disabled="currentIndex >= maxIndex"
+                                @click="carouselNext"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+
+                            <!-- Dot pagination -->
+                            <div v-if="dotCount > 1" class="carousel-dots">
+                                <button
+                                    v-for="(_, dotIndex) in dotCount"
+                                    :key="dotIndex"
+                                    class="carousel-dot"
+                                    :class="{
+                                        active: currentIndex === dotIndex,
+                                    }"
+                                    @click="carouselGoTo(dotIndex)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab content + sidebar -->
             <div class="row">
                 <div class="col-lg-8">
@@ -276,273 +511,6 @@ function onDragEnd(e: PointerEvent): void {
                             role="tabpanel"
                             tabindex="0"
                         >
-                            <!-- Meta + swiper -->
-                            <div class="row mb-50">
-                                <div class="col-lg-12">
-                                    <div class="inner-heading-wrap flex-two">
-                                        <div class="inner-heading">
-                                            <div class="tour-meta-grid">
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            countryLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            countryValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            destinationLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            destinationValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >Duration</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            durationValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            categoryLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            categoryValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="inner-price">
-                                            <p>
-                                                <span style="margin-right: 4px"
-                                                    >From</span
-                                                >
-                                                <span
-                                                    class="price-sale text-main"
-                                                    >{{ tour.price }}</span
-                                                >
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Swiper v12 carousel -->
-                            <div
-                                v-if="
-                                    tour.gallery_images.length > 0 && useSwiper
-                                "
-                                class="tour-gallery-swiper-wrap mb-40"
-                            >
-                                <Swiper
-                                    :modules="[Autoplay, Pagination]"
-                                    :pagination="{ clickable: true }"
-                                    :slides-per-view="4"
-                                    :space-between="16"
-                                    :grab-cursor="true"
-                                    :breakpoints="{
-                                        320: {
-                                            slidesPerView: 1,
-                                            spaceBetween: 12,
-                                        },
-                                        640: {
-                                            slidesPerView: 2,
-                                            spaceBetween: 12,
-                                        },
-                                        992: {
-                                            slidesPerView: 3,
-                                            spaceBetween: 16,
-                                        },
-                                        1200: {
-                                            slidesPerView: 4,
-                                            spaceBetween: 16,
-                                        },
-                                    }"
-                                    :loop="tour.gallery_images.length > 4"
-                                    :autoplay="{
-                                        delay: 3000,
-                                        disableOnInteraction: true,
-                                    }"
-                                    class="tour-gallery-swiper"
-                                    @swiper="onSwiperInit"
-                                >
-                                    <SwiperSlide
-                                        v-for="(
-                                            img, index
-                                        ) in tour.gallery_images"
-                                        :key="index"
-                                        class="cursor-pointer"
-                                        @click="openAt(index)"
-                                    >
-                                        <img
-                                            :src="img"
-                                            :alt="`${tour.name} gallery image ${index + 1}`"
-                                            class="swiper-slide-img"
-                                        />
-                                    </SwiperSlide>
-                                </Swiper>
-
-                                <!-- Custom navigation arrows -->
-                                <button
-                                    v-if="tour.gallery_images.length > 1"
-                                    class="swiper-custom-arrow swiper-custom-prev"
-                                    @click="swiperSlidePrev"
-                                >
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <polyline points="15 18 9 12 15 6" />
-                                    </svg>
-                                </button>
-                                <button
-                                    v-if="tour.gallery_images.length > 1"
-                                    class="swiper-custom-arrow swiper-custom-next"
-                                    @click="swiperSlideNext"
-                                >
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Custom Vue carousel (fallback) -->
-                            <div
-                                v-if="
-                                    tour.gallery_images.length > 0 && !useSwiper
-                                "
-                                class="mb-40"
-                            >
-                                <div class="tour-gallery-carousel">
-                                    <div class="carousel-track-wrapper">
-                                        <div
-                                            class="carousel-track"
-                                            :style="trackStyle"
-                                            @pointerdown="onDragStart"
-                                            @pointerup="onDragEnd"
-                                            @pointerleave="onDragEnd"
-                                        >
-                                            <div
-                                                v-for="(
-                                                    img, index
-                                                ) in tour.gallery_images"
-                                                :key="index"
-                                                class="carousel-slide"
-                                            >
-                                                <div
-                                                    class="carousel-slide-inner"
-                                                >
-                                                    <img
-                                                        :src="img"
-                                                        :alt="`${tour.name} gallery image ${index + 1}`"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Navigation arrows -->
-                                    <button
-                                        v-if="maxIndex > 0"
-                                        class="carousel-arrow carousel-prev"
-                                        :disabled="currentIndex <= 0"
-                                        @click="carouselPrev"
-                                    >
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <polyline
-                                                points="15 18 9 12 15 6"
-                                            />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        v-if="maxIndex > 0"
-                                        class="carousel-arrow carousel-next"
-                                        :disabled="currentIndex >= maxIndex"
-                                        @click="carouselNext"
-                                    >
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <polyline points="9 18 15 12 9 6" />
-                                        </svg>
-                                    </button>
-
-                                    <!-- Dot pagination -->
-                                    <div
-                                        v-if="dotCount > 1"
-                                        class="carousel-dots"
-                                    >
-                                        <button
-                                            v-for="(_, dotIndex) in dotCount"
-                                            :key="dotIndex"
-                                            class="carousel-dot"
-                                            :class="{
-                                                active:
-                                                    currentIndex === dotIndex,
-                                            }"
-                                            @click="carouselGoTo(dotIndex)"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="information-content-tour">
