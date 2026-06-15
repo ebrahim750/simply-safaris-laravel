@@ -1210,4 +1210,9 @@ function onDragEnd(e: PointerEvent): void {
         grid-template-columns: 1fr;
     }
 }
+
+.tour-single .pd-main {
+    padding-top: 0;
+    padding-bottom: 50px;
+}
 </style>
