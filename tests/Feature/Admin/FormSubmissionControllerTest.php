@@ -93,10 +93,30 @@ test('admin users can search tour form submissions', function () {
         );
 });
 
+test('admin users can delete a tour enquiry', function () {
+    $adminUser = User::factory()->create([
+        'account_type' => 'admin',
+    ]);
+    $tour = Tour::factory()->create();
+    $enquiry = TourEnquiry::factory()->create([
+        'tour_id' => $tour->id,
+    ]);
+
+    $this->actingAs($adminUser)
+        ->delete(route('admin.form-submissions.tour.destroy', $enquiry))
+        ->assertRedirect(route('admin.form-submissions.tour'))
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseMissing('tour_enquiries', [
+        'id' => $enquiry->id,
+    ]);
+});
+
 test('non-admin users cannot access form submissions pages', function () {
     $regularUser = User::factory()->create([
         'account_type' => 'user',
     ]);
+    $enquiry = TourEnquiry::factory()->create();
 
     $this->actingAs($regularUser)
         ->get(route('admin.form-submissions.contact'))
@@ -104,5 +124,9 @@ test('non-admin users cannot access form submissions pages', function () {
 
     $this->actingAs($regularUser)
         ->get(route('admin.form-submissions.tour'))
+        ->assertForbidden();
+
+    $this->actingAs($regularUser)
+        ->delete(route('admin.form-submissions.tour.destroy', $enquiry))
         ->assertForbidden();
 });

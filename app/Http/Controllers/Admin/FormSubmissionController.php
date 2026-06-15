@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\TourEnquiry;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,5 +47,13 @@ class FormSubmissionController extends Controller
         return Inertia::render('admin/form-submissions/Tour', [
             'enquiries' => $enquiries,
         ]);
+    }
+
+    public function destroyTourEnquiry(TourEnquiry $tourEnquiry): RedirectResponse
+    {
+        $tourEnquiry->delete();
+
+        return Redirect::route('admin.form-submissions.tour')
+            ->with('status', 'Tour enquiry deleted.');
     }
 }

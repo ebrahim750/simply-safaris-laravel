@@ -71,6 +71,7 @@ Route::middleware(['auth', 'password.change.required', 'verified'])->group(funct
         Route::delete('admin/destinations/places/{place}', [DestinationPlaceController::class, 'destroy'])->name('admin.destinations.places.destroy');
         Route::get('admin/form-submissions/contact', [FormSubmissionController::class, 'contact'])->name('admin.form-submissions.contact');
         Route::get('admin/form-submissions/tour', [FormSubmissionController::class, 'tour'])->name('admin.form-submissions.tour');
+        Route::delete('admin/form-submissions/tour/{tour_enquiry}', [FormSubmissionController::class, 'destroyTourEnquiry'])->name('admin.form-submissions.tour.destroy');
     });
     Route::middleware('root')->group(function () {
         Route::get('root-access/prod-test', [ProdTestController::class, 'index'])->name('root-access.prod-test');
