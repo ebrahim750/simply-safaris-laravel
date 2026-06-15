@@ -270,6 +270,20 @@ function onDragEnd(e: PointerEvent): void {
                                                     <span
                                                         class="tour-meta-label"
                                                         >{{
+                                                            countryLabel
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        class="tour-meta-value"
+                                                        >{{
+                                                            countryValue
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <div class="tour-meta-item">
+                                                    <span
+                                                        class="tour-meta-label"
+                                                        >{{
                                                             destinationLabel
                                                         }}</span
                                                     >
@@ -303,20 +317,6 @@ function onDragEnd(e: PointerEvent): void {
                                                         class="tour-meta-value"
                                                         >{{
                                                             categoryValue
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div class="tour-meta-item">
-                                                    <span
-                                                        class="tour-meta-label"
-                                                        >{{
-                                                            countryLabel
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="tour-meta-value"
-                                                        >{{
-                                                            countryValue
                                                         }}</span
                                                     >
                                                 </div>
@@ -535,94 +535,21 @@ function onDragEnd(e: PointerEvent): void {
                                             class="description-wrap mb-40"
                                         >
                                             <span class="description"
-                                                >Description:</span
+                                                >Description</span
                                             >
                                             <div
                                                 class="des"
                                                 v-html="tour.overview"
                                             ></div>
                                         </div>
-
-                                        <div class="description-wrap mb-40">
-                                            <span class="description"
-                                                >Advance Facilities</span
-                                            >
+                                        <div
+                                            v-else
+                                            class="description-wrap mb-40"
+                                        >
                                             <p class="des">
-                                                Leave your guidebooks at home
-                                                and dive into the local cultures
-                                                that make each destination so
-                                                special. We'll connect you with
-                                                our exclusive experiences. Each
-                                                trip is carefully crafted to let
-                                                enjoy your vacation.
+                                                No description available for
+                                                this tour.
                                             </p>
-                                        </div>
-
-                                        <div class="description-wrap mb-40">
-                                            <span class="description"
-                                                >What to Expect</span
-                                            >
-                                            <p class="des mb-18">
-                                                Leave your guidebooks at home
-                                                and dive into the local cultures
-                                                that make each destination so
-                                                special. We'll connect you with
-                                                our exclusive experiences. Each
-                                                trip is carefully crafted to let
-                                                enjoy your vacation.
-                                            </p>
-                                            <ul class="listing-des">
-                                                <li>
-                                                    <p>View the City Walls</p>
-                                                </li>
-                                                <li>
-                                                    <p>Hiking in the forest</p>
-                                                </li>
-                                                <li>
-                                                    <p>
-                                                        Discover the famous view
-                                                        point "The Lark"
-                                                    </p>
-                                                </li>
-                                                <li>
-                                                    <p>Sunset on the cruise</p>
-                                                </li>
-                                            </ul>
-                                        </div>
-
-                                        <div class="expect-wrap mb-70">
-                                            <h4 class="title mb-18">
-                                                What to Expect
-                                            </h4>
-                                            <div class="expect flex-three">
-                                                <span
-                                                    >Departure/Return
-                                                    Location</span
-                                                >
-                                                <p>
-                                                    2 Taijichang St, Dongcheng
-                                                    Qu, Beijing Shi, China
-                                                </p>
-                                            </div>
-                                            <div class="expect flex-three">
-                                                <span>Departure Time</span>
-                                                <p>
-                                                    Please arrive by 9:15 AM for
-                                                    a departure at 9:30 AM
-                                                </p>
-                                            </div>
-                                            <div class="expect flex-three">
-                                                <span>Return Time</span>
-                                                <p>Approximately 8:30 PM</p>
-                                            </div>
-                                            <div class="expect flex-three">
-                                                <span>Return Time</span>
-                                                <p>Approximately 8:30 PM</p>
-                                            </div>
-                                            <div class="expect flex-three">
-                                                <span>Return Time</span>
-                                                <p>Approximately 8:30 PM</p>
-                                            </div>
                                         </div>
 
                                         <div class="expect-wrap">
@@ -3151,11 +3078,14 @@ function onDragEnd(e: PointerEvent): void {
 }
 
 .tour-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 0;
 }
 
 .tour-meta-item {
+    flex: 0 1 auto;
+    min-width: 120px;
     padding: 0 24px;
     border-right: 1px solid #e0e2e4;
 }
@@ -3188,11 +3118,13 @@ function onDragEnd(e: PointerEvent): void {
 
 @media (max-width: 991px) {
     .tour-meta-grid {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
     }
 
     .tour-meta-item {
+        min-width: auto;
         padding: 0;
         border-right: none;
     }
