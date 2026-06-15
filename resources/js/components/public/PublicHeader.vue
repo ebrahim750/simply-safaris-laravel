@@ -31,8 +31,7 @@ const tourCategories = computed(
         }>,
 );
 const headerLower = ref<HTMLElement | null>(null);
-const isHeaderFixed = ref(false);
-const isHeaderSmall = ref(false);
+const isHeaderStuck = ref(false);
 const headerSpacerHeight = ref(0);
 const searchInput = ref<HTMLInputElement | null>(null);
 const getSearchFromUrl = (): string => {
@@ -54,8 +53,7 @@ const suggestions = ref<
 >([]);
 const isLoading = ref(false);
 
-let headerOffsetTop = 0;
-let headerHeight = 0;
+let headerStuckOffset = 0;
 
 const closeMobileMenu = () => {
     mobileMenuOpen.value = false;
@@ -87,29 +85,23 @@ const isDropdownOpen = (slug: string): boolean => {
     return openDropdowns.value.has(slug);
 };
 
-const measureStickyHeader = () => {
+const refreshHeader = () => {
     if (!headerLower.value) {
         return;
     }
 
-    const wasFixed = isHeaderFixed.value;
-    isHeaderFixed.value = false;
+    const wasStuck = isHeaderStuck.value;
+    isHeaderStuck.value = false;
 
     const bounds = headerLower.value.getBoundingClientRect();
-    headerOffsetTop = bounds.top + window.scrollY;
-    headerHeight = headerLower.value.offsetHeight;
-    headerSpacerHeight.value = headerHeight;
-    isHeaderFixed.value = wasFixed;
+    headerStuckOffset = bounds.top + window.scrollY + bounds.height;
+    headerSpacerHeight.value = headerLower.value.offsetHeight;
+
+    isHeaderStuck.value = wasStuck;
 };
 
-const handleStickyHeader = () => {
-    isHeaderFixed.value = window.scrollY > headerOffsetTop + headerHeight;
-    isHeaderSmall.value = window.scrollY > 500;
-};
-
-const refreshStickyHeader = () => {
-    measureStickyHeader();
-    handleStickyHeader();
+const handleScroll = () => {
+    isHeaderStuck.value = window.scrollY > headerStuckOffset;
 };
 
 const handleSearchSubmit = () => {
@@ -161,15 +153,15 @@ watch(
 
 onMounted(async () => {
     await nextTick();
-    refreshStickyHeader();
-    window.addEventListener('scroll', handleStickyHeader, { passive: true });
-    window.addEventListener('resize', refreshStickyHeader);
+    refreshHeader();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', refreshHeader);
     window.addEventListener('keydown', handleEscape);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('scroll', handleStickyHeader);
-    window.removeEventListener('resize', refreshStickyHeader);
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', refreshHeader);
     window.removeEventListener('keydown', handleEscape);
 });
 </script>
@@ -216,8 +208,7 @@ onUnmounted(() => {
                 ref="headerLower"
                 class="header-lower home3-header-lower"
                 :class="{
-                    'is-fixed': isHeaderFixed,
-                    'is-small': isHeaderSmall,
+                    'is-stuck': isHeaderStuck,
                 }"
             >
                 <div class="tf-container full">
@@ -470,7 +461,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div
-                v-show="isHeaderFixed"
+                v-show="isHeaderStuck"
                 :style="{ height: `${headerSpacerHeight}px` }"
             ></div>
         </div>
@@ -711,6 +702,35 @@ onUnmounted(() => {
     }
 
     .home3-header-lower {
+        padding: 20px 15px;
+    }
+}
+
+/* Clean sticky header: stay visible as soon as it leaves the top bar */
+.header-lower.home3-header-lower.is-stuck {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    opacity: 1;
+    visibility: visible;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1), inset 0px 1px 0px #ECECEC;
+    padding-left: 201px;
+    padding-right: 306px;
+    transition: none;
+}
+
+@media (max-width: 1570px) {
+    .header-lower.home3-header-lower.is-stuck {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+@media (max-width: 991px) {
+    .header-lower.home3-header-lower.is-stuck {
         padding: 20px 15px;
     }
 }
