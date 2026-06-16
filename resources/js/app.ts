@@ -25,6 +25,7 @@ void createInertiaApp({
             case name.startsWith('tours/'):
                 return PublicLayout;
             case name === 'ContactTailwind':
+            case name === 'AboutTailwind':
                 return TailwindPublicLayout;
             case name === 'Welcome':
                 return null;

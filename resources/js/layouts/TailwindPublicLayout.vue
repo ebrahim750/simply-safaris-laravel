@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import PublicFooter from '@/components/public/PublicFooter.vue';
-import PublicHeader from '@/components/public/PublicHeader.vue';
+import TailwindPublicFooter from '@/components/public/TailwindPublicFooter.vue';
+import TailwindPublicHeader from '@/components/public/TailwindPublicHeader.vue';
 </script>
 
 <template>
     <Head />
 
     <div>
-        <PublicHeader />
+        <TailwindPublicHeader />
 
         <main>
             <slot />
         </main>
 
-        <PublicFooter />
+        <TailwindPublicFooter />
     </div>
 </template>

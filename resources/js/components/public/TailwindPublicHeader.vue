@@ -1,0 +1,536 @@
+<script setup lang="ts">
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { debounce } from 'lodash-es';
+import { CalendarDays, ChevronDown, Loader2, MapPin, Menu, Search, X } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { about, contact, contact2, home } from '@/routes';
+import { index as blogIndex } from '@/routes/blog';
+import destinations from '@/routes/destinations';
+import tours from '@/routes/tours';
+
+const page = usePage();
+const mobileMenuOpen = ref(false);
+const languageOpen = ref(false);
+const searchOpen = ref(false);
+const openDropdowns = ref<Set<string>>(new Set());
+
+const destinationsData = computed(
+    () =>
+        page.props.destinations as Array<{
+            id: number;
+            name: string;
+            slug: string;
+            country_code: string | null;
+            places: Array<{ id: number; name: string; slug: string }>;
+        }>,
+);
+const tourCategories = computed(
+    () =>
+        page.props.tourCategories as Array<{
+            id: number;
+            name: string;
+        }>,
+);
+
+const headerLower = ref<HTMLElement | null>(null);
+const isHeaderStuck = ref(false);
+const headerSpacerHeight = ref(0);
+const searchInput = ref<HTMLInputElement | null>(null);
+
+const getSearchFromUrl = (): string => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
+    const url = new URL(page.url, window.location.origin);
+
+    return url.searchParams.get('search') || '';
+};
+
+const searchQuery = ref(getSearchFromUrl());
+const suggestions = ref<
+    Array<{
+        id: number;
+        name: string;
+        url: string;
+        main_image: string;
+        duration_days: number;
+        price: string;
+        places: Array<{ name: string; country: string | null }>;
+    }>
+>([]);
+const isLoading = ref(false);
+
+let headerStuckOffset = 0;
+let headerResizeObserver: ResizeObserver | null = null;
+
+const closeMobileMenu = () => {
+    mobileMenuOpen.value = false;
+    openDropdowns.value.clear();
+};
+
+const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        searchOpen.value = false;
+        mobileMenuOpen.value = false;
+    }
+};
+
+const toggleDropdown = (slug: string) => {
+    const newSet = new Set(openDropdowns.value);
+
+    if (newSet.has(slug)) {
+        newSet.delete(slug);
+    } else {
+        newSet.add(slug);
+    }
+
+    openDropdowns.value = newSet;
+};
+
+const isDropdownOpen = (slug: string): boolean => {
+    return openDropdowns.value.has(slug);
+};
+
+const refreshHeader = () => {
+    if (!headerLower.value) {
+        return;
+    }
+
+    headerSpacerHeight.value = headerLower.value.offsetHeight;
+
+    if (!isHeaderStuck.value) {
+        const bounds = headerLower.value.getBoundingClientRect();
+        headerStuckOffset = bounds.top + window.scrollY;
+    }
+};
+
+const handleScroll = () => {
+    isHeaderStuck.value = window.scrollY > headerStuckOffset;
+};
+
+const handleSearchSubmit = () => {
+    const query = searchQuery.value.trim();
+
+    if (query) {
+        searchOpen.value = false;
+        router.get(tours.index({ query: { search: query } }).url);
+    }
+};
+
+const fetchSuggestions = debounce(async (query: string) => {
+    if (!query.trim()) {
+        suggestions.value = [];
+
+        return;
+    }
+
+    isLoading.value = true;
+
+    try {
+        const response = await fetch(
+            `/tours/search?q=${encodeURIComponent(query)}`,
+        );
+        const data = await response.json();
+        suggestions.value = data.results;
+    } finally {
+        isLoading.value = false;
+    }
+}, 1000);
+
+watch(searchQuery, (newValue) => {
+    fetchSuggestions(newValue);
+});
+
+watch(searchOpen, (open) => {
+    if (open) {
+        nextTick(() => {
+            searchInput.value?.focus();
+        });
+    } else {
+        suggestions.value = [];
+    }
+});
+
+watch(
+    () => page.url,
+    () => {
+        searchQuery.value = getSearchFromUrl();
+    },
+);
+
+watch(isHeaderStuck, (stuck) => {
+    if (!stuck) {
+        refreshHeader();
+    }
+});
+
+const isActive = (path: string): boolean => {
+    if (path === '/') {
+        return page.url === '/';
+    }
+
+    return page.url.startsWith(path);
+};
+
+onMounted(async () => {
+    await nextTick();
+    refreshHeader();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('keydown', handleEscape);
+
+    if (headerLower.value) {
+        headerResizeObserver = new ResizeObserver(() => {
+            refreshHeader();
+        });
+        headerResizeObserver.observe(headerLower.value);
+    }
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('keydown', handleEscape);
+    headerResizeObserver?.disconnect();
+});
+</script>
+
+<template>
+    <header>
+        <!-- Top Bar -->
+        <div class="hidden bg-[#1D231F] lg:block">
+            <div class="mx-auto flex max-w-[1920px] items-center justify-between px-[201px] py-2.5 max-2xl:px-4">
+                <div class="flex items-center gap-9">
+                    <span class="inline-flex items-center gap-2 text-[15px] text-white/80">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        info@simplysafaris.com
+                    </span>
+                    <span class="inline-flex items-center gap-2 text-[15px] text-white/80">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        +1 684 555-0102
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[15px] text-white/80">Follow Us :</span>
+                    <a href="#" class="p-1 text-white/60 transition-colors hover:text-[#4DA528]" aria-label="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                    <a href="#" class="p-1 text-white/60 transition-colors hover:text-[#4DA528]" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                    <a href="#" class="p-1 text-white/60 transition-colors hover:text-[#4DA528]" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lower Header -->
+        <div
+            ref="headerLower"
+            class="relative z-50 bg-white shadow-[0_1px_0_0_#ececec]"
+            :class="isHeaderStuck ? 'fixed top-0 left-0 w-full' : ''"
+        >
+            <div class="mx-auto flex max-w-[1920px] items-center justify-between px-[201px] py-0 max-2xl:px-4 max-lg:px-4 max-lg:py-5">
+                <!-- Logo -->
+                <div class="shrink-0 py-4">
+                    <Link href="/" class="block">
+                        <img
+                            src="/images/simplysafaris.png"
+                            alt="Simply Safaris"
+                            class="h-auto w-[130px]"
+                        />
+                    </Link>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden items-center lg:flex">
+                    <ul class="flex items-center">
+                        <li>
+                            <Link
+                                :href="home()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >Home</Link>
+                        </li>
+
+                        <!-- Destinations Dropdown -->
+                        <li class="group relative">
+                            <Link
+                                :href="destinations.index()"
+                                class="flex items-center gap-1 px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/destinations') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                            >
+                                Destinations
+                                <ChevronDown class="size-3.5 opacity-50" />
+                            </Link>
+                            <ul class="absolute left-0 top-full min-w-[240px] rounded-b-lg border border-gray-100 bg-white py-3 opacity-0 shadow-lg transition-all duration-200 invisible group-hover:opacity-100 group-hover:visible">
+                                <li v-for="country in destinationsData" :key="country.id" class="group/sub relative">
+                                    <Link
+                                        :href="destinations.country({ country: country.slug })"
+                                        class="flex items-center gap-3 px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]"
+                                    >
+                                        <img
+                                            v-if="country.country_code"
+                                            :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
+                                            :alt="`${country.name} flag`"
+                                            class="h-auto w-[30px] rounded-sm"
+                                        />
+                                        <span>{{ country.name }}</span>
+                                    </Link>
+                                    <ul v-if="country.places.length > 0" class="absolute left-full top-0 min-w-[200px] rounded-lg border border-gray-100 bg-white py-3 opacity-0 shadow-lg transition-all duration-200 invisible group-hover/sub:opacity-100 group-hover/sub:visible">
+                                        <li v-for="place in country.places" :key="place.id">
+                                            <Link
+                                                :href="`${destinations.country({ country: country.slug }).url}#${place.slug}`"
+                                                class="block px-5 py-2 text-[13px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]"
+                                            >{{ place.name }}</Link>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Tours Dropdown -->
+                        <li class="group relative">
+                            <Link
+                                :href="tours.index()"
+                                class="flex items-center gap-1 px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/tours') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                            >
+                                Tours
+                                <ChevronDown class="size-3.5 opacity-50" />
+                            </Link>
+                            <ul class="absolute left-0 top-full min-w-[220px] rounded-b-lg border border-gray-100 bg-white py-3 opacity-0 shadow-lg transition-all duration-200 invisible group-hover:opacity-100 group-hover:visible">
+                                <li v-for="category in tourCategories" :key="category.id">
+                                    <Link
+                                        :href="tours.index({ query: { categories: [category.id] } }).url"
+                                        class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]"
+                                    >{{ category.name }}</Link>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <Link
+                                :href="blogIndex()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/blog') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >Blog</Link>
+                        </li>
+
+                        <li>
+                            <Link
+                                :href="about()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/about') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >About</Link>
+                        </li>
+
+                        <li>
+                            <Link
+                                :href="contact()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/contact') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >Contact</Link>
+                        </li>
+
+                        <li>
+                            <Link
+                                :href="about2()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/about2') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >About 2</Link>
+                        </li>
+
+                        <li>
+                            <Link
+                                :href="contact2()"
+                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
+                                :class="isActive('/contact2') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
+                                @click="closeMobileMenu"
+                            >Contact 2</Link>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Right Side -->
+                <div class="flex items-center gap-5">
+                    <button
+                        type="button"
+                        class="text-[#081E2A] transition-colors hover:text-[#4DA528]"
+                        aria-label="Search"
+                        @click="searchOpen = !searchOpen"
+                    >
+                        <Search class="size-5" />
+                    </button>
+
+                    <!-- Language Selector -->
+                    <div class="relative hidden lg:block">
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 text-[15px] text-[#081E2A]"
+                            @click="languageOpen = !languageOpen"
+                        >
+                            <img src="/template/images/page/language.svg" alt="" class="size-5" />
+                            <span>English</span>
+                            <ChevronDown class="size-3 opacity-50" />
+                        </button>
+                        <ul
+                            v-show="languageOpen"
+                            class="absolute right-0 top-full z-50 mt-2 min-w-[140px] rounded-lg border border-gray-100 bg-white py-2 shadow-lg"
+                        >
+                            <li class="cursor-pointer px-4 py-2 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">English</li>
+                            <li class="cursor-pointer px-4 py-2 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Vietnam</li>
+                            <li class="cursor-pointer px-4 py-2 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">German</li>
+                        </ul>
+                    </div>
+
+                    <!-- Mobile Toggle -->
+                    <button
+                        type="button"
+                        class="text-[#081E2A] transition-colors hover:text-[#4DA528] lg:hidden"
+                        aria-label="Toggle menu"
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                    >
+                        <Menu v-if="!mobileMenuOpen" class="size-6" />
+                        <X v-else class="size-6" />
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Spacer -->
+        <div v-show="isHeaderStuck" :style="{ height: `${headerSpacerHeight}px` }"></div>
+
+        <!-- Mobile Menu -->
+        <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
+        >
+            <div v-if="mobileMenuOpen" class="fixed inset-x-0 top-0 z-40 mt-[72px] max-h-[calc(100vh-72px)] overflow-y-auto border-t border-gray-100 bg-white shadow-lg lg:hidden">
+                <ul class="divide-y divide-gray-50 py-2">
+                    <li>
+                        <Link :href="home()" class="block px-6 py-3.5 text-[16px] font-semibold text-[#081E2A]" :class="isActive('/') ? 'text-[#4DA528]' : ''" @click="closeMobileMenu">Home</Link>
+                    </li>
+                    <li>
+                        <button type="button" class="flex w-full items-center justify-between px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/destinations') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="toggleDropdown('mobile-dest')">
+                            Destinations
+                            <ChevronDown class="size-4 transition-transform" :class="isDropdownOpen('mobile-dest') ? 'rotate-180' : ''" />
+                        </button>
+                        <ul v-show="isDropdownOpen('mobile-dest')" class="bg-gray-50 py-1">
+                            <li v-for="country in destinationsData" :key="country.id">
+                                <Link :href="destinations.country({ country: country.slug })" class="flex items-center gap-3 px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">
+                                    <img v-if="country.country_code" :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`" :alt="`${country.name} flag`" class="h-auto w-[24px] rounded-sm" />
+                                    {{ country.name }}
+                                </Link>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <button type="button" class="flex w-full items-center justify-between px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/tours') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="toggleDropdown('mobile-tours')">
+                            Tours
+                            <ChevronDown class="size-4 transition-transform" :class="isDropdownOpen('mobile-tours') ? 'rotate-180' : ''" />
+                        </button>
+                        <ul v-show="isDropdownOpen('mobile-tours')" class="bg-gray-50 py-1">
+                            <li v-for="category in tourCategories" :key="category.id">
+                                <Link :href="tours.index({ query: { categories: [category.id] } }).url" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">{{ category.name }}</Link>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <Link :href="blogIndex()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/blog') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">Blog</Link>
+                    </li>
+                    <li>
+                        <Link :href="about()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/about') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">About</Link>
+                    </li>
+                    <li>
+                        <Link :href="contact()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/contact') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">Contact</Link>
+                    </li>
+                    <li>
+                        <Link :href="about2()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/about2') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">About 2</Link>
+                    </li>
+                    <li>
+                        <Link :href="contact2()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/contact2') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">Contact 2</Link>
+                    </li>
+                </ul>
+            </div>
+        </Transition>
+
+        <!-- Search Overlay Backdrop -->
+        <Transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="searchOpen" class="fixed inset-0 z-[9998] bg-black/60" @click="searchOpen = false"></div>
+        </Transition>
+
+        <!-- Search Overlay Panel -->
+        <Transition
+            enter-active-class="transition ease-out duration-500"
+            enter-from-class="-translate-y-full"
+            enter-to-class="translate-y-0"
+            leave-active-class="transition ease-in duration-300"
+            leave-from-class="translate-y-0"
+            leave-to-class="-translate-y-full"
+        >
+            <div v-if="searchOpen" class="fixed inset-x-0 top-0 z-[9999] flex h-[75vh] flex-col bg-white shadow-2xl">
+                <div class="flex justify-end px-10 py-8 lg:px-20 lg:py-14">
+                    <button type="button" class="cursor-pointer p-2 text-gray-400 transition-colors hover:text-gray-900" @click="searchOpen = false">
+                        <X class="size-7" stroke-width="1.5" />
+                    </button>
+                </div>
+
+                <div class="flex flex-1 justify-center px-6 transition-all duration-500 lg:px-16" :class="suggestions.length > 0 || isLoading ? 'items-start pt-12 lg:pt-20' : 'items-center'">
+                    <div class="w-full max-w-5xl">
+                        <label class="mb-6 block text-sm font-medium tracking-widest text-gray-400 uppercase">
+                            What are you looking for?
+                        </label>
+                        <div class="relative">
+                            <input
+                                ref="searchInput"
+                                v-model="searchQuery"
+                                type="text"
+                                placeholder="Search tours..."
+                                class="w-full border-0 border-b-2 border-gray-200 bg-transparent py-6 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:border-gray-900 focus:outline-none focus:ring-0 lg:pr-14 lg:text-5xl"
+                                @keydown.enter="handleSearchSubmit"
+                            />
+                            <Search class="absolute top-1/2 right-4 size-5 -translate-y-1/2 cursor-pointer text-gray-400 transition-colors hover:text-gray-900 lg:right-6 lg:size-6" @click="handleSearchSubmit" />
+                        </div>
+
+                        <div class="mt-8 flex min-h-[3rem] justify-center">
+                            <Loader2 v-if="isLoading" class="size-10 animate-spin text-gray-400" />
+                        </div>
+
+                        <div v-if="suggestions.length > 0" class="mt-6 max-h-[50vh] overflow-y-auto border border-gray-100 bg-white">
+                            <Link v-for="suggestion in suggestions" :key="suggestion.id" :href="suggestion.url" class="flex items-center gap-4 border-b border-gray-100 px-5 py-3 transition-colors last:border-b-0 hover:bg-gray-50" @click="searchOpen = false">
+                                <div class="h-14 w-20 shrink-0 overflow-hidden rounded-md">
+                                    <img :src="suggestion.main_image" :alt="suggestion.name" class="size-full object-cover" />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-base font-semibold text-gray-900">{{ suggestion.name }}</p>
+                                    <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 truncate text-[13px] text-gray-500">
+                                        <span v-if="suggestion.places.length > 0" class="inline-flex items-center gap-1">
+                                            <MapPin class="size-3.5 shrink-0 text-[#4DA528]" />
+                                            {{ [...new Set(suggestion.places.map((p) => p.country).filter(Boolean))].join(', ') }}
+                                        </span>
+                                        <span v-if="suggestion.duration_days" class="inline-flex items-center gap-1">
+                                            <CalendarDays class="size-3.5 shrink-0 text-[#4DA528]" />
+                                            {{ suggestion.duration_days }} {{ suggestion.duration_days === 1 ? 'day' : 'days' }}
+                                        </span>
+                                    </p>
+                                    <p class="mt-1 text-sm font-semibold text-gray-800">{{ suggestion.price }}</p>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </header>
+</template>
