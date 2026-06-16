@@ -315,7 +315,7 @@ onMounted(() => {
     box-shadow: none;
 }
 
-:deep(.vue-tel-input .vti__input) {
+:deep(.vue-tel-input .vti__input:not(.vti__search_box)) {
     height: 100%;
     padding: 12px 16px;
     font-size: 14px;

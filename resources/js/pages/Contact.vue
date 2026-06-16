@@ -364,7 +364,7 @@ onMounted(() => {
     padding: 0 8px;
 }
 
-:deep(.contact-phone-wrap .vue-tel-input .vti__input) {
+:deep(.contact-phone-wrap .vue-tel-input .vti__input:not(.vti__search_box)) {
     border: none;
     border-radius: 0;
     padding: 8px 16px 20px 8px;
@@ -375,7 +375,7 @@ onMounted(() => {
     color: inherit;
 }
 
-:deep(.contact-phone-wrap .vue-tel-input .vti__input::placeholder) {
+:deep(.contact-phone-wrap .vue-tel-input .vti__input:not(.vti__search_box)::placeholder) {
     font-size: 18px;
     font-weight: 400;
     line-height: 22px;
