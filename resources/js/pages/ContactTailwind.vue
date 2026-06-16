@@ -80,10 +80,7 @@ onMounted(() => {
     <Head title="Contact Us" />
 
     <!-- Breadcrumb -->
-    <section
-        class="relative flex items-center bg-cover bg-center bg-no-repeat py-[137px]"
-        style="background-image: url('/template/images/page/breakcrumb.jpg')"
-    >
+    <section class="relative flex items-center bg-cover bg-center bg-no-repeat py-[137px]" style="background-image: url('/template/images/page/breakcrumb.jpg')">
         <div class="absolute inset-0" style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89))"></div>
         <div class="relative z-[1] mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
             <div class="text-center">
@@ -92,11 +89,7 @@ onMounted(() => {
                     <Link :href="home()" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-white after:content-['\203A'] after:text-[10px]">Home</Link>
                     <span class="text-white">Contact Us</span>
                 </nav>
-                <img
-                    class="absolute left-[7%] top-[40%] hidden w-auto lg:block"
-                    src="/template/images/page/mask-bcrumb.png"
-                    alt=""
-                />
+                <img class="absolute left-[7%] top-[40%] hidden w-auto lg:block" src="/template/images/page/mask-bcrumb.png" alt="" />
             </div>
         </div>
     </section>

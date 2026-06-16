@@ -17,14 +17,6 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case name === 'Home':
-            case name === 'About':
-            case name === 'Contact':
-            case name.startsWith('blog/'):
-            case name.startsWith('destinations/'):
-            case name.startsWith('tours/'):
-                return PublicLayout;
-            case name === 'ContactTailwind':
             case name === 'AboutTailwind':
             case name === 'ContactTailwind':
             case name === 'blog/IndexTailwind':
@@ -32,6 +24,13 @@ void createInertiaApp({
             case name === 'tours/IndexTailwind':
             case name === 'tours/ShowTailwind':
                 return TailwindPublicLayout;
+            case name === 'Home':
+            case name === 'About':
+            case name === 'Contact':
+            case name.startsWith('blog/'):
+            case name.startsWith('destinations/'):
+            case name.startsWith('tours/'):
+                return PublicLayout;
             case name === 'Welcome':
                 return null;
             case name.startsWith('auth/'):
