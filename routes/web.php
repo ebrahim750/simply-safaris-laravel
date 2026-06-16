@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Home')->name('home');
 Route::inertia('/about', 'About')->name('about');
 Route::get('/contact', [ContactController::class, 'contact'])->name('contact');
+Route::get('/contact2', [ContactController::class, 'contact2'])->name('contact2');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');

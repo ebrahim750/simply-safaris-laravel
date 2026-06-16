@@ -8,6 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import TailwindPublicLayout from '@/layouts/TailwindPublicLayout.vue';
 
 const fallbackAppName = import.meta.env.VITE_APP_NAME || 'Laravel';
 let appName = fallbackAppName;
@@ -23,6 +24,8 @@ void createInertiaApp({
             case name.startsWith('destinations/'):
             case name.startsWith('tours/'):
                 return PublicLayout;
+            case name === 'ContactTailwind':
+                return TailwindPublicLayout;
             case name === 'Welcome':
                 return null;
             case name.startsWith('auth/'):

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { CalendarDays, Loader2, MapPin, Search, X } from 'lucide-vue-next';
 import { debounce } from 'lodash-es';
-import { about, contact, home } from '@/routes';
+import { CalendarDays, Loader2, MapPin, Search, X } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { about, contact, contact2, home } from '@/routes';
+import { index as blogIndex } from '@/routes/blog';
 import destinations from '@/routes/destinations';
 import tours from '@/routes/tours';
-import { index as blogIndex } from '@/routes/blog';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -80,11 +80,13 @@ const handleEscape = (e: KeyboardEvent) => {
 
 const toggleDropdown = (slug: string) => {
     const newSet = new Set(openDropdowns.value);
+
     if (newSet.has(slug)) {
         newSet.delete(slug);
     } else {
         newSet.add(slug);
     }
+
     openDropdowns.value = newSet;
 };
 
@@ -111,6 +113,7 @@ const handleScroll = () => {
 
 const handleSearchSubmit = () => {
     const query = searchQuery.value.trim();
+
     if (query) {
         searchOpen.value = false;
         router.get(tours.index({ query: { search: query } }).url);
@@ -120,10 +123,12 @@ const handleSearchSubmit = () => {
 const fetchSuggestions = debounce(async (query: string) => {
     if (!query.trim()) {
         suggestions.value = [];
+
         return;
     }
 
     isLoading.value = true;
+
     try {
         const response = await fetch(
             `/tours/search?q=${encodeURIComponent(query)}`,
@@ -437,6 +442,19 @@ onUnmounted(() => {
                                                         :href="contact()"
                                                         @click="closeMobileMenu"
                                                         >Contact</Link
+                                                    >
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url ===
+                                                            '/contact2',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="contact2()"
+                                                        @click="closeMobileMenu"
+                                                        >Contact 2</Link
                                                     >
                                                 </li>
                                             </ul>
