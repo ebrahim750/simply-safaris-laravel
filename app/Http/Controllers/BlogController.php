@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -11,21 +12,33 @@ use Inertia\Response;
 
 class BlogController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $selectedCategory = null;
+
+        if ($request->filled('category')) {
+            $selectedCategory = BlogCategory::query()
+                ->where('slug', $request->input('category'))
+                ->first(['id', 'name', 'slug']);
+        }
+
         $posts = BlogPost::query()
             ->where('is_published', true)
             ->whereNotNull('published_at')
+            ->when($selectedCategory, fn ($query) => $query
+                ->whereHas('categories', fn ($q) => $q->where('blog_categories.id', $selectedCategory->id))
+            )
             ->with(['user:id,name', 'categories:id,name'])
             ->latest('published_at')
-            ->paginate(9, ['id', 'user_id', 'title', 'slug', 'content', 'featured_image', 'published_at'])
+            ->paginate(12, ['id', 'user_id', 'title', 'slug', 'content', 'featured_image', 'published_at'])
+            ->appends($request->only('category'))
             ->through(fn (BlogPost $post) => $this->mapPublicPost($post));
 
         $recentPosts = BlogPost::query()
             ->where('is_published', true)
             ->whereNotNull('published_at')
             ->latest('published_at')
-            ->limit(3)
+            ->limit(5)
             ->get(['id', 'title', 'slug', 'featured_image', 'published_at'])
             ->map(fn (BlogPost $post) => [
                 'id' => $post->id,
@@ -53,6 +66,11 @@ class BlogController extends Controller
             'posts' => $posts,
             'recentPosts' => $recentPosts,
             'categories' => $categories,
+            'selectedCategory' => $selectedCategory ? [
+                'id' => $selectedCategory->id,
+                'name' => $selectedCategory->name,
+                'slug' => $selectedCategory->slug,
+            ] : null,
         ]);
     }
 
@@ -67,7 +85,7 @@ class BlogController extends Controller
             ->whereNotNull('published_at')
             ->where('id', '!=', $post->id)
             ->latest('published_at')
-            ->limit(3)
+            ->limit(5)
             ->get(['id', 'title', 'slug', 'featured_image', 'published_at'])
             ->map(fn (BlogPost $recent) => [
                 'id' => $recent->id,

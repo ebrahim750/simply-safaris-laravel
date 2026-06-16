@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Calendar, Clock, User } from 'lucide-vue-next';
+import { Calendar, User } from 'lucide-vue-next';
 import Pagination from '@/components/Pagination.vue';
-import { show as blogShow } from '@/actions/App/Http/Controllers/BlogController';
+import { show as blogShow, index as blogIndex } from '@/actions/App/Http/Controllers/BlogController';
 import { home } from '@/routes';
+import type { QueryParams } from '@/wayfinder';
 
 interface Post {
     id: number;
@@ -52,6 +53,7 @@ defineProps<{
     posts: PostsPaginator;
     recentPosts: RecentPost[];
     categories: Category[];
+    selectedCategory: { id: number; name: string; slug: string } | null;
 }>();
 </script>
 
@@ -77,6 +79,12 @@ defineProps<{
         <div class="tf-container">
             <div class="row">
                 <div class="col-lg-8 col-12">
+                    <div v-if="selectedCategory" class="mb-6 flex items-center gap-3">
+                        <span class="text-sm text-gray-500">Showing posts in</span>
+                        <span class="rounded-full bg-[#4DA528]/10 px-4 py-1.5 text-sm font-medium text-[#4DA528]">{{ selectedCategory.name }}</span>
+                        <Link :href="blogIndex().url" class="text-xs text-gray-400 hover:text-gray-600">Clear</Link>
+                    </div>
+
                     <div v-if="posts.data.length === 0" class="text-center py-16">
                         <h3 class="text-2xl text-gray-500">No posts found</h3>
                         <p class="mt-2 text-gray-400">Check back soon for new articles.</p>
@@ -94,7 +102,10 @@ defineProps<{
                             <div class="blog-card-body">
                                 <div class="blog-card-meta">
                                     <span class="blog-card-date">{{ post.published_at_display }}</span>
-                                    <span class="blog-card-author">{{ post.author }}</span>
+                                    <span class="blog-card-author">
+                                        <User class="inline-block size-3.5 align-[-3px]" />
+                                        {{ post.author }}
+                                    </span>
                                 </div>
 
                                 <h3 class="blog-card-title">
@@ -110,7 +121,7 @@ defineProps<{
                         </article>
                     </div>
 
-                    <div class="mt-10 flex justify-center" v-if="posts.last_page > 1">
+                    <div class="mt-5 flex justify-center" v-if="posts.last_page > 1">
                         <Pagination :paginator="posts" />
                     </div>
                 </div>
@@ -119,21 +130,34 @@ defineProps<{
                     <div class="side-bar-right">
                         <div class="sidebar-widget" v-if="recentPosts.length > 0">
                             <h4 class="block-heading">Recent Posts</h4>
-                            <div class="recent-post-list">
-                                <div v-for="recent in recentPosts" :key="recent.id" class="list-recent flex-three">
-                                    <Link :href="blogShow({ post: recent.slug })" class="recent-image">
-                                        <img v-if="recent.featured_image" :src="recent.featured_image" alt="" />
-                                    </Link>
-                                    <div class="recent-info">
-                                        <div class="date">
-                                            <Calendar class="inline size-4" />
-                                            <span>{{ recent.published_at }}</span>
+                            <div class="space-y-0">
+                                <Link
+                                    v-for="(recent, index) in recentPosts"
+                                    :key="recent.id"
+                                    :href="blogShow({ post: recent.slug })"
+                                    class="group flex items-center gap-3 border-b border-gray-100 py-4 first:pt-0 last:border-b-0 last:pb-0 transition-colors"
+                                >
+                                    <span class="w-6 text-center text-lg font-bold leading-none tabular-nums shrink-0 text-[#4DA528]">
+                                        {{ String(index + 1).padStart(2, '0') }}
+                                    </span>
+                                    <div class="h-12 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                        <img
+                                            v-if="recent.featured_image"
+                                            :src="recent.featured_image"
+                                            alt=""
+                                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                        <div v-else class="flex h-full w-full items-center justify-center">
+                                            <Calendar class="size-4 text-gray-300" />
                                         </div>
-                                        <h4 class="title">
-                                            <Link :href="blogShow({ post: recent.slug })">{{ recent.title }}</Link>
-                                        </h4>
                                     </div>
-                                </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h5 class="text-[12px] font-semibold leading-snug line-clamp-2 group-hover:text-[#4DA528] transition-colors recent-post-title">
+                                            {{ recent.title }}
+                                        </h5>
+                                        <span class="mt-0.5 block text-[11px] text-gray-400">{{ recent.published_at }}</span>
+                                    </div>
+                                </Link>
                             </div>
                         </div>
 
@@ -141,10 +165,13 @@ defineProps<{
                             <h4 class="block-heading">Categories</h4>
                             <ul class="category-blog">
                                 <li v-for="category in categories" :key="category.id">
-                                    <a href="#" class="flex-two">
+                                    <Link
+                                        :href="blogIndex({ query: { category: category.slug } as QueryParams }).url"
+                                        class="flex-two"
+                                    >
                                         <span>{{ category.name }}</span>
                                         <span>{{ String(category.posts_count).padStart(2, '0') }}</span>
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -215,17 +242,23 @@ defineProps<{
 .blog-card-author {
     font-size: 12px;
     color: #999;
+    text-transform: capitalize;
+    line-height: 1;
+}
+
+.blog-card-author :deep(svg) {
+    vertical-align: middle;
 }
 
 .blog-card-title {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 600;
     line-height: 1.4;
     margin-bottom: 10px;
 }
 
 .blog-card-title a {
-    color: #081e2a;
+    color: #334155;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -265,6 +298,14 @@ defineProps<{
     content: '→';
     font-size: 14px;
     transition: transform 0.2s ease;
+}
+
+.recent-post-title {
+    color: #4b5563;
+}
+
+.recent-post-title:hover {
+    color: #4DA528;
 }
 
 @media (max-width: 991px) {

@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Calendar, Clock, User } from 'lucide-vue-next';
 import { show as blogShow, index as blogIndex } from '@/actions/App/Http/Controllers/BlogController';
 import { home } from '@/routes';
+import type { QueryParams } from '@/wayfinder';
 
 interface PostCategory {
     id: number;
@@ -48,46 +49,47 @@ defineProps<{
 <template>
     <Head :title="post.title" />
 
-    <section class="post-hero">
-        <div
-            class="post-hero-bg"
-            :style="post.featured_image ? { backgroundImage: `url(${post.featured_image})` } : {}"
-        />
-        <div class="post-hero-overlay" />
-        <div class="tf-container relative z-[2]">
-            <div class="post-hero-content">
-                <nav class="post-hero-breadcrumb">
-                    <Link :href="home()">Home</Link>
-                    <span class="mx-2">/</span>
-                    <Link :href="blogIndex()">Blog</Link>
-                </nav>
+    <section
+        class="breadcumb-section"
+        :style="post.featured_image ? { backgroundImage: `url(${post.featured_image})` } : {}"
+    >
+        <div class="tf-container relative z-index1">
+            <div class="row">
+                <div class="col-lg-12 center">
+                    <ul class="breadcumb-list flex-five justify-center">
+                        <li><Link :href="home()">Home</Link></li>
+                        <li><Link :href="blogIndex()">Blog</Link></li>
+                        <li><span>{{ post.title }}</span></li>
+                    </ul>
 
-                <h1 class="post-hero-title">{{ post.title }}</h1>
+                    <h1 class="title">{{ post.title }}</h1>
 
-                <div class="post-hero-meta">
-                    <span class="post-hero-author">
-                        <User class="size-4" />
-                        {{ post.author }}
-                    </span>
-                    <span class="post-hero-date">
-                        <Calendar class="size-4" />
-                        {{ post.published_at_display }}
-                    </span>
-                    <span v-if="post.content" class="post-hero-read">
-                        <Clock class="size-4" />
-                        {{ Math.ceil(post.content.length / 800) }} min read
-                    </span>
-                </div>
+                    <div class="flex items-center justify-center gap-5 mt-3 text-sm" style="color: rgba(255,255,255,0.75)">
+                        <span class="inline-flex items-center gap-1.5">
+                            <User class="size-4" />
+                            {{ post.author }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <Calendar class="size-4" />
+                            {{ post.published_at_display }}
+                        </span>
+                        <span v-if="post.content" class="inline-flex items-center gap-1.5">
+                            <Clock class="size-4" />
+                            {{ Math.ceil(post.content.length / 800) }} min read
+                        </span>
+                    </div>
 
-                <div v-if="post.categories.length > 0" class="post-hero-categories">
-                    <Link
-                        v-for="category in post.categories"
-                        :key="category.id"
-                        href="#"
-                        class="post-hero-category"
-                    >
-                        {{ category.name }}
-                    </Link>
+                    <div v-if="post.categories.length > 0" class="flex flex-wrap justify-center gap-2 mt-4">
+                        <Link
+                            v-for="category in post.categories"
+                            :key="category.id"
+                            :href="blogIndex({ query: { category: category.slug } as QueryParams }).url"
+                            class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors"
+                            style="background: rgba(255,255,255,0.15); color: #fff; backdrop-filter: blur(4px);"
+                        >
+                            {{ category.name }}
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
@@ -107,21 +109,34 @@ defineProps<{
                     <div class="side-bar-right">
                         <div class="sidebar-widget" v-if="recentPosts.length > 0">
                             <h4 class="block-heading">Recent Posts</h4>
-                            <div class="recent-post-list">
-                                <div v-for="recent in recentPosts" :key="recent.id" class="list-recent flex-three">
-                                    <Link :href="blogShow({ post: recent.slug })" class="recent-image">
-                                        <img v-if="recent.featured_image" :src="recent.featured_image" alt="" />
-                                    </Link>
-                                    <div class="recent-info">
-                                        <div class="date">
-                                            <Calendar class="inline size-4" />
-                                            <span>{{ recent.published_at }}</span>
+                            <div class="space-y-0">
+                                <Link
+                                    v-for="(recent, index) in recentPosts"
+                                    :key="recent.id"
+                                    :href="blogShow({ post: recent.slug })"
+                                    class="group flex items-center gap-3 border-b border-gray-100 py-4 first:pt-0 last:border-b-0 last:pb-0 transition-colors"
+                                >
+                                    <span class="w-6 text-center text-lg font-bold leading-none tabular-nums shrink-0 text-[#4DA528]">
+                                        {{ String(index + 1).padStart(2, '0') }}
+                                    </span>
+                                    <div class="h-12 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                        <img
+                                            v-if="recent.featured_image"
+                                            :src="recent.featured_image"
+                                            alt=""
+                                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                        <div v-else class="flex h-full w-full items-center justify-center">
+                                            <Calendar class="size-4 text-gray-300" />
                                         </div>
-                                        <h4 class="title">
-                                            <Link :href="blogShow({ post: recent.slug })">{{ recent.title }}</Link>
-                                        </h4>
                                     </div>
-                                </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h5 class="text-[12px] font-semibold leading-snug line-clamp-2 group-hover:text-[#4DA528] transition-colors recent-post-title">
+                                            {{ recent.title }}
+                                        </h5>
+                                        <span class="mt-0.5 block text-[11px] text-gray-400">{{ recent.published_at }}</span>
+                                    </div>
+                                </Link>
                             </div>
                         </div>
 
@@ -129,10 +144,13 @@ defineProps<{
                             <h4 class="block-heading">Categories</h4>
                             <ul class="category-blog">
                                 <li v-for="category in categories" :key="category.id">
-                                    <a href="#" class="flex-two">
+                                    <Link
+                                        :href="blogIndex({ query: { category: category.slug } as QueryParams }).url"
+                                        class="flex-two"
+                                    >
                                         <span>{{ category.name }}</span>
                                         <span>{{ String(category.posts_count).padStart(2, '0') }}</span>
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -144,104 +162,6 @@ defineProps<{
 </template>
 
 <style scoped>
-.post-hero {
-    position: relative;
-    min-height: 520px;
-    display: flex;
-    align-items: flex-end;
-    padding: 60px 0 50px;
-}
-
-.post-hero-bg {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    background-color: #1a1a2e;
-}
-
-.post-hero-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.75) 0%,
-        rgba(0, 0, 0, 0.45) 40%,
-        rgba(0, 0, 0, 0.3) 100%
-    );
-}
-
-.post-hero-content {
-    max-width: 720px;
-    margin: 0 auto;
-    padding-top: 120px;
-    text-align: center;
-}
-
-.post-hero-breadcrumb {
-    font-size: 14px;
-    margin-bottom: 20px;
-    justify-content: center;
-    display: flex;
-}
-
-.post-hero-breadcrumb a {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.post-hero-breadcrumb a:hover {
-    color: #fff;
-}
-
-.post-hero-title {
-    font-size: clamp(28px, 5vw, 46px);
-    font-weight: 700;
-    line-height: 1.15;
-    color: #fff;
-    margin-bottom: 22px;
-    letter-spacing: -0.5px;
-}
-
-.post-hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 18px;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.75);
-}
-
-.post-hero-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.post-hero-categories {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-}
-
-.post-hero-category {
-    font-size: 12px;
-    font-weight: 500;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 5px 14px;
-    border-radius: 20px;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s ease;
-}
-
-.post-hero-category:hover {
-    background: rgba(255, 255, 255, 0.25);
-}
-
 .post-body-section {
     padding: 60px 0;
 }
@@ -302,15 +222,6 @@ defineProps<{
 }
 
 @media (max-width: 767px) {
-    .post-hero {
-        min-height: 400px;
-        padding: 40px 0 35px;
-    }
-
-    .post-hero-content {
-        padding-top: 60px;
-    }
-
     .post-body-section {
         padding: 40px 0;
     }
@@ -318,5 +229,13 @@ defineProps<{
     .post-content {
         font-size: 16px;
     }
+}
+
+.recent-post-title {
+    color: #4b5563;
+}
+
+.recent-post-title:hover {
+    color: #4DA528;
 }
 </style>
