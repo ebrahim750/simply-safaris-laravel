@@ -793,7 +793,7 @@ function onDragEnd(e: PointerEvent): void {
     <!-- Seasonal Recommendations -->
     <section
         v-if="seasonalRecommendations.length > 0"
-        class="seasonal-recommendations-section mt-50 mb-40"
+        class="seasonal-recommendations-section mb-40"
     >
         <div class="tf-container">
             <div class="row">
@@ -1329,10 +1329,25 @@ function onDragEnd(e: PointerEvent): void {
     font-size: 28px;
     font-weight: 700;
     color: #081e2a;
+    text-align: center;
 }
 
 .seasonal-carousel-wrap {
     position: relative;
+}
+
+.seasonal-recommendations-section {
+    margin-top: 70px;
+}
+
+.seasonal-carousel-wrap .swiper-custom-arrow {
+    width: 52px;
+    height: 52px;
+}
+
+.seasonal-carousel-wrap .swiper-custom-arrow svg {
+    width: 22px;
+    height: 22px;
 }
 
 .seasonal-swiper {
@@ -1374,15 +1389,18 @@ function onDragEnd(e: PointerEvent): void {
     display: block;
 }
 
-.seasonal-swiper .seasonal-swiper-prev {
-    left: -18px;
+.seasonal-carousel-wrap .seasonal-swiper-prev {
+    left: -70px;
 }
 
-.seasonal-swiper .seasonal-swiper-next {
-    right: -18px;
+.seasonal-carousel-wrap .seasonal-swiper-next {
+    right: -70px;
 }
 
-@media (max-width: 1299px) {
+.seasonal-carousel-wrap:hover .swiper-custom-arrow {
+    opacity: 1;
+}
+
 .seasonal-swiper .tour-listing-content .map {
     display: inline-flex;
     align-items: center;
@@ -1420,6 +1438,7 @@ function onDragEnd(e: PointerEvent): void {
     color: #83827f;
 }
 
+@media (max-width: 1299px) {
 .seasonal-swiper .tour-listing-content .price-box p {
     font-size: 15px;
     font-weight: 500;
@@ -1443,12 +1462,22 @@ function onDragEnd(e: PointerEvent): void {
     }
 }
 
-.seasonal-swiper .seasonal-swiper-prev {
-        left: 8px;
+.seasonal-carousel-wrap .swiper-custom-arrow {
+        width: 44px;
+        height: 44px;
     }
 
-    .seasonal-swiper .seasonal-swiper-next {
-        right: 8px;
+    .seasonal-carousel-wrap .swiper-custom-arrow svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .seasonal-carousel-wrap .seasonal-swiper-prev {
+        left: -70px;
+    }
+
+    .seasonal-carousel-wrap .seasonal-swiper-next {
+        right: -70px;
     }
 }
 </style>
