@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { MapPin, Bike, CalendarDays, Tag, Compass } from 'lucide-vue-next';
-import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { debounce } from 'lodash-es';
+import { MapPin, Bike, Tag } from 'lucide-vue-next';
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
+import Pagination from '@/components/Pagination.vue';
+import TourCard from '@/components/tours/TourCard.vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
-import Pagination from '@/components/Pagination.vue';
+import type { QueryParams } from '@/wayfinder';
 
 interface Tour {
     id: number;
@@ -83,22 +85,51 @@ const hasActiveFilters = computed(() =>
 );
 
 function applyFilters(): void {
-    const params: Record<string, unknown> = {};
-    if (selectedCategories.value.length > 0) params.categories = selectedCategories.value;
-    if (selectedActivities.value.length > 0) params.activities = selectedActivities.value;
-    if (selectedPlaces.value.length > 0) params.places = selectedPlaces.value;
-    if (selectedCountries.value.length > 0) params.countries = selectedCountries.value;
-    if (priceRange.value[0] !== 100) params.price_min = priceRange.value[0];
-    if (priceRange.value[1] !== 5000) params.price_max = priceRange.value[1];
-    if (durationRange.value[0] !== 1) params.duration_min = durationRange.value[0];
-    if (durationRange.value[1] !== 30) params.duration_max = durationRange.value[1];
-    if (props.filters.search) params.search = props.filters.search;
+    const params: QueryParams = {};
+
+    if (selectedCategories.value.length > 0) {
+        params.categories = selectedCategories.value;
+    }
+
+    if (selectedActivities.value.length > 0) {
+        params.activities = selectedActivities.value;
+    }
+
+    if (selectedPlaces.value.length > 0) {
+        params.places = selectedPlaces.value;
+    }
+
+    if (selectedCountries.value.length > 0) {
+        params.countries = selectedCountries.value;
+    }
+
+    if (priceRange.value[0] !== 100) {
+        params.price_min = priceRange.value[0];
+    }
+
+    if (priceRange.value[1] !== 5000) {
+        params.price_max = priceRange.value[1];
+    }
+
+    if (durationRange.value[0] !== 1) {
+        params.duration_min = durationRange.value[0];
+    }
+
+    if (durationRange.value[1] !== 30) {
+        params.duration_max = durationRange.value[1];
+    }
+
+    if (props.filters.search) {
+        params.search = props.filters.search;
+    }
 
     isLoading.value = true;
     router.get(tourRoutes.index({ query: params }).url, {}, {
         preserveState: true,
         preserveScroll: true,
-        onFinish: () => { isLoading.value = false; },
+        onFinish: () => {
+            isLoading.value = false;
+        },
     });
 }
 
@@ -119,7 +150,9 @@ function clearFilters(): void {
     router.get(tourRoutes.index().url, {}, {
         preserveState: true,
         preserveScroll: true,
-        onFinish: () => { isLoading.value = false; },
+        onFinish: () => {
+            isLoading.value = false;
+        },
     });
 }
 </script>
@@ -376,75 +409,12 @@ function clearFilters(): void {
                         Search results for: "{{ props.filters.search }}"
                     </p>
                     <div class="listing-list-car-grid mb-60" style="padding-top: 45px">
-                        <div
+                        <TourCard
                             v-for="tour in tours.data"
                             :key="tour.id"
-                            class="tour-listing box-sd relative"
-                        >
-                            <div
-                                v-if="isLoading"
-                                class="absolute inset-0 bg-white/60 animate-pulse z-10"
-                            ></div>
-                            <Link
-                                :href="tourRoutes.show({ tour: tour.id })"
-                                class="tour-listing-image"
-                            >
-                                <div class="image-housing">
-                                    <img
-                                        v-if="tour.main_image"
-                                        :src="tour.main_image"
-                                        :alt="tour.name"
-                                    />
-                                    <img
-                                        v-else
-                                        src="/images/defaults/600x400.png"
-                                        :alt="tour.name"
-                                    />
-                                </div>
-                            </Link>
-                            <div class="tour-listing-content">
-                                <div class="flex-three location-meta flex-wrap">
-                                    <span class="map"
-                                        ><MapPin class="icon-inline" />
-                                        {{
-                                            tour.places.length > 0
-                                                ? [...new Set(tour.places.map((p) => p.country).filter(Boolean))].join(', ')
-                                                : '-'
-                                        }}</span
-                                    >
-                                    <span v-if="tour.places.length > 0" class="map"
-                                        ><Compass class="icon-inline" />
-                                        {{
-                                            tour.places.length > 3
-                                                ? tour.places.slice(0, 3).map((p) => p.name).join(', ') + '...'
-                                                : tour.places.map((p) => p.name).join(', ')
-                                        }}</span
-                                    >
-                                </div>
-                                <h3 class="title-tour-list">
-                                    <Link :href="tourRoutes.show({ tour: tour.id })"
-                                        >{{ tour.name }}</Link
-                                    >
-                                </h3>
-                                <div class="icon-box flex-three">
-                                    <div class="icons flex-three">
-                                        <CalendarDays class="icon-inline" />
-                                        <span
-                                            >{{ tour.duration_days ? `${tour.duration_days} ${tour.duration_days === 1 ? 'day' : 'days'}` : '-' }}</span
-                                        >
-                                    </div>
-
-                                </div>
-                                <div class="flex-two">
-                                    <div class="price-box flex-three">
-                                        <p>
-                                            From <span class="price-sale">{{ tour.price }}</span>
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
+                            :tour="tour"
+                            :is-loading="isLoading"
+                        />
                     </div>
                     <div class="row" v-if="tours.data.length > 0 && !isLoading">
                         <div class="col-md-12">
@@ -466,33 +436,6 @@ function clearFilters(): void {
     grid-template-columns: repeat(3, 1fr);
 }
 
-.image-housing {
-    height: 300px;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 8px;
-}
-
-.image-housing img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.map {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.icon-inline {
-    width: 18px;
-    height: 18px;
-    color: #4DA528;
-    flex-shrink: 0;
-}
-
 .filter-icon {
     width: 20px;
     height: 20px;
@@ -504,25 +447,8 @@ function clearFilters(): void {
     pointer-events: none;
 }
 
-.location-meta {
-    gap: 40px;
-}
-
 .mt-30 {
     margin-top: 30px;
-}
-
-.title-tour-list {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.title-tour-list a {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .range-slider {

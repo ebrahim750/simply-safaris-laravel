@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { CalendarDays, CheckCircle, Compass, MapPin, XCircle } from 'lucide-vue-next';
+import { CheckCircle, XCircle } from 'lucide-vue-next';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import TourEnquiryForm from '@/components/TourEnquiryForm.vue';
+import TourCard from '@/components/tours/TourCard.vue';
 import { usePhotoSwipe } from '@/composables/usePhotoSwipe';
 import { home } from '@/routes';
-import tourRoutes from '@/routes/tours';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -839,99 +839,11 @@ function onDragEnd(e: PointerEvent): void {
                                 v-for="recommendation in seasonalRecommendations"
                                 :key="recommendation.id"
                             >
-                                <div class="tour-listing box-sd h-full">
-                                    <Link
-                                        :href="
-                                            tourRoutes.show({
-                                                tour: recommendation.id,
-                                            }).url
-                                        "
-                                        class="tour-listing-image"
-                                    >
-                                        <div class="image-housing">
-                                            <img
-                                                v-if="recommendation.main_image"
-                                                :src="recommendation.main_image"
-                                                :alt="recommendation.name"
-                                            />
-                                            <img
-                                                v-else
-                                                src="/images/defaults/600x400.png"
-                                                :alt="recommendation.name"
-                                            />
-                                        </div>
-                                    </Link>
-                                    <div class="tour-listing-content">
-                                        <div
-                                            class="flex-three location-meta flex-wrap"
-                                        >
-                                            <span class="map"
-                                                ><MapPin class="icon-inline" />
-                                                {{
-                                                    recommendation.places.length >
-                                                    0
-                                                        ? [
-                                                              ...new Set(
-                                                                  recommendation.places
-                                                                      .map(
-                                                                          (p) => p.country,
-                                                                      )
-                                                                      .filter(Boolean),
-                                                              ),
-                                                          ].join(', ')
-                                                        : '-'
-                                                }}</span
-                                            >
-                                            <span
-                                                v-if="
-                                                    recommendation.places.length > 0
-                                                "
-                                                class="map"
-                                                ><Compass class="icon-inline" />
-                                                {{
-                                                    recommendation.places.length > 3
-                                                        ? recommendation.places
-                                                              .slice(0, 3)
-                                                              .map((p) => p.name)
-                                                              .join(', ') + '...'
-                                                        : recommendation.places
-                                                              .map((p) => p.name)
-                                                              .join(', ')
-                                                }}</span
-                                            >
-                                        </div>
-                                        <h3 class="title-tour-list">
-                                            <Link
-                                                :href="
-                                                    tourRoutes.show({
-                                                        tour: recommendation.id,
-                                                    }).url
-                                                "
-                                                >{{ recommendation.name }}</Link
-                                            >
-                                        </h3>
-                                        <div class="icon-box flex-three">
-                                            <div class="icons flex-three">
-                                                <CalendarDays class="icon-inline" />
-                                                <span>{{
-                                                    recommendation.duration_days
-                                                        ? `${recommendation.duration_days} ${recommendation.duration_days === 1 ? 'day' : 'days'}`
-                                                        : '-'
-                                                }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex-two">
-                                            <div class="price-box flex-three">
-                                                <p>
-                                                    From
-                                                    <span class="price-sale">{{
-                                                        recommendation.price
-                                                    }}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <TourCard
+                                    :tour="recommendation"
+                                    full-height
+                                    image-size="compact"
+                                />
                             </SwiperSlide>
                         </Swiper>
 
@@ -1371,24 +1283,6 @@ function onDragEnd(e: PointerEvent): void {
     display: none;
 }
 
-.seasonal-swiper .tour-listing {
-    height: 100%;
-}
-
-.seasonal-swiper .image-housing {
-    height: 220px;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 8px;
-}
-
-.seasonal-swiper .image-housing img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
 .seasonal-carousel-wrap .seasonal-swiper-prev {
     left: -70px;
 }
@@ -1401,68 +1295,8 @@ function onDragEnd(e: PointerEvent): void {
     opacity: 1;
 }
 
-.seasonal-swiper .tour-listing-content .map {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 400;
-    line-height: 20px;
-    color: #4f545a;
-}
-
-.seasonal-swiper .tour-listing-content .map .icon-inline {
-    width: 18px;
-    height: 18px;
-    color: #4da528;
-    flex-shrink: 0;
-}
-
-.seasonal-swiper .tour-listing-content .icon-box .icons {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.seasonal-swiper .tour-listing-content .icon-box .icons .icon-inline {
-    width: 19px;
-    height: 19px;
-    color: #4da528;
-    flex-shrink: 0;
-}
-
-.seasonal-swiper .tour-listing-content .icon-box .icons span {
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 20px;
-    color: #83827f;
-}
-
 @media (max-width: 1299px) {
-.seasonal-swiper .tour-listing-content .price-box p {
-    font-size: 15px;
-    font-weight: 500;
-    color: #83827f;
-}
-
-.seasonal-swiper .tour-listing-content .price-box p .price-sale {
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 20px;
-    color: #4da528;
-}
-
-.seasonal-swiper .location-meta {
-    gap: 40px;
-}
-
-@media (max-width: 767px) {
-    .seasonal-swiper .location-meta {
-        gap: 16px;
-    }
-}
-
-.seasonal-carousel-wrap .swiper-custom-arrow {
+    .seasonal-carousel-wrap .swiper-custom-arrow {
         width: 44px;
         height: 44px;
     }
