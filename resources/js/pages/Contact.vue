@@ -2,6 +2,8 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { CircleCheck, Loader2Icon } from 'lucide-vue-next';
 import { onMounted, ref } from 'vue';
+import { VueTelInput } from 'vue-tel-input';
+import 'vue-tel-input/vue-tel-input.css';
 import InputError from '@/components/InputError.vue';
 import { useScrollAnimate } from '@/composables/useScrollAnimate';
 import { home } from '@/routes';
@@ -16,6 +18,8 @@ defineProps<{
 useScrollAnimate();
 
 const submitted = ref(false);
+
+const phoneInputRef = ref<InstanceType<typeof VueTelInput>>();
 
 const form = useForm({
     name: '',
@@ -33,6 +37,14 @@ function submit(): void {
             form.reset();
         },
     });
+}
+
+function onDropdownOpen(): void {
+    setTimeout(() => {
+        const root = phoneInputRef.value?.$el as HTMLElement | undefined;
+        const searchInput = root?.querySelector<HTMLInputElement>('.vti__search_box');
+        searchInput?.focus();
+    }, 150);
 }
 
 declare global {
@@ -207,14 +219,24 @@ onMounted(() => {
                                 />
                                 <InputError :message="form.errors.email" />
                             </div>
-                            <div class="input-wrap relative">
-                                <i class="icon-call-1"></i>
-                                <input
+                            <div class="contact-phone-wrap">
+                                <VueTelInput
+                                    ref="phoneInputRef"
                                     v-model="form.phone"
-                                    type="tel"
-                                    name="phone"
-                                    placeholder="Phone Number*"
-                                    required
+                                    :input-options="{
+                                        required: true,
+                                        placeholder: 'Phone Number*',
+                                    }"
+                                    :dropdown-options="{
+                                        showSearchBox: true,
+                                        showDialCodeInSelection: true,
+                                        showDialCodeInList: true,
+                                        showFlags: true,
+                                        searchBoxPlaceholder: 'Search...',
+                                    }"
+                                    default-country="TZ"
+                                    mode="international"
+                                    @open="onDropdownOpen"
                                 />
                                 <InputError :message="form.errors.phone" />
                             </div>
@@ -303,3 +325,115 @@ onMounted(() => {
         </div>
     </section>
 </template>
+
+<style scoped>
+.contact-phone-wrap {
+    margin-bottom: 50px;
+}
+
+.contact-phone-wrap .vue-tel-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #edeeee;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0;
+    height: auto;
+}
+
+.contact-phone-wrap .vue-tel-input:focus-within {
+    border-bottom-color: #081e2a;
+    box-shadow: none;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown) {
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    padding: 6px 8px;
+    margin: 0;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown:hover) {
+    background-color: transparent;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__selection) {
+    font-size: 18px;
+    padding: 0 8px;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__input) {
+    border: none;
+    border-radius: 0;
+    padding: 8px 16px 20px 8px;
+    font-size: 18px;
+    line-height: 22px;
+    background-color: transparent;
+    box-shadow: none;
+    color: inherit;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__input::placeholder) {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 22px;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown-list) {
+    margin-top: 4px;
+    border: 1px solid #e0e2e4;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    max-height: 260px;
+    min-width: 240px;
+    width: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown-list.below) {
+    top: calc(100% + 4px);
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown-item) {
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown-item:hover),
+:deep(.contact-phone-wrap .vue-tel-input .vti__dropdown-item.highlighted) {
+    background-color: #f5f5f5;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__dial-code) {
+    margin-left: auto;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__search_box_container) {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e0e2e4;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__search_box) {
+    width: calc(100% - 8px);
+    padding: 8px 12px;
+    margin: 4px;
+    border: 1px solid #e0e2e4;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+:deep(.contact-phone-wrap .vue-tel-input .vti__search_box:focus) {
+    border-color: #4da528;
+}
+</style>
