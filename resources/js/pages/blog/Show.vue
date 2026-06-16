@@ -124,7 +124,7 @@ defineProps<{
                                             v-if="recent.featured_image"
                                             :src="recent.featured_image"
                                             alt=""
-                                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                                         />
                                         <div v-else class="flex h-full w-full items-center justify-center">
                                             <Calendar class="size-4 text-gray-300" />

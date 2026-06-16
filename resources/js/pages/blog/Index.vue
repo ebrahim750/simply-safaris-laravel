@@ -102,8 +102,8 @@ defineProps<{
                             <div class="blog-card-body">
                                 <div class="blog-card-meta">
                                     <span class="blog-card-date">{{ post.published_at_display }}</span>
-                                    <span class="blog-card-author">
-                                        <User class="inline-block size-3.5 align-[-3px]" />
+                                    <span class="blog-card-author inline-flex items-center gap-1">
+                                        <User class="size-3.5" />
                                         {{ post.author }}
                                     </span>
                                 </div>
@@ -145,7 +145,7 @@ defineProps<{
                                             v-if="recent.featured_image"
                                             :src="recent.featured_image"
                                             alt=""
-                                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                                         />
                                         <div v-else class="flex h-full w-full items-center justify-center">
                                             <Calendar class="size-4 text-gray-300" />

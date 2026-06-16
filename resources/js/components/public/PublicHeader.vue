@@ -402,6 +402,19 @@ onUnmounted(() => {
                                                 <li
                                                     :class="{
                                                         current:
+                                                            $page.url ===
+                                                            '/about',
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="about()"
+                                                        @click="closeMobileMenu"
+                                                        >About</Link
+                                                    >
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
                                                             $page.url.startsWith(
                                                                 '/blog',
                                                             ),
@@ -411,19 +424,6 @@ onUnmounted(() => {
                                                         :href="blogIndex()"
                                                         @click="closeMobileMenu"
                                                         >Blog</Link
-                                                    >
-                                                </li>
-                                                <li
-                                                    :class="{
-                                                        current:
-                                                            $page.url ===
-                                                            '/about',
-                                                    }"
-                                                >
-                                                    <Link
-                                                        :href="about()"
-                                                        @click="closeMobileMenu"
-                                                        >About</Link
                                                     >
                                                 </li>
                                                 <li
