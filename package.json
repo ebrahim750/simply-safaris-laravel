@@ -69,6 +69,7 @@
         "vue-colorful": "^0.0.0",
         "vue-input-otp": "^0.3.2",
         "vue-sonner": "^2.0.9",
+        "vue-tel-input": "^9.8.0",
         "vue3-colorpicker": "^2.3.0"
     },
     "optionalDependencies": {
