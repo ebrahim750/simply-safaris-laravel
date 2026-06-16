@@ -76,7 +76,7 @@ onMounted(() => {
     </section>
 
     <!-- About Us Content -->
-    <section class="py-[103px] max-lg:py-20">
+    <section class="pt-[103px] pb-[180px] max-lg:py-20">
         <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
             <div class="flex flex-wrap items-start">
                 <!-- Left: Images -->
@@ -938,7 +938,7 @@ onMounted(() => {
 
         <div class="relative z-10 mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
             <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="counter-item text-center">
+                <div class="tf-counter-box text-center">
                     <div
                         class="counter-icon mb-[25px] flex justify-center text-white"
                     >
@@ -985,7 +985,7 @@ onMounted(() => {
                         Happy<br />Traveller
                     </p>
                 </div>
-                <div class="counter-item text-center">
+                <div class="tf-counter-box text-center">
                     <div
                         class="counter-icon mb-[25px] flex justify-center text-white"
                     >
@@ -1037,7 +1037,7 @@ onMounted(() => {
                         Total Positive<br />Reviews
                     </p>
                 </div>
-                <div class="counter-item text-center">
+                <div class="tf-counter-box text-center">
                     <div
                         class="counter-icon mb-[25px] flex justify-center text-white"
                     >
@@ -1066,7 +1066,7 @@ onMounted(() => {
                         Tour<br />Completed
                     </p>
                 </div>
-                <div class="counter-item text-center">
+                <div class="tf-counter-box text-center">
                     <div
                         class="counter-icon mb-[25px] flex justify-center text-white"
                     >
@@ -1349,13 +1349,16 @@ onMounted(() => {
     color: #ffffff;
 }
 
-.counter-item {
+.tf-counter-box {
     position: relative;
     z-index: 1;
+    padding: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 23px;
     transition: all 0.3s ease;
 }
 
-.counter-item::before {
+.tf-counter-box::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -1363,12 +1366,12 @@ onMounted(() => {
     transform: translate(-50%, -50%);
     width: 90%;
     height: 92%;
-    border: 1px dashed rgba(0, 0, 0, 0.17);
+    border: 1px dashed rgba(255, 255, 255, 0.17);
     border-radius: 23px;
     transition: all 0.3s ease;
 }
 
-.counter-item:hover::before {
+.tf-counter-box:hover::before {
     border-color: #4da528;
 }
 
@@ -1376,7 +1379,7 @@ onMounted(() => {
     transition: all 0.5s ease;
 }
 
-.counter-item:hover .counter-icon svg {
+.tf-counter-box:hover .counter-icon svg {
     transform: rotateY(180deg);
 }
 </style>
