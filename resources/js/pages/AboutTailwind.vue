@@ -45,14 +45,15 @@ onMounted(() => {
         style="background-image: url('/template/images/page/breakcrumb.jpg')"
     >
         <div
-            class="absolute inset-0 bg-gradient-to-r from-[rgba(4,29,11,0.89)] to-[rgba(0,0,0,0.33)]"
+            class="absolute inset-0"
+            style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89))"
         ></div>
         <div
             class="relative z-[1] mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8"
         >
             <div class="text-center">
                 <h1
-                    class="mb-[26px] text-[45px] leading-[50px] font-semibold text-white"
+                    class="mb-[26px] text-[65px] leading-[82px] font-semibold text-white max-lg:text-[45px] max-lg:leading-[50px]"
                 >
                     About Us
                 </h1>

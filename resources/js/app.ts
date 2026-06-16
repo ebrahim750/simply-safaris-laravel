@@ -26,6 +26,11 @@ void createInertiaApp({
                 return PublicLayout;
             case name === 'ContactTailwind':
             case name === 'AboutTailwind':
+            case name === 'ContactTailwind':
+            case name === 'blog/IndexTailwind':
+            case name === 'blog/ShowTailwind':
+            case name === 'tours/IndexTailwind':
+            case name === 'tours/ShowTailwind':
                 return TailwindPublicLayout;
             case name === 'Welcome':
                 return null;

@@ -84,10 +84,10 @@ onMounted(() => {
         class="relative flex items-center bg-cover bg-center bg-no-repeat py-[137px]"
         style="background-image: url('/template/images/page/breakcrumb.jpg')"
     >
-        <div class="absolute inset-0 bg-gradient-to-r from-[rgba(4,29,11,0.89)] to-[rgba(0,0,0,0.33)]"></div>
+        <div class="absolute inset-0" style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89))"></div>
         <div class="relative z-[1] mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h1 class="mb-[26px] text-white" style="font-size: 45px; line-height: 50px; font-weight: 600;">Contact Us</h1>
+                <h1 class="mb-[26px] text-white" style="font-size: 65px; line-height: 82px; font-weight: 600;">Contact Us</h1>
                 <nav class="flex items-center justify-center" style="font-size: 18px; line-height: 22.68px;">
                     <Link :href="home()" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-white after:content-['\203A'] after:text-[10px]">Home</Link>
                     <span class="text-white">Contact Us</span>

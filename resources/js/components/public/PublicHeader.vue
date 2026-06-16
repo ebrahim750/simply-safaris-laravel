@@ -457,6 +457,15 @@ onUnmounted(() => {
                                                         >Contact 2</Link
                                                     >
                                                 </li>
+                                                <li class="dropdown2">
+                                                    <a href="#">Refactored</a>
+                                                    <ul>
+                                                        <li><Link href="/about2" @click="closeMobileMenu">About 2</Link></li>
+                                                        <li><Link :href="contact2()" @click="closeMobileMenu">Contact 2</Link></li>
+                                                        <li><Link href="/blog2" @click="closeMobileMenu">Blog 2</Link></li>
+                                                        <li><Link href="/tours2" @click="closeMobileMenu">Tours 2</Link></li>
+                                                    </ul>
+                                                </li>
                                             </ul>
                                         </div>
                                     </nav>

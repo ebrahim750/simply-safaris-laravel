@@ -35,9 +35,15 @@ Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/search', [TourController::class, 'search'])->name('tours.search');
 Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
 Route::post('/tours/{tour}/enquiry', [TourController::class, 'enquiry'])->name('tours.enquiry');
+Route::get('/tours2', [TourController::class, 'index2'])->name('tours2.index');
+Route::get('/tours2/search', [TourController::class, 'search'])->name('tours2.search');
+Route::get('/tours2/{tour}', [TourController::class, 'show2'])->name('tours2.show');
+Route::post('/tours2/{tour}/enquiry', [TourController::class, 'enquiry'])->name('tours2.enquiry');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/blog2', [BlogController::class, 'index2'])->name('blog2.index');
+Route::get('/blog2/{post:slug}', [BlogController::class, 'show2'])->name('blog2.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');
