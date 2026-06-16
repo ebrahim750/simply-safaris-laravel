@@ -28,7 +28,7 @@ const props = defineProps<{
         show_external_booking: boolean;
         categories: Array<{ id: number; name: string }>;
         activities: Array<{ id: number; name: string }>;
-        places: Array<{ id: number; name: string; country?: string }>;
+        places: Array<{ id: number; name: string; country?: string; country_code?: string | null }>;
         itinerary_items: Array<{ title: string; content: string | null }>;
         inclusions: Array<{ text: string }>;
         exclusions: Array<{ text: string }>;
@@ -44,7 +44,7 @@ const props = defineProps<{
         price_amount: number;
         duration_days: number | null;
         categories: Array<{ id: number; name: string }>;
-        places: Array<{ id: number; name: string; country?: string }>;
+        places: Array<{ id: number; name: string; country?: string; country_code?: string | null }>;
     }>;
 }>();
 
@@ -68,10 +68,14 @@ const destinationLabel = computed(() =>
     props.tour.places.length > 1 ? 'Destinations' : 'Destination',
 );
 
-const destinationValue = computed(() =>
-    props.tour.places.length > 0
-        ? props.tour.places.map((place) => place.name).join(', ')
-        : 'N/A',
+const uniquePlaces = computed(() => [...new Set(props.tour.places.map((place) => place.name))]);
+
+const destinationFirst = computed(() =>
+    uniquePlaces.value.length > 0 ? uniquePlaces.value[0] : 'N/A',
+);
+
+const destinationMoreCount = computed(() =>
+    Math.max(0, uniquePlaces.value.length - 1),
 );
 
 const durationValue = computed(() =>
@@ -84,26 +88,48 @@ const categoryLabel = computed(() =>
     props.tour.categories.length > 1 ? 'Tour Categories' : 'Tour Category',
 );
 
-const categoryValue = computed(() =>
-    props.tour.categories.length > 0
-        ? props.tour.categories.map((category) => category.name).join(', ')
+const uniqueCategoryNames = computed(() =>
+    props.tour.categories.map((c) => c.name),
+);
+
+const categoryDisplay = computed(() =>
+    uniqueCategoryNames.value.length > 0
+        ? uniqueCategoryNames.value.slice(0, 3).join(', ')
         : 'N/A',
 );
 
-const countries = computed(() => {
-    const allCountries = props.tour.places
-        .map((place) => place.country)
-        .filter((country): country is string => Boolean(country));
+const categoryMoreCount = computed(() =>
+    Math.max(0, uniqueCategoryNames.value.length - 3),
+);
 
-    return [...new Set(allCountries)];
+const showCountriesModal = ref(false);
+const showPlacesModal = ref(false);
+const showCategoriesModal = ref(false);
+
+const uniqueCountries = computed(() => {
+    const seen = new Map<string, string | null>();
+
+    for (const place of props.tour.places) {
+        const name = place.country;
+
+        if (name && !seen.has(name)) {
+            seen.set(name, place.country_code ?? null);
+        }
+    }
+
+    return [...seen].map(([name, code]) => ({ name, code }));
 });
 
 const countryLabel = computed(() =>
-    countries.value.length > 1 ? 'Countries' : 'Country',
+    uniqueCountries.value.length > 1 ? 'Countries' : 'Country',
 );
 
-const countryValue = computed(() =>
-    countries.value.length > 0 ? countries.value.join(', ') : 'N/A',
+const countryFirst = computed(() =>
+    uniqueCountries.value.length > 0 ? uniqueCountries.value[0].name : 'N/A',
+);
+
+const countryMoreCount = computed(() =>
+    Math.max(0, uniqueCountries.value.length - 1),
 );
 
 const { openAt } = usePhotoSwipe(props.tour.gallery_images, props.tour.name);
@@ -289,17 +315,29 @@ function onDragEnd(e: PointerEvent): void {
                                             <span class="tour-meta-label">{{
                                                 countryLabel
                                             }}</span>
-                                            <span class="tour-meta-value">{{
-                                                countryValue
-                                            }}</span>
+                                            <span class="tour-meta-value">
+                                                {{ countryFirst }}<span
+                                                    v-if="countryMoreCount > 0"
+                                                    class="show-more-link"
+                                                    @click.prevent="showCountriesModal = true"
+                                                >
+                                                    +{{ countryMoreCount }} more</span
+                                                >
+                                            </span>
                                         </div>
                                         <div class="tour-meta-item">
                                             <span class="tour-meta-label">{{
                                                 destinationLabel
                                             }}</span>
-                                            <span class="tour-meta-value">{{
-                                                destinationValue
-                                            }}</span>
+                                            <span class="tour-meta-value">
+                                                {{ destinationFirst }}<span
+                                                    v-if="destinationMoreCount > 0"
+                                                    class="show-more-link"
+                                                    @click.prevent="showPlacesModal = true"
+                                                >
+                                                    +{{ destinationMoreCount }} more</span
+                                                >
+                                            </span>
                                         </div>
                                         <div class="tour-meta-item">
                                             <span class="tour-meta-label"
@@ -314,8 +352,14 @@ function onDragEnd(e: PointerEvent): void {
                                                 categoryLabel
                                             }}</span>
                                             <span class="tour-meta-value">{{
-                                                categoryValue
-                                            }}</span>
+                                                categoryDisplay
+                                            }}<span
+                                                    v-if="categoryMoreCount > 0"
+                                                    class="show-more-link"
+                                                    @click.prevent="showCategoriesModal = true"
+                                                >
+                                                    +{{ categoryMoreCount }} more</span
+                                                ></span>
                                         </div>
                                     </div>
                                 </div>
@@ -888,6 +932,53 @@ function onDragEnd(e: PointerEvent): void {
             </div>
         </div>
     </section>
+
+    <Teleport to="body">
+        <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false">
+            <div class="modal-content">
+                <button class="modal-close" @click="showCountriesModal = false">&times;</button>
+                <h3>Countries</h3>
+                <p class="modal-subtitle">{{ tour.name }}</p>
+                <ul class="modal-list">
+                    <li v-for="entry in uniqueCountries" :key="entry.name" class="flex items-center gap-3">
+                        <img
+                            v-if="entry.code"
+                            :src="`https://flagcdn.com/w40/${entry.code.toLowerCase()}.png`"
+                            :alt="entry.name"
+                            class="h-5 w-auto rounded-sm"
+                        />
+                        {{ entry.name }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div v-if="showPlacesModal" class="modal-overlay" @click.self="showPlacesModal = false">
+            <div class="modal-content">
+                <button class="modal-close" @click="showPlacesModal = false">&times;</button>
+                <h3>Places</h3>
+                <p class="modal-subtitle">{{ tour.name }}</p>
+                <ul class="modal-list">
+                    <li v-for="place in uniquePlaces" :key="place">
+                        {{ place }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div v-if="showCategoriesModal" class="modal-overlay" @click.self="showCategoriesModal = false">
+            <div class="modal-content">
+                <button class="modal-close" @click="showCategoriesModal = false">&times;</button>
+                <h3>Tour Categories</h3>
+                <p class="modal-subtitle">{{ tour.name }}</p>
+                <ul class="modal-list">
+                    <li v-for="category in uniqueCategoryNames" :key="category">
+                        {{ category }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </Teleport>
 </template>
 
 <style scoped>
@@ -1152,6 +1243,17 @@ function onDragEnd(e: PointerEvent): void {
     color: #081e2a;
 }
 
+.show-more-link {
+    color: #4da528;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.show-more-link:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 991px) {
     .tour-meta-grid {
         display: grid;
@@ -1313,5 +1415,79 @@ function onDragEnd(e: PointerEvent): void {
     .seasonal-carousel-wrap .seasonal-swiper-next {
         right: -70px;
     }
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #081e2a;
+}
+
+.modal-subtitle {
+    font-size: 14px;
+    color: #888;
+    margin: 0 0 16px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+.modal-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    color: #666;
+    line-height: 1.6;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-list li:last-child {
+    border-bottom: none;
 }
 </style>

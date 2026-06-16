@@ -55,7 +55,7 @@ class TourController extends Controller
                 $query->whereBetween('duration_days', [(int) $min, (int) $max]);
             })
             ->latest('id')
-            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name'])
+            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name,country_code'])
             ->paginate(12)
             ->through(fn (Tour $tour): array => $this->mapTour($tour))
             ->withQueryString();
@@ -116,7 +116,7 @@ class TourController extends Controller
             ->where('is_hidden', false)
             ->where('name', 'like', '%'.$query.'%')
             ->limit(8)
-            ->with(['places:id,name,country_id', 'places.country:id,name'])
+            ->with(['places:id,name,country_id', 'places.country:id,name,country_code'])
             ->get(['id', 'name', 'slug', 'main_image', 'duration_days', 'price']);
 
         return response()->json([
@@ -130,6 +130,7 @@ class TourController extends Controller
                 'places' => $tour->places->map(fn ($p): array => [
                     'name' => $p->name,
                     'country' => $p->country?->name,
+                    'country_code' => $p->country?->country_code,
                 ])->all(),
             ])->all(),
         ]);
@@ -137,13 +138,13 @@ class TourController extends Controller
 
     public function show(Tour $tour): Response
     {
-        $tour->load(['categories:id,name', 'activities:id,name', 'places:id,name,country_id', 'places.country:id,name', 'itineraryItems', 'inclusions', 'exclusions']);
+        $tour->load(['categories:id,name', 'activities:id,name', 'places:id,name,country_id', 'places.country:id,name,country_code', 'itineraryItems', 'inclusions', 'exclusions']);
 
         $seasonalRecommendations = Tour::query()
             ->where('is_hidden', false)
             ->where('is_featured_as_seasonal_recommendation', true)
             ->where('id', '!=', $tour->id)
-            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name'])
+            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name,country_code'])
             ->limit(12)
             ->latest('id')
             ->get()
@@ -170,7 +171,7 @@ class TourController extends Controller
                 'show_external_booking' => $tour->show_external_booking,
                 'categories' => $tour->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all(),
                 'activities' => $tour->activities->map(fn ($a) => ['id' => $a->id, 'name' => $a->name])->all(),
-                'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name])->all(),
+                'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name, 'country_code' => $p->country?->country_code])->all(),
                 'itinerary_items' => $tour->itineraryItems->map(fn ($i) => ['title' => $i->title, 'content' => $i->content])->all(),
                 'inclusions' => $tour->inclusions->map(fn ($i) => ['text' => $i->text])->all(),
                 'exclusions' => $tour->exclusions->map(fn ($e) => ['text' => $e->text])->all(),
@@ -252,7 +253,7 @@ class TourController extends Controller
             'price_amount' => (float) $tour->price,
             'duration_days' => $tour->duration_days,
             'categories' => $tour->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all(),
-            'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name])->all(),
+            'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name, 'country_code' => $p->country?->country_code])->all(),
         ];
     }
 

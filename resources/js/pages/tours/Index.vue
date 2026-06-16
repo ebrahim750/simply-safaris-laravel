@@ -18,7 +18,7 @@ interface Tour {
     price_amount: number;
     duration_days: number | null;
     categories: Array<{ id: number; name: string }>;
-    places: Array<{ id: number; name: string; country?: string }>;
+    places: Array<{ id: number; name: string; country?: string; country_code?: string | null }>;
 }
 
 interface PaginatorLink {
