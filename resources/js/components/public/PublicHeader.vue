@@ -6,6 +6,7 @@ import { debounce } from 'lodash-es';
 import { about, contact, home } from '@/routes';
 import destinations from '@/routes/destinations';
 import tours from '@/routes/tours';
+import { index as blogIndex } from '@/routes/blog';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -397,6 +398,20 @@ onUnmounted(() => {
                                                             >
                                                         </li>
                                                     </ul>
+                                                </li>
+                                                <li
+                                                    :class="{
+                                                        current:
+                                                            $page.url.startsWith(
+                                                                '/blog',
+                                                            ),
+                                                    }"
+                                                >
+                                                    <Link
+                                                        :href="blogIndex()"
+                                                        @click="closeMobileMenu"
+                                                        >Blog</Link
+                                                    >
                                                 </li>
                                                 <li
                                                     :class="{

@@ -5,6 +5,7 @@ import {
     LayoutGrid,
     Map,
     MapPin,
+    Newspaper,
     Settings,
     TestTubeDiagonal,
     Users,
@@ -153,6 +154,18 @@ const rootAccessNavItems: NavItem[] = [
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                         </SidebarMenuSub>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            as-child
+                            :is-active="isCurrentOrParentUrl('/admin/blog')"
+                            tooltip="Blog"
+                        >
+                            <Link href="/admin/blog">
+                                <Newspaper />
+                                <span>Blog</span>
+                            </Link>
+                        </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton

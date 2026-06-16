@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 import { about, contact, home } from '@/routes';
+import { index as blogIndex } from '@/routes/blog';
 
 const currentYear = new Date().getFullYear();
 const showBackToTop = ref(false);
@@ -58,7 +59,7 @@ onUnmounted(() => {
                         <li><Link :href="about()">About Us</Link></li>
                         <li><a href="#">Gallery</a></li>
                         <li><a href="#">Our Team</a></li>
-                        <li><a href="#">Blog Insights</a></li>
+                        <li><Link :href="blogIndex()">Blog Insights</Link></li>
                         <li><Link :href="contact()">Contact</Link></li>
                     </ul>
                 </div>

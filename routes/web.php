@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\DestinationCountryController;
 use App\Http\Controllers\Admin\DestinationPlaceController;
 use App\Http\Controllers\Admin\FormSubmissionController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Admin\TourActivityController;
 use App\Http\Controllers\Admin\TourCategoryController;
 use App\Http\Controllers\Admin\TourController as AdminTourController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\RootAccess\ColorSiteSettingsController;
@@ -32,6 +34,9 @@ Route::get('/tours/search', [TourController::class, 'search'])->name('tours.sear
 Route::get('/tours/{tour}', [TourController::class, 'show'])->name('tours.show');
 Route::post('/tours/{tour}/enquiry', [TourController::class, 'enquiry'])->name('tours.enquiry');
 
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('force-password', [ForcePasswordChangeController::class, 'edit'])->name('force-password.edit');
     Route::put('force-password', [ForcePasswordChangeController::class, 'update'])
@@ -42,6 +47,13 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'password.change.required', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::middleware('admin')->group(function () {
+        Route::get('admin/blog', [BlogPostController::class, 'index'])->name('admin.blog');
+        Route::get('admin/blog/create', [BlogPostController::class, 'create'])->name('admin.blog.create');
+        Route::post('admin/blog', [BlogPostController::class, 'store'])->name('admin.blog.store');
+        Route::get('admin/blog/{post}/edit', [BlogPostController::class, 'edit'])->name('admin.blog.edit');
+        Route::patch('admin/blog/{post}', [BlogPostController::class, 'update'])->name('admin.blog.update');
+        Route::patch('admin/blog/{post}/published', [BlogPostController::class, 'togglePublished'])->name('admin.blog.published.toggle');
+        Route::delete('admin/blog/{post}', [BlogPostController::class, 'destroy'])->name('admin.blog.destroy');
         Route::get('admin/tours', [AdminTourController::class, 'index'])->name('admin.tours');
         Route::get('admin/tours/create', [AdminTourController::class, 'create'])->name('admin.tours.create');
         Route::post('admin/tours', [AdminTourController::class, 'store'])->name('admin.tours.store');
