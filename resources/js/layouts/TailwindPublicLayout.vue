@@ -5,7 +5,9 @@ import TailwindPublicHeader from '@/components/public/TailwindPublicHeader.vue';
 </script>
 
 <template>
-    <Head />
+    <Head>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Yesteryear&display=swap" rel="stylesheet" />
+    </Head>
 
     <div>
         <TailwindPublicHeader />

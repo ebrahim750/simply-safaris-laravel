@@ -183,10 +183,10 @@ onMounted(() => {
                 style="background-image: url('/template/images/page/video1.jpg')"
             >
                 <div class="absolute inset-0 rounded-[18px] bg-gradient-to-b from-transparent to-[rgba(0,0,0,0.64)]"></div>
-                <button type="button" class="relative z-10 flex size-[134px] w-[138px] items-center justify-center rotate-45 rounded-[25px] bg-[#4DA528] border-0 cursor-pointer" style="border: none" @click="openVideo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" class="rotate-[-45deg] ml-1 text-white"><polygon points="5,3 19,12 5,21"/></svg>
+                <button type="button" class="relative z-10 flex h-[134px] w-[138px] cursor-pointer items-center justify-center rounded-[25px] bg-[#4DA528] rotate-45 max-lg:h-[100px] max-lg:w-[100px]" @click="openVideo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" class="-rotate-45 ml-1 text-white"><polygon points="5,3 19,12 5,21"/></svg>
                 </button>
-                <p class="relative z-10 mt-[46px] font-['Yesteryear'] text-[50px] leading-[50px] text-white max-lg:text-[80px] max-md:text-[50px]" style="font-size: clamp(50px, 10vw, 121px); line-height: 1;">Watch Video</p>
+                <p class="relative z-10 mt-[46px] font-['Yesteryear'] text-[121px] leading-[121px] font-normal text-white max-lg:text-[80px] max-lg:leading-[100px]">Watch Video</p>
             </div>
         </div>
     </section>
