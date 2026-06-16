@@ -139,6 +139,17 @@ class TourController extends Controller
     {
         $tour->load(['categories:id,name', 'activities:id,name', 'places:id,name,country_id', 'places.country:id,name', 'itineraryItems', 'inclusions', 'exclusions']);
 
+        $seasonalRecommendations = Tour::query()
+            ->where('is_hidden', false)
+            ->where('is_featured_as_seasonal_recommendation', true)
+            ->where('id', '!=', $tour->id)
+            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name'])
+            ->limit(12)
+            ->latest('id')
+            ->get()
+            ->map(fn (Tour $recommendation): array => $this->mapTour($recommendation))
+            ->all();
+
         return Inertia::render('tours/Show', [
             'tour' => [
                 'id' => $tour->id,
@@ -166,6 +177,7 @@ class TourController extends Controller
             ],
             'turnstileSiteKey' => config('services.cf_turnstile.site_key'),
             'isLocal' => app()->environment('local'),
+            'seasonalRecommendations' => $seasonalRecommendations,
         ]);
     }
 
