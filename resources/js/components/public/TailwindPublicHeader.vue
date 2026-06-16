@@ -332,22 +332,19 @@ onUnmounted(() => {
                             >Contact</Link>
                         </li>
 
-                        <li>
-                            <Link
-                                href="/about2"
-                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
-                                :class="isActive('/about2') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
-                                @click="closeMobileMenu"
-                            >About 2</Link>
-                        </li>
-
-                        <li>
-                            <Link
-                                :href="contact2()"
-                                class="block px-5 py-9 text-[16px] font-semibold transition-colors"
-                                :class="isActive('/contact2') ? 'text-[#4DA528]' : 'text-[#081E2A] hover:text-[#4DA528]'"
-                                @click="closeMobileMenu"
-                            >Contact 2</Link>
+                        <li class="group relative">
+                            <span class="flex cursor-pointer items-center gap-1 px-5 py-9 text-[16px] font-semibold text-[#081E2A] hover:text-[#4DA528]">
+                                Refactored
+                                <ChevronDown class="size-3.5 opacity-50" />
+                            </span>
+                            <ul class="absolute left-0 top-full min-w-[180px] rounded-b-lg border border-gray-100 bg-white py-3 opacity-0 shadow-lg transition-all duration-200 invisible group-hover:opacity-100 group-hover:visible">
+                                <li>
+                                    <Link href="/about2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">About 2</Link>
+                                </li>
+                                <li>
+                                    <Link :href="contact2()" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Contact 2</Link>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </nav>
@@ -450,10 +447,18 @@ onUnmounted(() => {
                         <Link :href="contact()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/contact') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">Contact</Link>
                     </li>
                     <li>
-                        <Link href="/about2" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/about2') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">About 2</Link>
-                    </li>
-                    <li>
-                        <Link :href="contact2()" class="block px-6 py-3.5 text-[16px] font-semibold" :class="isActive('/contact2') ? 'text-[#4DA528]' : 'text-[#081E2A]'" @click="closeMobileMenu">Contact 2</Link>
+                        <button type="button" class="flex w-full items-center justify-between px-6 py-3.5 text-[16px] font-semibold text-[#081E2A]" @click="toggleDropdown('mobile-refactored')">
+                            Refactored
+                            <ChevronDown class="size-4 transition-transform" :class="isDropdownOpen('mobile-refactored') ? 'rotate-180' : ''" />
+                        </button>
+                        <ul v-show="isDropdownOpen('mobile-refactored')" class="bg-gray-50 py-1">
+                            <li>
+                                <Link href="/about2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">About 2</Link>
+                            </li>
+                            <li>
+                                <Link :href="contact2()" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">Contact 2</Link>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
