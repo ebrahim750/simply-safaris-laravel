@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import Swiper from 'swiper';
+import { Autoplay } from 'swiper/modules';
 import { onMounted, ref } from 'vue';
+import 'swiper/css/bundle';
 import { home } from '@/routes';
 
 const showVideoModal = ref(false);
@@ -14,29 +17,22 @@ const closeVideo = () => {
 };
 
 onMounted(() => {
-    const swiperScript = document.createElement('script');
-    swiperScript.src = '/template/js/swiper-bundle.min.js';
-    swiperScript.onload = () => {
-        // @ts-expect-error - Swiper is loaded dynamically
-        if (window.Swiper) {
-            // @ts-expect-error - Swiper is loaded dynamically
-            new window.Swiper('.brand-logo-tailwind', {
-                autoplay: { delay: 0, disableOnInteraction: false },
-                slidesPerView: 2,
-                loop: true,
-                spaceBetween: 30,
-                speed: 10000,
-                observer: true,
-                observeParents: true,
-                breakpoints: {
-                    600: { slidesPerView: 2, spaceBetween: 0 },
-                    992: { slidesPerView: 3, spaceBetween: 0 },
-                    1200: { slidesPerView: 5, spaceBetween: 0 },
-                },
-            });
-        }
-    };
-    document.head.appendChild(swiperScript);
+    Swiper.use([Autoplay]);
+
+    new Swiper('.brand-logo-tailwind', {
+        autoplay: { delay: 0, disableOnInteraction: false },
+        slidesPerView: 2,
+        loop: true,
+        spaceBetween: 30,
+        speed: 10000,
+        observer: true,
+        observeParents: true,
+        breakpoints: {
+            600: { slidesPerView: 2, spaceBetween: 0 },
+            992: { slidesPerView: 3, spaceBetween: 0 },
+            1200: { slidesPerView: 5, spaceBetween: 0 },
+        },
+    });
 });
 </script>
 
