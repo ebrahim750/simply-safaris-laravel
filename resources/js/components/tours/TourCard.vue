@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { CalendarDays, Compass, MapPin } from 'lucide-vue-next';
+import { CalendarDays, MapPin, Tag } from 'lucide-vue-next';
 import tourRoutes from '@/routes/tours';
 
 interface TourCardPlace {
@@ -17,6 +17,7 @@ interface TourCardTour {
     main_image: string | null;
     price: string;
     duration_days: number | null;
+    categories: Array<{ id: number; name: string }>;
     places: TourCardPlace[];
 }
 
@@ -35,7 +36,13 @@ const props = withDefaults(
 );
 
 const showCountriesModal = ref(false);
-const showPlacesModal = ref(false);
+const showCategoriesModal = ref(false);
+
+const isMounted = ref(false);
+
+onMounted(() => {
+    isMounted.value = true;
+});
 
 const uniqueCountries = computed(() => {
     const seen = new Map<string, string | null>();
@@ -51,10 +58,6 @@ const uniqueCountries = computed(() => {
     return [...seen].map(([name, code]) => ({ name, code }));
 });
 
-const uniquePlaces = computed(() => {
-    return [...new Set(props.tour.places.map((place) => place.name))];
-});
-
 const countryDisplay = computed(() => {
     if (uniqueCountries.value.length === 0) {
         return '-';
@@ -67,17 +70,19 @@ const countryMoreCount = computed(() => {
     return Math.max(0, uniqueCountries.value.length - 1);
 });
 
-const placeDisplay = computed(() => {
-    if (uniquePlaces.value.length === 0) {
-        return '-';
-    }
+const uniqueCategoryNames = computed(() =>
+    props.tour.categories.map((c) => c.name),
+);
 
-    return uniquePlaces.value[0];
-});
+const categoryFirst = computed(() =>
+    uniqueCategoryNames.value.length > 0
+        ? uniqueCategoryNames.value[0]
+        : null,
+);
 
-const placeMoreCount = computed(() => {
-    return Math.max(0, uniquePlaces.value.length - 1);
-});
+const categoryMoreCount = computed(() =>
+    Math.max(0, uniqueCategoryNames.value.length - 1),
+);
 
 function durationLabel(days: number | null): string {
     if (!days) {
@@ -129,16 +134,6 @@ function durationLabel(days: number | null): string {
                         +{{ countryMoreCount }} more</span
                     >
                 </span>
-                <span v-if="uniquePlaces.length > 0" class="map">
-                    <Compass class="icon-inline" />
-                    {{ placeDisplay }}<span
-                        v-if="placeMoreCount > 0"
-                        class="more-link"
-                        @click.prevent.stop="showPlacesModal = true"
-                    >
-                        +{{ placeMoreCount }} more</span
-                    >
-                </span>
             </div>
             <h3 class="title-tour-list">
                 <Link :href="tourRoutes.show({ tour: tour.id })">
@@ -150,6 +145,16 @@ function durationLabel(days: number | null): string {
                     <CalendarDays class="icon-inline" />
                     <span>{{ durationLabel(tour.duration_days) }}</span>
                 </div>
+                <span v-if="categoryFirst" class="category-meta">
+                    <Tag class="icon-inline" />
+                    {{ categoryFirst }}<span
+                        v-if="categoryMoreCount > 0"
+                        class="more-link"
+                        @click.prevent.stop="showCategoriesModal = true"
+                    >
+                        +{{ categoryMoreCount }} more</span
+                    >
+                </span>
             </div>
             <div class="flex-two">
                 <div class="price-box flex-three">
@@ -160,52 +165,54 @@ function durationLabel(days: number | null): string {
             </div>
         </div>
 
-        <Teleport to="body">
-            <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false">
-                <div class="modal-content">
-                    <button class="modal-close" @click="showCountriesModal = false">&times;</button>
-                    <h3>Countries</h3>
-                    <p class="modal-subtitle">{{ tour.name }}</p>
-                    <ul class="modal-list">
-                        <li v-for="entry in uniqueCountries" :key="entry.name" class="flex items-center gap-3">
-                            <img
-                                v-if="entry.code"
-                                :src="`https://flagcdn.com/w40/${entry.code.toLowerCase()}.png`"
-                                :alt="entry.name"
-                                class="h-5 w-auto rounded-sm"
-                            />
-                            {{ entry.name }}
-                        </li>
-                    </ul>
+        <template v-if="isMounted">
+            <Teleport to="body">
+                <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false">
+                    <div class="modal-content">
+                        <button class="modal-close" @click="showCountriesModal = false">&times;</button>
+                        <h3>Countries</h3>
+                        <p class="modal-subtitle">{{ tour.name }}</p>
+                        <ul class="modal-list">
+                            <li v-for="entry in uniqueCountries" :key="entry.name" class="flex items-center gap-3">
+                                <img
+                                    v-if="entry.code"
+                                    :src="`https://flagcdn.com/w40/${entry.code.toLowerCase()}.png`"
+                                    :alt="entry.name"
+                                    class="h-5 w-auto rounded-sm"
+                                />
+                                {{ entry.name }}
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
 
-            <div v-if="showPlacesModal" class="modal-overlay" @click.self="showPlacesModal = false">
-                <div class="modal-content">
-                    <button class="modal-close" @click="showPlacesModal = false">&times;</button>
-                    <h3>Places</h3>
-                    <p class="modal-subtitle">{{ tour.name }}</p>
-                    <ul class="modal-list">
-                        <li v-for="place in uniquePlaces" :key="place">
-                            {{ place }}
-                        </li>
-                    </ul>
+                <div v-if="showCategoriesModal" class="modal-overlay" @click.self="showCategoriesModal = false">
+                    <div class="modal-content">
+                        <button class="modal-close" @click="showCategoriesModal = false">&times;</button>
+                        <h3>Tour Categories</h3>
+                        <p class="modal-subtitle">{{ tour.name }}</p>
+                        <ul class="modal-list">
+                            <li v-for="category in uniqueCategoryNames" :key="category">
+                                {{ category }}
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </Teleport>
+            </Teleport>
+        </template>
     </div>
 </template>
 
 <style scoped>
 .image-housing {
-    height: 300px;
+    height: 380px;
     width: 100%;
     overflow: hidden;
     border-radius: 8px;
 }
 
 .image-housing-compact {
-    height: 220px;
+    height: 300px;
 }
 
 .image-housing img {
@@ -235,6 +242,18 @@ function durationLabel(days: number | null): string {
     height: 18px;
     color: #4da528;
     flex-shrink: 0;
+}
+
+.category-meta {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #83827F;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    white-space: nowrap;
 }
 
 .location-meta {

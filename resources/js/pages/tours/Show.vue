@@ -106,6 +106,12 @@ const showCountriesModal = ref(false);
 const showPlacesModal = ref(false);
 const showCategoriesModal = ref(false);
 
+const isMounted = ref(false);
+
+onMounted(() => {
+    isMounted.value = true;
+});
+
 const uniqueCountries = computed(() => {
     const seen = new Map<string, string | null>();
 
@@ -933,8 +939,9 @@ function onDragEnd(e: PointerEvent): void {
         </div>
     </section>
 
-    <Teleport to="body">
-        <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false">
+    <template v-if="isMounted">
+        <Teleport to="body">
+            <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false">
             <div class="modal-content">
                 <button class="modal-close" @click="showCountriesModal = false">&times;</button>
                 <h3>Countries</h3>
@@ -979,6 +986,7 @@ function onDragEnd(e: PointerEvent): void {
             </div>
         </div>
     </Teleport>
+    </template>
 </template>
 
 <style scoped>
