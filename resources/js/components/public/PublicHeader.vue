@@ -444,19 +444,6 @@ onUnmounted(() => {
                                                         >Contact</Link
                                                     >
                                                 </li>
-                                                <li
-                                                    :class="{
-                                                        current:
-                                                            $page.url ===
-                                                            '/contact2',
-                                                    }"
-                                                >
-                                                    <Link
-                                                        :href="contact2()"
-                                                        @click="closeMobileMenu"
-                                                        >Contact 2</Link
-                                                    >
-                                                </li>
                                                 <li class="dropdown2">
                                                     <a href="#">Refactored</a>
                                                     <ul>
