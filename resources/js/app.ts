@@ -19,6 +19,7 @@ void createInertiaApp({
         switch (true) {
             case name === 'AboutTailwind':
             case name === 'ContactTailwind':
+            case name === 'HomeTailwind':
             case name === 'blog/IndexTailwind':
             case name === 'blog/ShowTailwind':
             case name === 'tours/IndexTailwind':

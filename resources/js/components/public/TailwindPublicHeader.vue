@@ -339,6 +339,9 @@ onUnmounted(() => {
                             </span>
                             <ul class="absolute left-0 top-full min-w-[180px] rounded-b-lg border border-gray-100 bg-white py-3 opacity-0 shadow-lg transition-all duration-200 invisible group-hover:opacity-100 group-hover:visible">
                                 <li>
+                                    <Link href="/home2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Home 2</Link>
+                                </li>
+                                <li>
                                     <Link href="/about2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">About 2</Link>
                                 </li>
                                 <li>
@@ -458,6 +461,9 @@ onUnmounted(() => {
                             <ChevronDown class="size-4 transition-transform" :class="isDropdownOpen('mobile-refactored') ? 'rotate-180' : ''" />
                         </button>
                         <ul v-show="isDropdownOpen('mobile-refactored')" class="bg-gray-50 py-1">
+                            <li>
+                                <Link href="/home2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">Home 2</Link>
+                            </li>
                             <li>
                                 <Link href="/about2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">About 2</Link>
                             </li>
