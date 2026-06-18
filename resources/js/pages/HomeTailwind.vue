@@ -571,7 +571,7 @@ function submitSearch(): void {
     </section>
 
     <!-- Activities Section -->
-    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
+    <section class="relative overflow-hidden bg-gray-900 py-10 lg:py-16">
         <img src="/template/images/page/mask-activiti.png" alt="" class="pointer-events-none absolute top-0 left-0 w-full opacity-20" />
         <img src="/template/images/page/mask-print-2.png" alt="" class="pointer-events-none absolute right-0 bottom-0 opacity-20" />
 
@@ -594,12 +594,12 @@ function submitSearch(): void {
 
             <div class="flex flex-col overflow-hidden rounded-2xl bg-white lg:flex-row">
                 <div class="w-full lg:w-1/2">
-                    <img src="/template/images/about-us/about-h4.jpg" alt="Activity" class="min-h-[300px] h-full w-full object-cover" />
+                    <img src="/template/images/about-us/about-h4.jpg" alt="Activity" class="aspect-[4/3] w-full object-cover lg:h-full lg:min-h-0" />
                 </div>
-                <div class="flex w-full flex-col justify-center p-8 lg:w-1/2 lg:p-10">
-                    <span class="mb-2 text-sm font-medium tracking-wider text-[#4DA528] uppercase">Welcome to our Print</span>
-                    <h3 class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl">Real adventure &amp; enjoy your dream tours</h3>
-                    <div class="mb-8 flex flex-wrap gap-6">
+                <div class="flex w-full flex-col justify-center p-6 lg:w-1/2 lg:p-8">
+                    <span class="mb-1.5 text-sm font-medium tracking-wider text-[#4DA528] uppercase">Welcome to our Print</span>
+                    <h3 class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">Real adventure &amp; enjoy your dream tours</h3>
+                    <div class="mb-5 flex flex-wrap gap-6">
                         <div class="flex items-center gap-3 text-gray-600">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0f9eb] text-[#4DA528]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg></div>
                             <span>Real adventure Feel</span>
