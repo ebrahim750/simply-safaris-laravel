@@ -150,7 +150,7 @@ function clearFilters(): void {
     <!-- Breadcrumb -->
     <section class="relative flex items-center bg-cover bg-center bg-no-repeat py-[137px]" style="background-image: url('/template/images/page/breakcrumb.jpg')">
         <div class="absolute inset-0" style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89))"></div>
-        <div class="relative z-[1] mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8">
+        <div class="relative z-[1] mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <h1 class="mb-[26px] text-[65px] font-semibold leading-[82px] text-white max-lg:text-[45px] max-lg:leading-[50px]">Tours</h1>
                 <nav class="flex items-center justify-center text-[18px] leading-[22.68px]">
@@ -164,10 +164,10 @@ function clearFilters(): void {
 
     <!-- Tours + Filter -->
     <section class="pt-[120px] pb-[105px]">
-        <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-wrap">
+        <div class="mx-auto max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap lg:gap-[30px]">
                 <!-- Sidebar Filters -->
-                <div class="w-full lg:w-3/12 lg:mr-[30px]">
+                <div class="w-full lg:w-[280px] lg:shrink-0 xl:w-3/12">
                     <form class="rounded-[10px] border border-[#EDEEEE] px-10 py-9" @submit.prevent>
                         <div class="mb-10">
                             <div class="mb-[30px] flex items-center justify-between gap-2">
@@ -179,7 +179,7 @@ function clearFilters(): void {
                             <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
                                 <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isDestinationOpen = !isDestinationOpen">
                                     <MapPin class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
-                                    <div class="flex-1 pl-9">
+                                    <div class="flex-1">
                                         <span class="block text-[14px] font-medium text-[#4f545a]">Destination</span>
                                         <span class="block text-[16px] font-semibold text-[#081e2a]">Location</span>
                                     </div>
@@ -211,7 +211,7 @@ function clearFilters(): void {
                             <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
                                 <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isCategoriesOpen = !isCategoriesOpen">
                                     <Tag class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
-                                    <div class="flex-1 pl-9">
+                                    <div class="flex-1">
                                         <span class="block text-[14px] font-medium text-[#4f545a]">Categories</span>
                                         <span class="block text-[16px] font-semibold text-[#081e2a]">Tour Type</span>
                                     </div>
@@ -232,7 +232,7 @@ function clearFilters(): void {
                             <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
                                 <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isActivitiesOpen = !isActivitiesOpen">
                                     <Bike class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
-                                    <div class="flex-1 pl-9">
+                                    <div class="flex-1">
                                         <span class="block text-[14px] font-medium text-[#4f545a]">Activities</span>
                                         <span class="block text-[16px] font-semibold text-[#081e2a]">Booking Type</span>
                                     </div>
@@ -287,7 +287,7 @@ function clearFilters(): void {
                 </div>
 
                 <!-- Tour Cards -->
-                <div class="relative w-full lg:w-9/12 max-lg:mt-10">
+                <div class="relative w-full lg:min-w-0 lg:flex-1 max-lg:mt-10">
                     <p v-if="props.filters.search" class="absolute right-0 left-0 top-0 text-center text-[25px] text-gray-600">Search results for: "{{ props.filters.search }}"</p>
                     <div class="grid grid-cols-1 gap-6 pt-[45px] sm:grid-cols-2 lg:grid-cols-3">
                         <TourCardTailwind v-for="tour in tours.data" :key="tour.id" :tour="tour" :is-loading="isLoading" />
