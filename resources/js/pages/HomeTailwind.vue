@@ -96,6 +96,18 @@ const selectedCountries = ref<number[]>([]);
 const selectedPlaces = ref<number[]>([]);
 const selectedCategories = ref<number[]>([]);
 const selectedActivities = ref<number[]>([]);
+const activeActivityTab = ref(0);
+
+const activityTabs = [
+    { label: 'Couple camping or cabin', icon: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z' },
+    { label: 'Adventure & Climbing', icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
+    { label: 'Fishing & Swimming', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+    { label: 'Mountain & Hill Hiking', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { label: 'Trailers & RV Sports', icon: 'M1 3h15v13M16 8h4l3 3v5h-7V8z M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z' },
+];
+
+const tourTabs = ['New York', 'London', 'Tokyo', 'Los Angelas', 'Manila'];
+
 const priceRange = ref([100, 5000]);
 
 function toggleDropdown(name: string): void {
@@ -508,11 +520,14 @@ function submitSearch(): void {
             </div>
 
             <div class="mb-10 flex flex-wrap justify-center gap-2">
-                <button class="rounded-full bg-[#4DA528] px-5 py-2 text-sm font-medium text-white transition-colors">New York</button>
-                <button class="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">London</button>
-                <button class="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">Tokyo</button>
-                <button class="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">Los Angelas</button>
-                <button class="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">Manila</button>
+                <button
+                    v-for="tab in tourTabs"
+                    :key="tab"
+                    type="button"
+                    class="rounded-full px-5 py-2 text-sm font-medium transition-colors"
+                    :class="activeTourTab === tab ? 'bg-[#4DA528] text-white' : 'border border-gray-200 bg-white text-gray-600 hover:border-[#4DA528] hover:text-[#4DA528]'"
+                    @click="activeTourTab = tab"
+                >{{ tab }}</button>
             </div>
 
             <div class="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -561,28 +576,19 @@ function submitSearch(): void {
         <img src="/template/images/page/mask-print-2.png" alt="" class="pointer-events-none absolute right-0 bottom-0 opacity-20" />
 
         <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 class="mb-10 text-center text-6xl font-bold tracking-widest text-white/10 md:text-8xl">ACTIVITIES</h2>
+            <h2 class="mb-10 text-center text-6xl font-bold tracking-widest text-transparent md:text-8xl bg-cover bg-center" style="background-image: url('/template/images/page/clip-text.jpg'); -webkit-background-clip: text; background-clip: text;">ACTIVITIES</h2>
 
             <div class="mb-10 flex flex-wrap justify-center gap-4">
-                <button class="flex flex-col items-center gap-2 rounded-xl bg-[#4DA528] px-6 py-4 text-white transition-all">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg>
-                    <span class="text-sm">Couple camping or cabin</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 rounded-xl bg-white/10 px-6 py-4 text-white/70 transition-all hover:bg-white/20">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                    <span class="text-sm">Adventure &amp; Climbing</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 rounded-xl bg-white/10 px-6 py-4 text-white/70 transition-all hover:bg-white/20">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                    <span class="text-sm">Fishing &amp; Swimming</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 rounded-xl bg-white/10 px-6 py-4 text-white/70 transition-all hover:bg-white/20">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
-                    <span class="text-sm">Mountain &amp; Hill Hiking</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 rounded-xl bg-white/10 px-6 py-4 text-white/70 transition-all hover:bg-white/20">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
-                    <span class="text-sm">Trailers &amp; RV Sports</span>
+                <button
+                    v-for="(tab, index) in activityTabs"
+                    :key="index"
+                    type="button"
+                    class="flex flex-col items-center gap-2 rounded-xl px-6 py-4 text-white transition-all"
+                    :class="activeActivityTab === index ? 'bg-[#4DA528]' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+                    @click="activeActivityTab = index"
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path :d="tab.icon" /></svg>
+                    <span class="text-sm">{{ tab.label }}</span>
                 </button>
             </div>
 
