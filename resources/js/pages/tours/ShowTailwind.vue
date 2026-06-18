@@ -131,7 +131,6 @@ function swiperSlidePrev(): void {
                     <Link href="/tours2" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-[10px] after:text-white after:content-['\203A']">Tours</Link>
                     <span class="text-white">{{ tour.name }}</span>
                 </nav>
-                <img class="absolute left-[7%] top-[40%] hidden w-auto lg:block" src="/template/images/page/mask-bcrumb.png" alt="" />
             </div>
         </div>
     </section>
@@ -268,13 +267,16 @@ function swiperSlidePrev(): void {
     <!-- Seasonal Recommendations -->
     <section v-if="seasonalRecommendations.length > 0" class="mt-[70px] mb-10">
         <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-            <h3 class="mb-8 text-center text-[28px] font-bold text-[#081e2a]">Seasonal Recommendations</h3>
+            <h3 class="mb-8 text-center text-[42px] font-['Yesteryear'] text-[#4DA528]">Seasonal Recommendations</h3>
             <div class="seasonal-carousel-wrap relative">
-                <Swiper :modules="[Autoplay, Navigation, Pagination]" :pagination="{ clickable: true }" :navigation="{ nextEl: '.seasonal-swiper-next', prevEl: '.seasonal-swiper-prev' }" :slides-per-view="3" :space-between="24" :grab-cursor="true" :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 } }" :loop="seasonalRecommendations.length > 3" :autoplay="{ delay: 3500, disableOnInteraction: true }" class="seasonal-swiper overflow-hidden pb-9">
-                    <SwiperSlide v-for="recommendation in seasonalRecommendations" :key="recommendation.id" class="!h-auto"><TourCardTailwind :tour="recommendation" full-height image-size="compact" /></SwiperSlide>
+                <Swiper :modules="[Autoplay, Navigation, Pagination]" :pagination="{ clickable: true }" :navigation="{ nextEl: '.seasonal-swiper-next', prevEl: '.seasonal-swiper-prev' }" :slides-per-view="3" :space-between="24" :grab-cursor="true" :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 } }" :loop="seasonalRecommendations.length > 3" :autoplay="{ delay: 3500, disableOnInteraction: false }" class="seasonal-swiper pb-14">
+                    <SwiperSlide v-for="recommendation in seasonalRecommendations" :key="recommendation.id" class="!h-auto">
+                        <TourCardTailwind :tour="recommendation" />
+                        <div class="h-12"></div>
+                    </SwiperSlide>
                 </Swiper>
-                <button v-if="seasonalRecommendations.length > 1" class="swiper-custom-arrow swiper-custom-prev seasonal-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg></button>
-                <button v-if="seasonalRecommendations.length > 1" class="swiper-custom-arrow swiper-custom-next seasonal-swiper-next !h-[52px] !w-[52px]" aria-label="Next"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg></button>
+                <button v-if="seasonalRecommendations.length > 3" class="swiper-custom-arrow swiper-custom-prev seasonal-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg></button>
+                <button v-if="seasonalRecommendations.length > 3" class="swiper-custom-arrow swiper-custom-next seasonal-swiper-next !h-[52px] !w-[52px]" aria-label="Next"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg></button>
             </div>
         </div>
     </section>

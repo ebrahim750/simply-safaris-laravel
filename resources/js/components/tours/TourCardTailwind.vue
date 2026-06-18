@@ -87,7 +87,32 @@ const categoryMoreCount = computed(() =>
 
 <template>
     <div class="group overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-lg">
-        <div v-if="isLoading" class="absolute inset-0 z-10 animate-pulse bg-white/60"></div>
+        <!-- Skeleton Loading -->
+        <template v-if="isLoading">
+            <div class="animate-pulse">
+                <div class="h-52 w-full bg-gray-200"></div>
+                <div class="p-4">
+                    <div class="mb-2 flex items-center gap-1">
+                        <div class="h-3 w-3 rounded-full bg-gray-200"></div>
+                        <div class="h-3 w-20 rounded bg-gray-200"></div>
+                    </div>
+                    <div class="mb-2 h-5 w-3/4 rounded bg-gray-200"></div>
+                    <div class="mb-3 flex items-center justify-between">
+                        <div class="h-3 w-16 rounded bg-gray-200"></div>
+                        <div class="h-3 w-20 rounded bg-gray-200"></div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3">
+                        <div class="flex items-center gap-2">
+                            <div class="h-3 w-10 rounded bg-gray-200"></div>
+                            <div class="h-4 w-16 rounded bg-gray-200"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Real Content -->
+        <template v-else>
         <Link :href="tourShow({ tour: tour.id })" class="relative block overflow-hidden">
             <img
                 v-if="tour.main_image"
@@ -174,6 +199,7 @@ const categoryMoreCount = computed(() =>
                     </div>
                 </div>
             </Teleport>
+        </template>
         </template>
     </div>
 </template>

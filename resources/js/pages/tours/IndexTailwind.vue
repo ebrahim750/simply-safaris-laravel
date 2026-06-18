@@ -67,7 +67,7 @@ const durationRange = ref([props.filters.duration.min, props.filters.duration.ma
 
 const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
 
-const hasActiveFilters = computed(() =>
+const hasFilterFilters = computed(() =>
     selectedCountries.value.length > 0 ||
     selectedPlaces.value.length > 0 ||
     selectedCategories.value.length > 0 ||
@@ -75,8 +75,11 @@ const hasActiveFilters = computed(() =>
     priceRange.value[0] !== 100 ||
     priceRange.value[1] !== 5000 ||
     durationRange.value[0] !== 1 ||
-    durationRange.value[1] !== 30 ||
-    props.filters.search !== null
+    durationRange.value[1] !== 30
+);
+
+const hasActiveFilters = computed(() =>
+    hasFilterFilters.value || props.filters.search !== null
 );
 
 function applyFilters(): void {
@@ -163,8 +166,16 @@ function clearFilters(): void {
     </section>
 
     <!-- Tours + Filter -->
-    <section class="pt-[120px] pb-[105px]">
+    <section class="pt-8 pb-[105px]">
         <div class="mx-auto max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <p v-if="props.filters.search" class="mb-3 text-center text-[25px] text-gray-600">Search results for: "{{ props.filters.search }}"</p>
+            <div v-if="props.filters.search" class="mb-12 flex justify-center">
+                <button
+                    type="button"
+                    class="cursor-pointer rounded-md px-3 py-1 text-[13px] font-medium text-gray-500 transition-colors hover:bg-gray-100"
+                    @click="clearFilters"
+                >Clear search term</button>
+            </div>
             <div class="flex flex-wrap lg:gap-[30px]">
                 <!-- Sidebar Filters -->
                 <div class="w-full lg:w-[340px] lg:shrink-0 xl:w-[380px]">
@@ -172,7 +183,7 @@ function clearFilters(): void {
                         <div class="mb-10">
                             <div class="mb-[30px] flex items-center justify-between gap-2">
                                 <h6 class="title-tour-tailwind pl-[10px] text-[20px] font-semibold text-[#081e2a]">Filter Tours</h6>
-                                <button type="button" class="rounded-md px-2 py-0.5 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50" :class="{ 'opacity-0 pointer-events-none': !hasActiveFilters }" @click="clearFilters">Clear filters</button>
+                                <button type="button" class="rounded-md px-2 py-0.5 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50" :class="{ 'opacity-0 pointer-events-none': !hasFilterFilters }" @click="clearFilters">Clear filters</button>
                             </div>
 
                             <!-- Destinations -->
@@ -288,7 +299,6 @@ function clearFilters(): void {
 
                 <!-- Tour Cards -->
                 <div class="relative w-full lg:min-w-0 lg:flex-1 max-lg:mt-10">
-                    <p v-if="props.filters.search" class="absolute right-0 left-0 top-0 text-center text-[25px] text-gray-600">Search results for: "{{ props.filters.search }}"</p>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <TourCardTailwind v-for="tour in tours.data" :key="tour.id" :tour="tour" :is-loading="isLoading" />
                     </div>
