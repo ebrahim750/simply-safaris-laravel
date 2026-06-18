@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 
 interface Place {
     id: number;
@@ -90,20 +91,12 @@ const activityOptions = [
     { id: 4, name: 'Wildlife Viewing' },
 ];
 
-const durationOptions = [
-    { value: '', label: 'Any Duration' },
-    { value: '1-3', label: '1-3 days' },
-    { value: '4-7', label: '4-7 days' },
-    { value: '8-14', label: '8-14 days' },
-    { value: '15-30', label: '15+ days' },
-];
-
 const openDropdown = ref<string | null>(null);
 const selectedCountries = ref<number[]>([]);
 const selectedPlaces = ref<number[]>([]);
 const selectedCategories = ref<number[]>([]);
 const selectedActivities = ref<number[]>([]);
-const selectedDuration = ref('');
+const priceRange = ref([100, 5000]);
 
 function toggleDropdown(name: string): void {
     openDropdown.value = openDropdown.value === name ? null : name;
@@ -127,33 +120,41 @@ const destinationCount = computed(() => selectedCountries.value.length + selecte
 
 const destinationDisplay = computed(() => {
     if (destinationCount.value === 0) return 'All Destinations';
-    const names: string[] = [];
-    selectedCountries.value.forEach(id => {
-        const c = destinations.find(d => d.id === id);
-        if (c) names.push(c.name);
-    });
-    selectedPlaces.value.forEach(id => {
-        for (const d of destinations) {
-            const p = d.places.find(pl => pl.id === id);
-            if (p) { names.push(p.name); break; }
+    if (destinationCount.value === 1) {
+        if (selectedCountries.value.length === 1) {
+            return destinations.find(d => d.id === selectedCountries.value[0])?.name ?? 'All Destinations';
         }
-    });
-    return names.join(', ');
+        if (selectedPlaces.value.length === 1) {
+            for (const d of destinations) {
+                const p = d.places.find(pl => pl.id === selectedPlaces.value[0]);
+                if (p) return p.name;
+            }
+        }
+    }
+    return `${destinationCount.value} selected`;
 });
 
 const categoryDisplay = computed(() => {
     if (selectedCategories.value.length === 0) return 'All Categories';
-    return selectedCategories.value.map(id => categoryOptions.find(c => c.id === id)?.name).filter(Boolean).join(', ');
+    if (selectedCategories.value.length === 1) {
+        return categoryOptions.find(c => c.id === selectedCategories.value[0])?.name ?? 'All Categories';
+    }
+    return `${selectedCategories.value.length} selected`;
 });
 
 const activityDisplay = computed(() => {
     if (selectedActivities.value.length === 0) return 'All Activities';
-    return selectedActivities.value.map(id => activityOptions.find(a => a.id === id)?.name).filter(Boolean).join(', ');
+    if (selectedActivities.value.length === 1) {
+        return activityOptions.find(a => a.id === selectedActivities.value[0])?.name ?? 'All Activities';
+    }
+    return `${selectedActivities.value.length} selected`;
 });
 
-const durationDisplay = computed(() => {
-    return durationOptions.find(d => d.value === selectedDuration.value)?.label ?? 'Any Duration';
-});
+function formatPrice(value: number): string {
+    return `$${value.toLocaleString()}`;
+}
+
+const priceDisplay = computed(() => `${formatPrice(priceRange.value[0])} - ${formatPrice(priceRange.value[1])}`);
 
 function submitSearch(): void {
     const queryParts: string[] = [];
@@ -163,11 +164,8 @@ function submitSearch(): void {
     selectedCategories.value.forEach(id => queryParts.push(`categories[]=${id}`));
     selectedActivities.value.forEach(id => queryParts.push(`activities[]=${id}`));
 
-    if (selectedDuration.value) {
-        const [min, max] = selectedDuration.value.split('-').map(Number);
-        if (min) queryParts.push(`duration_min=${min}`);
-        if (max) queryParts.push(`duration_max=${max}`);
-    }
+    if (priceRange.value[0] !== 100) queryParts.push(`price_min=${priceRange.value[0]}`);
+    if (priceRange.value[1] !== 5000) queryParts.push(`price_max=${priceRange.value[1]}`);
 
     const qs = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
     window.location.href = `/tours${qs}`;
@@ -360,7 +358,7 @@ function submitSearch(): void {
                             </div>
                         </div>
 
-                        <!-- Duration -->
+                        <!-- Price Range -->
                         <div class="search-dropdown relative flex-1">
                             <button
                                 type="button"
@@ -368,32 +366,33 @@ function submitSearch(): void {
                                 :class="openDropdown === 'duration' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
                                 @click.stop="toggleDropdown('duration')"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                                 <div class="min-w-0 flex-1">
-                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Duration</span>
-                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ durationDisplay }}</span>
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Price Range</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ priceDisplay }}</span>
                                 </div>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'duration' }"><path d="m6 9 6 6 6-6" /></svg>
                             </button>
 
-                            <!-- Duration Panel -->
+                            <!-- Price Range Panel -->
                             <div
                                 v-show="openDropdown === 'duration'"
-                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[180px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-lg"
                             >
-                                <label
-                                    v-for="opt in durationOptions"
-                                    :key="opt.value"
-                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
-                                >
-                                    <input
-                                        type="radio"
-                                        :value="opt.value"
-                                        v-model="selectedDuration"
-                                        class="h-4 w-4 accent-[#4DA528]"
-                                    />
-                                    <span class="text-[15px] text-gray-700">{{ opt.label }}</span>
-                                </label>
+                                <div class="mb-3 flex items-center justify-between">
+                                    <span class="text-[13px] font-medium text-gray-500">Min</span>
+                                    <span class="text-[13px] font-medium text-gray-500">Max</span>
+                                </div>
+                                <div class="mb-4 flex items-center justify-between">
+                                    <span class="text-[15px] font-semibold text-[#081E2A]">{{ formatPrice(priceRange[0]) }}</span>
+                                    <span class="text-[15px] font-semibold text-[#081E2A]">{{ formatPrice(priceRange[1]) }}</span>
+                                </div>
+                                <SliderRoot v-model="priceRange" class="range-slider" :min="100" :max="5000" :step="100" :min-steps-between-thumbs="1">
+                                    <SliderTrack class="slider-track">
+                                        <SliderRange class="slider-fill" />
+                                    </SliderTrack>
+                                    <SliderThumb v-for="(_, index) in priceRange" :key="index" class="slider-thumb" :aria-label="index === 0 ? 'Minimum price' : 'Maximum price'" />
+                                </SliderRoot>
                             </div>
                         </div>
                     </div>
@@ -933,3 +932,42 @@ function submitSearch(): void {
         </div>
     </section>
 </template>
+
+<style scoped>
+.range-slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 18px;
+    user-select: none;
+    touch-action: none;
+}
+.slider-track {
+    position: relative;
+    flex: 1;
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+}
+.slider-fill {
+    position: absolute;
+    height: 100%;
+    background: #4da528;
+    border-radius: 2px;
+}
+.slider-thumb {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: #4da528;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+.slider-thumb:focus-visible {
+    outline: 2px solid rgba(77, 165, 40, 0.35);
+    outline-offset: 2px;
+}
+</style>
