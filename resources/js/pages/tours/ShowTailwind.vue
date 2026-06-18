@@ -144,7 +144,7 @@ function swiperSlidePrev(): void {
                     <li v-for="tab in tabs" :key="tab.id" class="nav-item flex-1" role="presentation">
                         <button type="button" role="tab" :aria-selected="activeTab === tab.id"
                             class="inline-flex w-full items-center justify-center gap-3.5 rounded-[47px] px-8 py-[26px] text-[16px] font-semibold leading-5 transition-colors"
-                            :class="activeTab === tab.id ? 'bg-[#F4F6F8]' : 'text-[#081E2A] hover:bg-[#F4F6F8]'"
+                            :class="[activeTab === tab.id ? 'bg-[#F4F6F8]' : 'text-[#081E2A] hover:bg-[#F4F6F8] cursor-pointer']"
                             @click="activeTab = tab.id">
                             <span class="text-[#4DA528]" v-html="tab.svg"></span>
                             {{ tab.label }}
@@ -157,11 +157,23 @@ function swiperSlidePrev(): void {
             <div v-show="activeTab === 'overview'">
                 <div class="mb-[50px]">
                     <div class="flex flex-wrap items-center justify-between gap-4">
-                        <div class="tour-meta-grid">
-                            <div class="tour-meta-item"><span class="tour-meta-label">{{ countryLabel }}</span><span class="tour-meta-value">{{ countryFirst }}<span v-if="countryMoreCount > 0" class="show-more-link cursor-pointer text-[14px] text-[#4da528] hover:underline ml-1" @click.prevent="showCountriesModal = true">+{{ countryMoreCount }} more</span></span></div>
-                            <div class="tour-meta-item"><span class="tour-meta-label">{{ destinationLabel }}</span><span class="tour-meta-value">{{ destinationFirst }}<span v-if="destinationMoreCount > 0" class="show-more-link cursor-pointer text-[14px] text-[#4da528] hover:underline ml-1" @click.prevent="showPlacesModal = true">+{{ destinationMoreCount }} more</span></span></div>
-                            <div class="tour-meta-item"><span class="tour-meta-label">Duration</span><span class="tour-meta-value">{{ durationValue }}</span></div>
-                            <div class="tour-meta-item"><span class="tour-meta-label">{{ categoryLabel }}</span><span class="tour-meta-value">{{ categoryDisplay }}<span v-if="categoryMoreCount > 0" class="show-more-link cursor-pointer text-[14px] text-[#4da528] hover:underline ml-1" @click.prevent="showCategoriesModal = true">+{{ categoryMoreCount }} more</span></span></div>
+                        <div class="flex flex-wrap gap-y-4 max-[991px]:grid max-[991px]:grid-cols-2 max-[991px]:gap-4">
+                            <div class="min-w-[120px] shrink-0 border-r border-[#e0e2e4] px-6 first:pl-0 last:border-r-0 max-[991px]:min-w-auto max-[991px]:border-r-0 max-[991px]:p-0">
+                                <span class="mb-1 block text-xs font-medium uppercase leading-[18px] text-gray-500">{{ countryLabel }}</span>
+                                <span class="block text-base font-semibold leading-6 text-[#081e2a]">{{ countryFirst }}<span v-if="countryMoreCount > 0" class="ml-1 cursor-pointer text-sm font-normal text-[#4da528] hover:underline" @click.prevent="showCountriesModal = true">+{{ countryMoreCount }} more</span></span>
+                            </div>
+                            <div class="min-w-[120px] shrink-0 border-r border-[#e0e2e4] px-6 first:pl-0 last:border-r-0 max-[991px]:min-w-auto max-[991px]:border-r-0 max-[991px]:p-0">
+                                <span class="mb-1 block text-xs font-medium uppercase leading-[18px] text-gray-500">{{ destinationLabel }}</span>
+                                <span class="block text-base font-semibold leading-6 text-[#081e2a]">{{ destinationFirst }}<span v-if="destinationMoreCount > 0" class="ml-1 cursor-pointer text-sm font-normal text-[#4da528] hover:underline" @click.prevent="showPlacesModal = true">+{{ destinationMoreCount }} more</span></span>
+                            </div>
+                            <div class="min-w-[120px] shrink-0 border-r border-[#e0e2e4] px-6 first:pl-0 last:border-r-0 max-[991px]:min-w-auto max-[991px]:border-r-0 max-[991px]:p-0">
+                                <span class="mb-1 block text-xs font-medium uppercase leading-[18px] text-gray-500">Duration</span>
+                                <span class="block text-base font-semibold leading-6 text-[#081e2a]">{{ durationValue }}</span>
+                            </div>
+                            <div class="min-w-[120px] shrink-0 border-r border-[#e0e2e4] px-6 first:pl-0 last:border-r-0 max-[991px]:min-w-auto max-[991px]:border-r-0 max-[991px]:p-0">
+                                <span class="mb-1 block text-xs font-medium uppercase leading-[18px] text-gray-500">{{ categoryLabel }}</span>
+                                <span class="block text-base font-semibold leading-6 text-[#081e2a]">{{ categoryDisplay }}<span v-if="categoryMoreCount > 0" class="ml-1 cursor-pointer text-sm font-normal text-[#4da528] hover:underline" @click.prevent="showCategoriesModal = true">+{{ categoryMoreCount }} more</span></span>
+                            </div>
                         </div>
                         <div class="shrink-0"><p><span class="mr-1 text-gray-500">From</span><span class="text-xl font-bold text-[#4DA528]">{{ tour.price }}</span></p></div>
                     </div>
@@ -287,26 +299,56 @@ function swiperSlidePrev(): void {
     <!-- Modals -->
     <template v-if="isMounted">
         <Teleport to="body">
-            <div v-if="showCountriesModal" class="modal-overlay" @click.self="showCountriesModal = false"><div class="modal-content"><button class="modal-close" @click="showCountriesModal = false">&times;</button><h3>Countries</h3><p class="modal-subtitle">{{ tour.name }}</p><ul class="modal-list"><li v-for="entry in uniqueCountries" :key="entry.name" class="flex items-center gap-3"><img v-if="entry.code" :src="`https://flagcdn.com/w40/${entry.code.toLowerCase()}.png`" :alt="entry.name" class="h-5 w-auto rounded-sm" />{{ entry.name }}</li></ul></div></div>
-            <div v-if="showPlacesModal" class="modal-overlay" @click.self="showPlacesModal = false"><div class="modal-content"><button class="modal-close" @click="showPlacesModal = false">&times;</button><h3>Places</h3><p class="modal-subtitle">{{ tour.name }}</p><ul class="modal-list"><li v-for="place in uniquePlaces" :key="place">{{ place }}</li></ul></div></div>
-            <div v-if="showCategoriesModal" class="modal-overlay" @click.self="showCategoriesModal = false"><div class="modal-content"><button class="modal-close" @click="showCategoriesModal = false">&times;</button><h3>Tour Categories</h3><p class="modal-subtitle">{{ tour.name }}</p><ul class="modal-list"><li v-for="category in uniqueCategoryNames" :key="category">{{ category }}</li></ul></div></div>
+            <div
+                v-if="showCountriesModal"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-5"
+                @click.self="showCountriesModal = false"
+            >
+                <div class="relative w-full max-w-[400px] rounded-2xl bg-white p-[30px] shadow-2xl">
+                    <button class="absolute top-4 right-4 cursor-pointer border-none bg-transparent text-[28px] leading-none text-[#666] transition-colors hover:text-[#333]" @click="showCountriesModal = false">&times;</button>
+                    <h3 class="mb-1 text-[22px] font-semibold text-[#081e2a]">Countries</h3>
+                    <p class="mb-4 text-sm text-[#888]">{{ tour.name }}</p>
+                    <ul class="m-0 list-none p-0">
+                        <li v-for="entry in uniqueCountries" :key="entry.name" class="flex items-center gap-3 border-b border-[#eee] px-0 py-[10px] text-[15px] leading-relaxed text-[#666] last:border-b-0">
+                            <img v-if="entry.code" :src="`https://flagcdn.com/w40/${entry.code.toLowerCase()}.png`" :alt="entry.name" class="h-5 w-auto rounded-sm" />
+                            {{ entry.name }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div
+                v-if="showPlacesModal"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-5"
+                @click.self="showPlacesModal = false"
+            >
+                <div class="relative w-full max-w-[400px] rounded-2xl bg-white p-[30px] shadow-2xl">
+                    <button class="absolute top-4 right-4 cursor-pointer border-none bg-transparent text-[28px] leading-none text-[#666] transition-colors hover:text-[#333]" @click="showPlacesModal = false">&times;</button>
+                    <h3 class="mb-1 text-[22px] font-semibold text-[#081e2a]">Places</h3>
+                    <p class="mb-4 text-sm text-[#888]">{{ tour.name }}</p>
+                    <ul class="m-0 list-none p-0">
+                        <li v-for="place in uniquePlaces" :key="place" class="border-b border-[#eee] px-0 py-[10px] text-[15px] leading-relaxed text-[#666] last:border-b-0">{{ place }}</li>
+                    </ul>
+                </div>
+            </div>
+            <div
+                v-if="showCategoriesModal"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-5"
+                @click.self="showCategoriesModal = false"
+            >
+                <div class="relative w-full max-w-[400px] rounded-2xl bg-white p-[30px] shadow-2xl">
+                    <button class="absolute top-4 right-4 cursor-pointer border-none bg-transparent text-[28px] leading-none text-[#666] transition-colors hover:text-[#333]" @click="showCategoriesModal = false">&times;</button>
+                    <h3 class="mb-1 text-[22px] font-semibold text-[#081e2a]">Tour Categories</h3>
+                    <p class="mb-4 text-sm text-[#888]">{{ tour.name }}</p>
+                    <ul class="m-0 list-none p-0">
+                        <li v-for="category in uniqueCategoryNames" :key="category" class="border-b border-[#eee] px-0 py-[10px] text-[15px] leading-relaxed text-[#666] last:border-b-0">{{ category }}</li>
+                    </ul>
+                </div>
+            </div>
         </Teleport>
     </template>
 </template>
 
 <style scoped>
-.tour-meta-grid { display: flex; flex-wrap: wrap; gap: 16px 0; }
-.tour-meta-item { flex: 0 1 auto; min-width: 120px; padding: 0 24px; border-right: 1px solid #e0e2e4; }
-.tour-meta-item:first-child { padding-left: 0; }
-.tour-meta-item:last-child { border-right: none; }
-.tour-meta-label { display: block; font-size: 12px; font-weight: 500; line-height: 18px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; }
-.tour-meta-value { display: block; font-size: 16px; font-weight: 600; line-height: 24px; color: #081e2a; }
-.show-more-link { color: #4da528; cursor: pointer; font-weight: 400; font-size: 14px; }
-.show-more-link:hover { text-decoration: underline; }
-
-@media (max-width: 991px) { .tour-meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; } .tour-meta-item { min-width: auto; padding: 0; border-right: none; } }
-@media (max-width: 575px) { .tour-meta-grid { grid-template-columns: 1fr; } }
-
 .tour-gallery-swiper-wrap { position: relative; }
 .tour-gallery-swiper :deep(.swiper-pagination) { bottom: 0; }
 .tour-gallery-swiper :deep(.swiper-pagination-bullet-active) { background: #4da528; }
@@ -325,16 +367,6 @@ function swiperSlidePrev(): void {
 .seasonal-carousel-wrap .seasonal-swiper-next { right: -70px; }
 @media (hover: none) { .swiper-custom-arrow { opacity: 0.9; } }
 @media (max-width: 1299px) { .seasonal-carousel-wrap .swiper-custom-arrow { width: 44px; height: 44px; } .seasonal-carousel-wrap .swiper-custom-arrow svg { width: 20px; height: 20px; } .seasonal-carousel-wrap .seasonal-swiper-prev { left: -70px; } .seasonal-carousel-wrap .seasonal-swiper-next { right: -70px; } }
-
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.modal-content { background: #fff; border-radius: 16px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-.modal-content h3 { font-size: 22px; font-weight: 600; margin-bottom: 4px; color: #081e2a; }
-.modal-subtitle { font-size: 14px; color: #888; margin: 0 0 16px; }
-.modal-close { position: absolute; top: 16px; right: 16px; padding: 0; border: none; background: transparent; font-size: 28px; line-height: 1; color: #666; cursor: pointer; }
-.modal-close:hover { color: #333; }
-.modal-list { list-style: none; padding: 0; margin: 0; }
-.modal-list li { display: flex; align-items: center; gap: 8px; padding: 10px 0; color: #666; line-height: 1.6; font-size: 15px; border-bottom: 1px solid #eee; }
-.modal-list li:last-child { border-bottom: none; }
 
 .block-heading-tailwind {
     position: relative;

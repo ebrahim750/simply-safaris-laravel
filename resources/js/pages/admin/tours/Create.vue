@@ -899,7 +899,7 @@ function submit(): void {
                                     <div class="flex items-center gap-2">
                                         <img
                                             v-if="group.country_code"
-                                            :src="`https://flagcdn.com/w40/${group.country_code}.png`"
+                                            :src="`https://flagcdn.com/w40/${group.country_code.toLowerCase()}.png`"
                                             :alt="`${group.country_name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />

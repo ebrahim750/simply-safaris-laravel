@@ -159,7 +159,7 @@ function submit(): void {
                                     >
                                         <img
                                             v-if="selectedCountry.country_code"
-                                            :src="`https://flagcdn.com/w40/${selectedCountry.country_code}.png`"
+                                            :src="`https://flagcdn.com/w40/${selectedCountry.country_code.toLowerCase()}.png`"
                                             :alt="`${selectedCountry.name} flag`"
                                             class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                         />
@@ -178,7 +178,7 @@ function submit(): void {
                                         <div class="flex items-center gap-2">
                                             <img
                                                 v-if="country.country_code"
-                                                 :src="`https://flagcdn.com/w40/${country.country_code}.png`"
+                                                 :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
                                                  :alt="`${country.name} flag`"
                                                 class="h-4 w-6 rounded-[2px] border border-border object-cover"
                                             />

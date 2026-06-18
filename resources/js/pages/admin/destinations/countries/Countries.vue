@@ -168,7 +168,7 @@ const columns: ColumnDef<AdminCountry>[] = [
             h('div', { class: 'flex items-center gap-3' }, [
                 row.original.country_code
                     ? h('img', {
-                          src: `https://flagcdn.com/w40/${row.original.country_code}.png`,
+                          src: `https://flagcdn.com/w40/${row.original.country_code.toLowerCase()}.png`,
                           alt: `${row.original.name} flag`,
                           class: 'h-5 w-7 rounded-[2px] border border-border object-cover',
                       })
