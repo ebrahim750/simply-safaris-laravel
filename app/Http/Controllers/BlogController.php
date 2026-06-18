@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use App\Models\Country;
+use App\Models\TourActivity;
+use App\Models\TourCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -273,7 +276,31 @@ class BlogController extends Controller
                 ])->all(),
             ]);
 
-        return Inertia::render('HomeTailwind', ['blogPosts' => $posts]);
+        $countries = Country::query()
+            ->with(['places' => fn ($query) => $query->select('id', 'country_id', 'name')->orderBy('name')])
+            ->orderBy('name')
+            ->get(['id', 'name', 'country_code'])
+            ->map(fn ($country) => [
+                'id' => $country->id,
+                'name' => $country->name,
+                'country_code' => $country->country_code,
+                'places' => $country->places->map(fn ($place) => ['id' => $place->id, 'name' => $place->name])->all(),
+            ]);
+
+        $categories = TourCategory::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $activities = TourActivity::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('HomeTailwind', [
+            'blogPosts' => $posts,
+            'countries' => $countries,
+            'categories' => $categories,
+            'activities' => $activities,
+        ]);
     }
 
     /**

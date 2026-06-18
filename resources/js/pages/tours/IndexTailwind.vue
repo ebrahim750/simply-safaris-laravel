@@ -167,7 +167,7 @@ function clearFilters(): void {
         <div class="mx-auto max-w-[1366px] px-4 sm:px-6 lg:px-8">
             <div class="flex flex-wrap lg:gap-[30px]">
                 <!-- Sidebar Filters -->
-                <div class="w-full lg:w-[280px] lg:shrink-0 xl:w-3/12">
+                <div class="w-full lg:w-[340px] lg:shrink-0 xl:w-[380px]">
                     <form class="rounded-[10px] border border-[#EDEEEE] px-10 py-9" @submit.prevent>
                         <div class="mb-10">
                             <div class="mb-[30px] flex items-center justify-between gap-2">
@@ -191,8 +191,8 @@ function clearFilters(): void {
                                         <div class="py-1.5">
                                             <label :for="'country-' + country.id" class="inline-flex items-center gap-2 text-[15px] font-semibold text-[#081e2a] cursor-pointer">
                                                 <input :id="'country-' + country.id" v-model="selectedCountries" type="checkbox" :value="country.id" class="accent-[#4da528]" @change="applyFilters" />
-                                                <img v-if="country.country_code" :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`" :alt="country.name" class="h-3.5 w-5 rounded-sm border border-gray-200 object-cover" />
                                                 {{ country.name }}
+                                                <img v-if="country.country_code" :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`" :alt="country.name" class="ml-auto h-4 w-6 rounded-sm border border-gray-200 object-cover" />
                                             </label>
                                         </div>
                                         <div class="pl-7 pb-2">
@@ -250,7 +250,7 @@ function clearFilters(): void {
                             </div>
 
                             <!-- Price Filter -->
-                            <fieldset class="relative mb-10">
+                            <fieldset class="relative mb-10 mt-10">
                                 <h6 class="mb-3 text-[18px] font-semibold text-[#081e2a]">Filter By Price</h6>
                                 <div>
                                     <div class="mb-2 flex items-center justify-between text-[12px] text-gray-400">
@@ -292,7 +292,7 @@ function clearFilters(): void {
                     <div class="grid grid-cols-1 gap-6 pt-[45px] sm:grid-cols-2 lg:grid-cols-3">
                         <TourCardTailwind v-for="tour in tours.data" :key="tour.id" :tour="tour" :is-loading="isLoading" />
                     </div>
-                    <div v-if="tours.data.length > 0 && !isLoading" class="mt-5 flex justify-center">
+                    <div v-if="tours.data.length > 0 && !isLoading" class="mt-16 flex justify-center">
                         <Pagination :paginator="tours" />
                     </div>
                 </div>

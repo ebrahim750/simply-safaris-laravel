@@ -25,97 +25,19 @@ interface BlogPost {
     categories: BlogCategory[];
 }
 
-defineProps<{
+interface HomeCountry {
+    id: number;
+    name: string;
+    country_code: string | null;
+    places: Array<{ id: number; name: string }>;
+}
+
+const props = defineProps<{
     blogPosts?: BlogPost[];
+    countries?: HomeCountry[];
+    categories?: Array<{ id: number; name: string }>;
+    activities?: Array<{ id: number; name: string }>;
 }>();
-
-interface Place {
-    id: number;
-    name: string;
-}
-
-interface DestinationCountry {
-    id: number;
-    name: string;
-    country_code: string;
-    places: Place[];
-}
-
-const destinations: DestinationCountry[] = [
-    {
-        id: 1, name: 'Kenya', country_code: 'KE',
-        places: [
-            { id: 1, name: 'Maasai Mara' },
-            { id: 2, name: 'Amboseli' },
-            { id: 3, name: 'Nairobi' },
-        ],
-    },
-    {
-        id: 2, name: 'Tanzania', country_code: 'TZ',
-        places: [
-            { id: 4, name: 'Serengeti' },
-            { id: 5, name: 'Ngorongoro' },
-            { id: 6, name: 'Zanzibar' },
-        ],
-    },
-    {
-        id: 3, name: 'South Africa', country_code: 'ZA',
-        places: [
-            { id: 7, name: 'Kruger National Park' },
-            { id: 8, name: 'Cape Town' },
-            { id: 9, name: 'Garden Route' },
-        ],
-    },
-    {
-        id: 4, name: 'Botswana', country_code: 'BW',
-        places: [
-            { id: 10, name: 'Okavango Delta' },
-            { id: 11, name: 'Chobe National Park' },
-        ],
-    },
-    {
-        id: 5, name: 'Namibia', country_code: 'NA',
-        places: [
-            { id: 12, name: 'Etosha National Park' },
-            { id: 13, name: 'Sossusvlei' },
-        ],
-    },
-    {
-        id: 6, name: 'Uganda', country_code: 'UG',
-        places: [
-            { id: 14, name: 'Bwindi Impenetrable Forest' },
-            { id: 15, name: 'Kibale Forest' },
-        ],
-    },
-    {
-        id: 7, name: 'Rwanda', country_code: 'RW',
-        places: [
-            { id: 16, name: 'Volcanoes National Park' },
-            { id: 17, name: 'Akagera National Park' },
-        ],
-    },
-    {
-        id: 8, name: 'Zimbabwe', country_code: 'ZW',
-        places: [
-            { id: 18, name: 'Victoria Falls' },
-            { id: 19, name: 'Hwange National Park' },
-        ],
-    },
-];
-
-const categoryOptions = [
-    { id: 1, name: 'Safari' },
-    { id: 2, name: 'Adventure' },
-    { id: 3, name: 'Beach' },
-    { id: 4, name: 'Cultural' },
-];
-
-const activityOptions = [
-    { id: 1, name: 'Hiking' },
-    { id: 2, name: 'Camping' },
-    { id: 3, name: 'Fishing' },
-    { id: 4, name: 'Wildlife Viewing' },
-];
 
 const openDropdown = ref<string | null>(null);
 const selectedCountries = ref<number[]>([]);
@@ -197,13 +119,14 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
 
 const destinationDisplay = computed(() => {
+    const list = props.countries ?? [];
     if (destinationCount.value === 0) return 'All Destinations';
     if (destinationCount.value === 1) {
         if (selectedCountries.value.length === 1) {
-            return destinations.find(d => d.id === selectedCountries.value[0])?.name ?? 'All Destinations';
+            return list.find(d => d.id === selectedCountries.value[0])?.name ?? 'All Destinations';
         }
         if (selectedPlaces.value.length === 1) {
-            for (const d of destinations) {
+            for (const d of list) {
                 const p = d.places.find(pl => pl.id === selectedPlaces.value[0]);
                 if (p) return p.name;
             }
@@ -213,17 +136,19 @@ const destinationDisplay = computed(() => {
 });
 
 const categoryDisplay = computed(() => {
+    const list = props.categories ?? [];
     if (selectedCategories.value.length === 0) return 'All Categories';
     if (selectedCategories.value.length === 1) {
-        return categoryOptions.find(c => c.id === selectedCategories.value[0])?.name ?? 'All Categories';
+        return list.find(c => c.id === selectedCategories.value[0])?.name ?? 'All Categories';
     }
     return `${selectedCategories.value.length} selected`;
 });
 
 const activityDisplay = computed(() => {
+    const list = props.activities ?? [];
     if (selectedActivities.value.length === 0) return 'All Activities';
     if (selectedActivities.value.length === 1) {
-        return activityOptions.find(a => a.id === selectedActivities.value[0])?.name ?? 'All Activities';
+        return list.find(a => a.id === selectedActivities.value[0])?.name ?? 'All Activities';
     }
     return `${selectedActivities.value.length} selected`;
 });
@@ -325,7 +250,7 @@ function submitSearch(): void {
                                 v-show="openDropdown === 'destination'"
                                 class="absolute left-0 top-full z-50 mt-1 max-h-[320px] w-[340px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
                             >
-                                <div v-for="country in destinations" :key="country.id">
+                                <div v-for="country in countries ?? []" :key="country.id">
                                     <!-- Country Header -->
                                     <label class="flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-gray-50">
                                         <input
@@ -384,7 +309,7 @@ function submitSearch(): void {
                                 class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
                             >
                                 <label
-                                    v-for="cat in categoryOptions"
+                                    v-for="cat in categories ?? []"
                                     :key="cat.id"
                                     class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
                                 >
@@ -421,7 +346,7 @@ function submitSearch(): void {
                                 class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
                             >
                                 <label
-                                    v-for="act in activityOptions"
+                                    v-for="act in activities ?? []"
                                     :key="act.id"
                                     class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
                                 >
@@ -488,23 +413,6 @@ function submitSearch(): void {
             </div>
         </div>
     </div>
-
-    <!-- Social Proof Bar -->
-    <section class="py-10">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <div class="flex -space-x-3">
-                    <img v-for="n in 6" :key="n" :src="`/template/images/avata/${n}.jpg`" alt="" class="h-10 w-10 rounded-full border-2 border-white object-cover" />
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#4DA528] text-xs font-bold text-white">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600">
-                    <span class="font-bold text-[#4DA528]">2,500</span> people booked Tomorrowland Event in last 24 hours
-                </p>
-            </div>
-        </div>
-    </section>
 
     <!-- About Us Section -->
     <section class="py-16 lg:py-24">
