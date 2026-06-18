@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Country;
+use App\Models\Tour;
 use App\Models\TourActivity;
 use App\Models\TourCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -295,11 +297,30 @@ class BlogController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $featuredTours = Tour::query()
+            ->where('is_hidden', false)
+            ->whereHas('places')
+            ->with(['categories:id,name', 'places:id,name,country_id', 'places.country:id,name,country_code'])
+            ->latest('id')
+            ->limit(12)
+            ->get()
+            ->map(fn (Tour $tour) => [
+                'id' => $tour->id,
+                'name' => $tour->name,
+                'main_image' => $this->resolveImageUrl($tour->main_image),
+                'price' => Number::currency($tour->price, precision: 0),
+                'price_amount' => (float) $tour->price,
+                'duration_days' => $tour->duration_days,
+                'categories' => $tour->categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all(),
+                'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name, 'country_code' => $p->country?->country_code])->all(),
+            ]);
+
         return Inertia::render('HomeTailwind', [
             'blogPosts' => $posts,
             'countries' => $countries,
             'categories' => $categories,
             'activities' => $activities,
+            'featuredTours' => $featuredTours,
         ]);
     }
 

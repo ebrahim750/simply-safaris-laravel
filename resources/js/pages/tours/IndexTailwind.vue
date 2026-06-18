@@ -234,7 +234,7 @@ function clearFilters(): void {
                                     <Bike class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
                                     <div class="flex-1">
                                         <span class="block text-[14px] font-medium text-[#4f545a]">Activities</span>
-                                        <span class="block text-[16px] font-semibold text-[#081e2a]">Booking Type</span>
+                                        <span class="block text-[16px] font-semibold text-[#081e2a]">Activity Type</span>
                                     </div>
                                     <span v-if="selectedActivities.length > 0" class="mr-1 inline-flex items-center justify-center rounded-full bg-[#4DA528] px-1.5 py-0.5 text-[12px] font-semibold text-white">selected: {{ selectedActivities.length }}</span>
                                     <span class="absolute right-4 top-1/2 -mt-1 h-2 w-2 border-r-[1.7px] border-b-[1.7px] border-[#3a3a3c] transition-transform duration-150" :class="isActivitiesOpen ? '-rotate-[135deg]' : 'rotate-45'" />
@@ -289,7 +289,7 @@ function clearFilters(): void {
                 <!-- Tour Cards -->
                 <div class="relative w-full lg:min-w-0 lg:flex-1 max-lg:mt-10">
                     <p v-if="props.filters.search" class="absolute right-0 left-0 top-0 text-center text-[25px] text-gray-600">Search results for: "{{ props.filters.search }}"</p>
-                    <div class="grid grid-cols-1 gap-6 pt-[45px] sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <TourCardTailwind v-for="tour in tours.data" :key="tour.id" :tour="tour" :is-loading="isLoading" />
                     </div>
                     <div v-if="tours.data.length > 0 && !isLoading" class="mt-16 flex justify-center">

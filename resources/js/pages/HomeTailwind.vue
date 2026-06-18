@@ -5,6 +5,7 @@ import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import BlogCard from '@/components/blog/BlogCard.vue';
+import TourCardTailwind from '@/components/tours/TourCardTailwind.vue';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -37,6 +38,15 @@ const props = defineProps<{
     countries?: HomeCountry[];
     categories?: Array<{ id: number; name: string }>;
     activities?: Array<{ id: number; name: string }>;
+    featuredTours?: Array<{
+        id: number;
+        name: string;
+        main_image: string | null;
+        price: string;
+        duration_days: number | null;
+        categories: Array<{ id: number; name: string }>;
+        places: Array<{ id: number; name: string; country?: string | null; country_code?: string | null }>;
+    }>;
 }>();
 
 const openDropdown = ref<string | null>(null);
@@ -94,7 +104,23 @@ const activityContent = [
     },
 ];
 
-const tourTabs = ['New York', 'London', 'Tokyo', 'Los Angelas', 'Manila'];
+const activeTourTab = ref<number | null>(null);
+
+const filteredTours = computed(() => {
+    const list = props.featuredTours ?? [];
+
+    if (activeTourTab.value === null) {
+        return list;
+    }
+
+    const countryName = props.countries?.find((c) => c.id === activeTourTab.value)?.name;
+
+    if (!countryName) {
+        return list;
+    }
+
+    return list.filter((tour) => tour.places.some((p) => p.country === countryName));
+});
 
 const priceRange = ref([100, 5000]);
 
@@ -113,7 +139,13 @@ function handleClickOutside(event: MouseEvent): void {
     }
 }
 
-onMounted(() => document.addEventListener('mousedown', handleClickOutside));
+onMounted(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    if (props.countries && props.countries.length > 0 && activeTourTab.value === null) {
+        activeTourTab.value = props.countries[0].id;
+    }
+});
+
 onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside));
 
 const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
@@ -484,7 +516,7 @@ function submitSearch(): void {
     </section>
 
     <!-- Tour Package Section -->
-    <section class="bg-gray-50 py-16 lg:py-24">
+    <section v-if="featuredTours && featuredTours.length > 0" class="bg-gray-50 py-16 lg:py-24">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-10 text-center">
                 <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
@@ -495,49 +527,43 @@ function submitSearch(): void {
 
             <div class="mb-10 flex flex-wrap justify-center gap-2">
                 <button
-                    v-for="tab in tourTabs"
-                    :key="tab"
+                    v-for="country in countries ?? []"
+                    :key="country.id"
                     type="button"
                     class="rounded-full px-5 py-2 text-sm font-medium transition-colors"
-                    :class="activeTourTab === tab ? 'bg-[#4DA528] text-white' : 'border border-gray-200 bg-white text-gray-600 hover:border-[#4DA528] hover:text-[#4DA528]'"
-                    @click="activeTourTab = tab"
-                >{{ tab }}</button>
+                    :class="activeTourTab === country.id ? 'bg-[#4DA528] text-white' : 'border border-gray-200 bg-white text-gray-600 hover:border-[#4DA528] hover:text-[#4DA528]'"
+                    @click="activeTourTab = country.id"
+                >{{ country.name }}</button>
             </div>
 
-            <div class="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div v-for="n in 4" :key="n" class="group overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-lg">
-                    <a href="#" class="relative block overflow-hidden">
-                        <img :src="`/template/images/travel-list/${n}.jpg`" alt="Tour" class="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
-                            <span class="rounded-full bg-[#4DA528] px-3 py-1 text-xs font-medium text-white">Featured</span>
-                            <div class="flex gap-2">
-                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 7.8c-.7-2.4-2.6-4.3-5-5C14.8 2.5 13.5 2 12 2S9.2 2.5 8.2 2.8c-2.4.7-4.3 2.6-5 5C2.8 9 2.3 10.5 2.3 12s.5 3 1 4.2c.7 2.4 2.6 4.3 5 5 1 .3 2.3.8 3.8.8s2.8-.5 3.8-.8c2.4-.7 4.3-2.6 5-5 .5-1.2 1-2.7 1-4.2s-.6-3-1.1-4.2z"/></svg> 5</span>
-                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 2</span>
-                            </div>
-                        </div>
-                    </a>
-                    <div class="p-4">
-                        <span class="mb-2 inline-block rounded bg-[#f0f9eb] px-2 py-0.5 text-xs font-medium text-[#4DA528]">Bestseller</span>
-                        <div class="mb-2 flex items-center gap-1 text-xs text-gray-400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg> United States USA</div>
-                        <h3 class="mb-2 font-bold leading-snug text-gray-900 transition-colors hover:text-[#4DA528]"><a href="#">Days and 6 nights From Moscow</a></h3>
-                        <div class="mb-3 flex items-center gap-1 text-xs text-yellow-400">
-                            ★★★★★ <span class="text-gray-400">(1 Review)</span>
-                        </div>
-                        <div class="mb-3 flex items-center justify-between text-xs text-gray-500">
-                            <span class="flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> 5 days</span>
-                            <span class="flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> 12 Person</span>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-                            <div><span class="text-xs text-gray-400">From</span> <span class="text-sm font-bold text-[#4DA528]">$169.00</span> <span class="text-xs text-gray-400 line-through">$199.00</span></div>
-                            <button class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-[#4DA528] hover:text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg></button>
-                        </div>
-                    </div>
-                </div>
+            <div class="tour-carousel-wrap relative">
+                <Swiper
+                    :modules="[Autoplay, Navigation, Pagination]"
+                    :pagination="{ clickable: true }"
+                    :navigation="{ nextEl: '.tour-swiper-next', prevEl: '.tour-swiper-prev' }"
+                    :slides-per-view="4"
+                    :space-between="24"
+                    :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 }, 1200: { slidesPerView: 4, spaceBetween: 24 } }"
+                    :loop="true"
+                    :autoplay="{ delay: 3500, disableOnInteraction: false }"
+                    class="tour-swiper pb-14"
+                >
+                    <SwiperSlide v-for="tour in filteredTours" :key="tour.id" class="!h-auto">
+                        <TourCardTailwind :tour="tour" />
+                        <div class="h-12"></div>
+                    </SwiperSlide>
+                </Swiper>
+                <button v-if="filteredTours.length > 4" class="swiper-custom-arrow swiper-custom-prev tour-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button v-if="filteredTours.length > 4" class="swiper-custom-arrow swiper-custom-next tour-swiper-next !h-[52px] !w-[52px]" aria-label="Next">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
             </div>
 
-            <div class="text-center">
-                <a href="#" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#3d8420]">
-                    View all tour
+            <div class="mt-10 text-center">
+                <a href="/tours2" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#3d8420]">
+                    View all tours
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                 </a>
             </div>
@@ -980,7 +1006,8 @@ function submitSearch(): void {
 .swiper-custom-arrow:hover {
     background: #ffffff;
 }
-.blog-carousel-wrap:hover .swiper-custom-arrow {
+.blog-carousel-wrap:hover .swiper-custom-arrow,
+.tour-carousel-wrap:hover .swiper-custom-arrow {
     opacity: 1;
 }
 .swiper-custom-prev {
@@ -995,17 +1022,35 @@ function submitSearch(): void {
 .blog-carousel-wrap .blog-swiper-next {
     right: -70px;
 }
+
+.tour-swiper :deep(.swiper-pagination) {
+    bottom: 0;
+}
+.tour-swiper :deep(.swiper-pagination-bullet-active) {
+    background: #4da528;
+}
+.tour-carousel-wrap .swiper-custom-arrow {
+    top: 38%;
+}
+.tour-carousel-wrap .tour-swiper-prev {
+    left: -70px;
+}
+.tour-carousel-wrap .tour-swiper-next {
+    right: -70px;
+}
 @media (hover: none) {
     .swiper-custom-arrow {
         opacity: 0.9;
     }
 }
 @media (max-width: 1299px) {
-    .blog-carousel-wrap .swiper-custom-arrow {
+    .blog-carousel-wrap .swiper-custom-arrow,
+    .tour-carousel-wrap .swiper-custom-arrow {
         width: 44px;
         height: 44px;
     }
-    .blog-carousel-wrap .swiper-custom-arrow svg {
+    .blog-carousel-wrap .swiper-custom-arrow svg,
+    .tour-carousel-wrap .swiper-custom-arrow svg {
         width: 20px;
         height: 20px;
     }
@@ -1013,6 +1058,12 @@ function submitSearch(): void {
         left: -70px;
     }
     .blog-carousel-wrap .blog-swiper-next {
+        right: -70px;
+    }
+    .tour-carousel-wrap .tour-swiper-prev {
+        left: -70px;
+    }
+    .tour-carousel-wrap .tour-swiper-next {
         right: -70px;
     }
 }
