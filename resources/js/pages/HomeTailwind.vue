@@ -106,6 +106,46 @@ const activityTabs = [
     { label: 'Trailers & RV Sports', icon: 'M1 3h15v13M16 8h4l3 3v5h-7V8z M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z' },
 ];
 
+const activeActivityContent = computed(() => activityContent[activeActivityTab.value]);
+
+const activityContent = [
+    {
+        image: '/template/images/about-us/about-h4.jpg',
+        subtitle: 'Welcome to our Print',
+        title: 'Real adventure & enjoy your dream tours',
+        features: ['Real adventure Feel', 'Comfort & Secure trip'],
+        cta: 'Get Started Today',
+    },
+    {
+        image: '/template/images/gallery/9.jpg',
+        subtitle: 'Push Your Limits',
+        title: 'Conquer peaks & chase the thrill',
+        features: ['Expert guides', 'All gear included'],
+        cta: 'Start Climbing',
+    },
+    {
+        image: '/template/images/gallery/10.jpg',
+        subtitle: 'Dive Into Nature',
+        title: 'Cast your line & swim wild waters',
+        features: ['Prime fishing spots', 'Guided swim tours'],
+        cta: 'Explore Waters',
+    },
+    {
+        image: '/template/images/gallery/11.jpg',
+        subtitle: 'Trail Blazer',
+        title: 'Summit views & mountain solitude',
+        features: ['Scenic trails', 'All skill levels'],
+        cta: 'Hit the Trail',
+    },
+    {
+        image: '/template/images/gallery/8.jpg',
+        subtitle: 'Road Ready',
+        title: 'Freedom on wheels with endless horizons',
+        features: ['RV rentals', 'Campsite bookings'],
+        cta: 'Plan Your Route',
+    },
+];
+
 const tourTabs = ['New York', 'London', 'Tokyo', 'Los Angelas', 'Manila'];
 
 const priceRange = ref([100, 5000]);
@@ -594,24 +634,20 @@ function submitSearch(): void {
 
             <div class="flex flex-col overflow-hidden rounded-2xl bg-white lg:flex-row">
                 <div class="w-full lg:w-1/2">
-                    <img src="/template/images/about-us/about-h4.jpg" alt="Activity" class="aspect-[4/3] w-full object-cover lg:h-full lg:min-h-0" />
+                    <img :src="activeActivityContent.image" :alt="activeActivityContent.title" class="aspect-[4/3] w-full object-cover lg:h-full lg:min-h-0" />
                 </div>
                 <div class="flex w-full flex-col justify-center p-6 lg:w-1/2 lg:p-8">
-                    <span class="mb-1.5 text-sm font-medium tracking-wider text-[#4DA528] uppercase">Welcome to our Print</span>
-                    <h3 class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">Real adventure &amp; enjoy your dream tours</h3>
+                    <span class="mb-1.5 text-sm font-medium tracking-wider text-[#4DA528] uppercase">{{ activeActivityContent.subtitle }}</span>
+                    <h3 class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">{{ activeActivityContent.title }}</h3>
                     <div class="mb-5 flex flex-wrap gap-6">
-                        <div class="flex items-center gap-3 text-gray-600">
+                        <div v-for="feature in activeActivityContent.features" :key="feature" class="flex items-center gap-3 text-gray-600">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0f9eb] text-[#4DA528]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg></div>
-                            <span>Real adventure Feel</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-gray-600">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0f9eb] text-[#4DA528]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></div>
-                            <span>Comfort &amp; Secure trip</span>
+                            <span>{{ feature }}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <a href="#" class="flex h-12 w-12 items-center justify-center rounded-full bg-[#4DA528] text-white transition-colors hover:bg-[#3d8420]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></a>
-                        <a href="#" class="font-semibold text-gray-900 transition-colors hover:text-[#4DA528]">Get Started Today</a>
+                        <a href="#" class="font-semibold text-gray-900 transition-colors hover:text-[#4DA528]">{{ activeActivityContent.cta }}</a>
                     </div>
                 </div>
             </div>
