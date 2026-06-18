@@ -51,16 +51,17 @@ import { Head } from '@inertiajs/vue3';
     </section>
 
     <!-- Search Form Widget -->
-    <div class="relative z-20 -mt-12 px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-6xl">
-            <div class="rounded-xl bg-white p-4 shadow-xl md:p-6">
-                <form class="flex flex-col gap-4 lg:flex-row lg:items-end">
-                    <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div class="relative">
-                            <label class="mb-1 block text-xs font-medium text-gray-500">Destination</label>
-                            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
-                                <select class="w-full cursor-pointer appearance-none bg-transparent text-sm text-gray-700 outline-none">
+    <div class="relative z-[4] -mt-[82px] px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="rounded-lg bg-white px-7 py-8 shadow-[0_7px_29px_rgba(0,0,0,0.06)]">
+                <form class="flex flex-col gap-5 lg:flex-row lg:items-center">
+                    <div class="flex flex-1 flex-col gap-5 sm:flex-row sm:flex-wrap">
+                        <!-- Destination -->
+                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                            <div class="min-w-0 flex-1">
+                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Destination</label>
+                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
                                     <option>Melborn, Australia</option>
                                     <option>HaNoi, Vietnam</option>
                                     <option>Tokyo, Japan</option>
@@ -68,11 +69,13 @@ import { Head } from '@inertiajs/vue3';
                                 </select>
                             </div>
                         </div>
-                        <div class="relative">
-                            <label class="mb-1 block text-xs font-medium text-gray-500">Type</label>
-                            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                                <select class="w-full cursor-pointer appearance-none bg-transparent text-sm text-gray-700 outline-none">
+
+                        <!-- Type -->
+                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                            <div class="min-w-0 flex-1">
+                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Type</label>
+                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
                                     <option>Booking Type</option>
                                     <option>Group Tour</option>
                                     <option>Private Tour</option>
@@ -80,11 +83,13 @@ import { Head } from '@inertiajs/vue3';
                                 </select>
                             </div>
                         </div>
-                        <div class="relative">
-                            <label class="mb-1 block text-xs font-medium text-gray-500">Duration</label>
-                            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                <select class="w-full cursor-pointer appearance-none bg-transparent text-sm text-gray-700 outline-none">
+
+                        <!-- Duration -->
+                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                            <div class="min-w-0 flex-1">
+                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Duration</label>
+                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
                                     <option>2-4 days</option>
                                     <option>5-7 days</option>
                                     <option>1-2 weeks</option>
@@ -92,20 +97,22 @@ import { Head } from '@inertiajs/vue3';
                                 </select>
                             </div>
                         </div>
-                        <div class="relative">
-                            <label class="mb-1 block text-xs font-medium text-gray-500">Guests</label>
-                            <div class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                                <input type="text" value="0" class="w-full bg-transparent text-sm text-gray-700 outline-none" />
+
+                        <!-- Guests -->
+                        <div class="relative flex items-start gap-3">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                            <div class="min-w-0 flex-1">
+                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Guests</label>
+                                <input type="text" value="0" class="mt-6 w-full border-0 bg-transparent p-0 text-sm text-gray-700 outline-none" />
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button type="button" class="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-gray-500 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="3" y2="18" /></svg>
-                            Filters
+
+                    <div class="flex items-center gap-4">
+                        <button type="button" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#4DA528] transition-colors hover:text-[#FF970D]">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="3" y2="18" /></svg>
                         </button>
-                        <button type="submit" class="flex items-center gap-2 rounded-lg bg-[#4DA528] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#3d8420]">
+                        <button type="submit" class="flex items-center gap-2.5 rounded-full bg-[#4DA528] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#FF970D]">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                             Search
                         </button>
@@ -151,7 +158,7 @@ import { Head } from '@inertiajs/vue3';
                 <div class="w-full lg:w-1/2">
                     <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
                     <h2 class="mb-4 mt-3 text-3xl leading-tight font-bold text-gray-900 md:text-4xl">
-                        Great opportunity for <em class="font-normal text-gray-400">adventure</em> &amp; travels
+                        Great opportunity for <span class="font-['Yesteryear'] text-[#64748B]">adventure</span> &amp; travels
                     </h2>
                     <p class="mb-8 leading-relaxed text-gray-500">
                         Welcome to Simply Safaris! We are a professional and reliable travel company that offers a wide range of safari and adventure tours to the world's most stunning destinations.
@@ -616,17 +623,22 @@ import { Head } from '@inertiajs/vue3';
     </section>
 
     <!-- Bottom CTA Bar -->
-    <section class="pb-0">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-between gap-6 rounded-t-2xl bg-[#4DA528] p-6 md:flex-row md:p-8">
-                <div class="flex items-center gap-4">
-                    <img src="/template/images/page/ready.png" alt="" class="h-12 w-12 rounded-full object-cover" />
+    <section class="-mb-[93px]">
+        <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+            <div class="relative flex items-center justify-between rounded-[7px] bg-[#4DA528] px-[39px] py-[35px] max-md:flex-col max-md:gap-5 max-md:text-center max-sm:px-5 max-sm:py-[30px]">
+                <div class="flex items-center gap-[43px] max-md:flex-col max-md:gap-4">
+                    <div class="shrink-0">
+                        <img src="/template/images/page/ready.png" alt="" class="w-[74px]" />
+                    </div>
                     <div>
-                        <h3 class="text-lg font-bold text-white">Ready to adventure and enjoy natural</h3>
-                        <p class="text-sm text-white/70">Lorem ipsum dolor sit amet, consectetur notted adipisicin</p>
+                        <h2 class="mb-[10px] text-[36px] leading-[45px] font-bold text-white max-md:text-[29px] max-md:leading-[40px]">Ready to adventure and enjoy natural</h2>
+                        <p class="text-[18px] leading-[32px] text-white/50">Lorem ipsum dolor sit amet, consectetur notted adipisicin</p>
                     </div>
                 </div>
-                <a href="#" class="shrink-0 rounded bg-white px-6 py-3 font-semibold text-[#4DA528] transition-colors hover:bg-gray-100">Let's get started</a>
+                <img src="/template/images/page/vector4.png" alt="" class="absolute right-[22%] hidden w-auto xl:block" />
+                <div class="shrink-0 max-md:mt-5">
+                    <a href="#" class="inline-block rounded-[5px] bg-white px-9 py-[23px] text-[15px] font-semibold tracking-[0.05em] text-[#4DA528] uppercase transition-all hover:bg-[#FF970D] hover:text-white">Let's get started</a>
+                </div>
             </div>
         </div>
     </section>
