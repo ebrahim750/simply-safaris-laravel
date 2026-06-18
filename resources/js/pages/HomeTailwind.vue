@@ -400,7 +400,7 @@ function submitSearch(): void {
                     <div class="shrink-0">
                         <button
                             type="submit"
-                            class="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#4DA528] px-10 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#FF970D] active:scale-[0.98]"
+                            class="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-transparent bg-[#4DA528] px-10 py-5 text-[15px] font-semibold text-white transition-colors hover:bg-[#FF970D] active:scale-[0.98]"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                             Search
@@ -503,7 +503,7 @@ function submitSearch(): void {
             <div class="mb-10 text-center">
                 <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
                 <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
-                    Amazing Featured Tour <em class="font-normal text-gray-400">Package</em> the world
+                    Amazing Featured Tour <span class="font-['Yesteryear'] text-[#64748B]">Package</span> the world
                 </h2>
             </div>
 
@@ -620,7 +620,7 @@ function submitSearch(): void {
                 <div class="w-full lg:w-5/12">
                     <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
                     <h2 class="mb-4 mt-3 text-3xl leading-tight font-bold text-gray-900 md:text-4xl">
-                        Amazing Featured Tour <em class="font-normal text-gray-400">Package</em> the world
+                    Amazing Featured Tour <span class="font-['Yesteryear'] text-[#64748B]">Package</span> the world
                     </h2>
                     <p class="mb-8 text-gray-500">Discover exclusive tour packages with unbeatable prices and unforgettable experiences.</p>
 
@@ -884,7 +884,7 @@ function submitSearch(): void {
             <div class="mb-10 text-center">
                 <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
                 <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
-                    Latest news &amp; articles <em class="font-normal text-gray-400">from</em> the blog
+                    Latest news &amp; articles <span class="font-['Yesteryear'] text-[#64748B]">from</span> the blog
                 </h2>
             </div>
             <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
