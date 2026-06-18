@@ -22,7 +22,7 @@ use App\Http\Controllers\TourController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('home');
-Route::inertia('/home2', 'HomeTailwind')->name('home2');
+Route::get('/home2', [BlogController::class, 'home2'])->name('home2');
 Route::inertia('/about', 'About')->name('about');
 Route::inertia('/about2', 'AboutTailwind')->name('about2');
 Route::get('/contact', [ContactController::class, 'contact'])->name('contact');

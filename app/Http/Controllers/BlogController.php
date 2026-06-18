@@ -250,6 +250,32 @@ class BlogController extends Controller
         ]);
     }
 
+    public function home2(): Response
+    {
+        $posts = BlogPost::query()
+            ->where('is_published', true)
+            ->whereNotNull('published_at')
+            ->with(['user:id,name', 'categories:id,name'])
+            ->latest('published_at')
+            ->limit(6)
+            ->get(['id', 'user_id', 'title', 'slug', 'content', 'featured_image', 'published_at'])
+            ->map(fn (BlogPost $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $this->makeExcerpt($post->content),
+                'featured_image' => $this->resolveImageUrl($post->featured_image),
+                'published_at_display' => $post->published_at?->format('M j, Y'),
+                'author' => $post->user?->name ?? 'Unknown',
+                'categories' => $post->categories->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ])->all(),
+            ]);
+
+        return Inertia::render('HomeTailwind', ['blogPosts' => $posts]);
+    }
+
     /**
      * @return array<string, mixed>
      */

@@ -2,6 +2,32 @@
 import { Head } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import BlogCard from '@/components/blog/BlogCard.vue';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
+interface BlogCategory {
+    id: number;
+    name: string;
+}
+
+interface BlogPost {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt?: string | null;
+    featured_image?: string | null;
+    published_at_display?: string | null;
+    author?: string;
+    categories: BlogCategory[];
+}
+
+defineProps<{
+    blogPosts?: BlogPost[];
+}>();
 
 interface Place {
     id: number;
@@ -921,7 +947,7 @@ function submitSearch(): void {
     </section>
 
     <!-- Blog Section -->
-    <section class="py-16 lg:py-24">
+    <section v-if="blogPosts && blogPosts.length > 0" class="py-16 lg:py-24">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-10 text-center">
                 <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
@@ -929,26 +955,29 @@ function submitSearch(): void {
                     Latest news &amp; articles <span class="font-['Yesteryear'] text-[#64748B]">from</span> the blog
                 </h2>
             </div>
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div v-for="n in 3" :key="n" class="group">
-                    <a href="#" class="relative mb-4 block overflow-hidden rounded-xl">
-                        <img :src="`/template/images/travel-list/${n}.jpg`" alt="Blog" class="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <span class="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-gray-700">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>
-                            Traveling
-                        </span>
-                    </a>
-                    <div class="mb-3 flex items-center gap-4 text-xs text-gray-400">
-                        <span class="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg> 02 Apr 2021</span>
-                        <span class="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> Comments (03)</span>
-                    </div>
-                    <h3 class="mb-2 text-lg font-bold text-gray-900 transition-colors hover:text-[#4DA528]"><a href="#">The 8 best things about Touristy</a></h3>
-                    <p class="mb-4 text-sm text-gray-500">Business is the activity of making or buying and selling products.</p>
-                    <a href="#" class="inline-flex items-center gap-1 text-sm font-medium text-[#4DA528] transition-colors hover:text-[#3d8420]">
-                        Read More
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                    </a>
-                </div>
+            <div class="blog-carousel-wrap relative">
+                <Swiper
+                    :modules="[Autoplay, Navigation, Pagination]"
+                    :pagination="{ clickable: true }"
+                    :navigation="{ nextEl: '.blog-swiper-next', prevEl: '.blog-swiper-prev' }"
+                    :slides-per-view="3"
+                    :space-between="24"
+                    :grab-cursor="true"
+                    :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 } }"
+                    :loop="blogPosts.length > 3"
+                    :autoplay="{ delay: 3500, disableOnInteraction: true }"
+                    class="blog-swiper overflow-hidden"
+                >
+                    <SwiperSlide v-for="post in blogPosts" :key="post.id" class="!h-auto">
+                        <BlogCard :post="post" />
+                    </SwiperSlide>
+                </Swiper>
+                <button v-if="blogPosts.length > 1" class="swiper-custom-arrow swiper-custom-prev blog-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button v-if="blogPosts.length > 1" class="swiper-custom-arrow swiper-custom-next blog-swiper-next !h-[52px] !w-[52px]" aria-label="Next">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
             </div>
         </div>
     </section>
@@ -1011,5 +1040,72 @@ function submitSearch(): void {
 .slider-thumb:focus-visible {
     outline: 2px solid rgba(77, 165, 40, 0.35);
     outline-offset: 2px;
+}
+
+.blog-swiper :deep(.swiper-pagination) {
+    bottom: 0;
+}
+.blog-swiper :deep(.swiper-pagination-bullet-active) {
+    background: #4da528;
+}
+
+.swiper-custom-arrow {
+    position: absolute;
+    top: 42%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+    color: #081e2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease, background 0.2s;
+}
+.swiper-custom-arrow:hover {
+    background: #ffffff;
+}
+.blog-carousel-wrap:hover .swiper-custom-arrow {
+    opacity: 1;
+}
+.swiper-custom-prev {
+    left: 8px;
+}
+.swiper-custom-next {
+    right: 8px;
+}
+.blog-carousel-wrap .blog-swiper-prev {
+    left: -70px;
+}
+.blog-carousel-wrap .blog-swiper-next {
+    right: -70px;
+}
+@media (hover: none) {
+    .swiper-custom-arrow {
+        opacity: 0.9;
+    }
+}
+@media (max-width: 1299px) {
+    .blog-carousel-wrap .swiper-custom-arrow {
+        width: 44px;
+        height: 44px;
+    }
+    .blog-carousel-wrap .swiper-custom-arrow svg {
+        width: 20px;
+        height: 20px;
+    }
+    .blog-carousel-wrap .blog-swiper-prev {
+        left: -70px;
+    }
+    .blog-carousel-wrap .blog-swiper-next {
+        right: -70px;
+    }
 }
 </style>
