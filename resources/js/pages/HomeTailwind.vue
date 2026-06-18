@@ -1,5 +1,177 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+
+interface Place {
+    id: number;
+    name: string;
+}
+
+interface DestinationCountry {
+    id: number;
+    name: string;
+    country_code: string;
+    places: Place[];
+}
+
+const destinations: DestinationCountry[] = [
+    {
+        id: 1, name: 'Kenya', country_code: 'KE',
+        places: [
+            { id: 1, name: 'Maasai Mara' },
+            { id: 2, name: 'Amboseli' },
+            { id: 3, name: 'Nairobi' },
+        ],
+    },
+    {
+        id: 2, name: 'Tanzania', country_code: 'TZ',
+        places: [
+            { id: 4, name: 'Serengeti' },
+            { id: 5, name: 'Ngorongoro' },
+            { id: 6, name: 'Zanzibar' },
+        ],
+    },
+    {
+        id: 3, name: 'South Africa', country_code: 'ZA',
+        places: [
+            { id: 7, name: 'Kruger National Park' },
+            { id: 8, name: 'Cape Town' },
+            { id: 9, name: 'Garden Route' },
+        ],
+    },
+    {
+        id: 4, name: 'Botswana', country_code: 'BW',
+        places: [
+            { id: 10, name: 'Okavango Delta' },
+            { id: 11, name: 'Chobe National Park' },
+        ],
+    },
+    {
+        id: 5, name: 'Namibia', country_code: 'NA',
+        places: [
+            { id: 12, name: 'Etosha National Park' },
+            { id: 13, name: 'Sossusvlei' },
+        ],
+    },
+    {
+        id: 6, name: 'Uganda', country_code: 'UG',
+        places: [
+            { id: 14, name: 'Bwindi Impenetrable Forest' },
+            { id: 15, name: 'Kibale Forest' },
+        ],
+    },
+    {
+        id: 7, name: 'Rwanda', country_code: 'RW',
+        places: [
+            { id: 16, name: 'Volcanoes National Park' },
+            { id: 17, name: 'Akagera National Park' },
+        ],
+    },
+    {
+        id: 8, name: 'Zimbabwe', country_code: 'ZW',
+        places: [
+            { id: 18, name: 'Victoria Falls' },
+            { id: 19, name: 'Hwange National Park' },
+        ],
+    },
+];
+
+const categoryOptions = [
+    { id: 1, name: 'Safari' },
+    { id: 2, name: 'Adventure' },
+    { id: 3, name: 'Beach' },
+    { id: 4, name: 'Cultural' },
+];
+
+const activityOptions = [
+    { id: 1, name: 'Hiking' },
+    { id: 2, name: 'Camping' },
+    { id: 3, name: 'Fishing' },
+    { id: 4, name: 'Wildlife Viewing' },
+];
+
+const durationOptions = [
+    { value: '', label: 'Any Duration' },
+    { value: '1-3', label: '1-3 days' },
+    { value: '4-7', label: '4-7 days' },
+    { value: '8-14', label: '8-14 days' },
+    { value: '15-30', label: '15+ days' },
+];
+
+const openDropdown = ref<string | null>(null);
+const selectedCountries = ref<number[]>([]);
+const selectedPlaces = ref<number[]>([]);
+const selectedCategories = ref<number[]>([]);
+const selectedActivities = ref<number[]>([]);
+const selectedDuration = ref('');
+
+function toggleDropdown(name: string): void {
+    openDropdown.value = openDropdown.value === name ? null : name;
+}
+
+function closeDropdowns(): void {
+    openDropdown.value = null;
+}
+
+function handleClickOutside(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.search-dropdown')) {
+        closeDropdowns();
+    }
+}
+
+onMounted(() => document.addEventListener('mousedown', handleClickOutside));
+onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside));
+
+const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
+
+const destinationDisplay = computed(() => {
+    if (destinationCount.value === 0) return 'All Destinations';
+    const names: string[] = [];
+    selectedCountries.value.forEach(id => {
+        const c = destinations.find(d => d.id === id);
+        if (c) names.push(c.name);
+    });
+    selectedPlaces.value.forEach(id => {
+        for (const d of destinations) {
+            const p = d.places.find(pl => pl.id === id);
+            if (p) { names.push(p.name); break; }
+        }
+    });
+    return names.join(', ');
+});
+
+const categoryDisplay = computed(() => {
+    if (selectedCategories.value.length === 0) return 'All Categories';
+    return selectedCategories.value.map(id => categoryOptions.find(c => c.id === id)?.name).filter(Boolean).join(', ');
+});
+
+const activityDisplay = computed(() => {
+    if (selectedActivities.value.length === 0) return 'All Activities';
+    return selectedActivities.value.map(id => activityOptions.find(a => a.id === id)?.name).filter(Boolean).join(', ');
+});
+
+const durationDisplay = computed(() => {
+    return durationOptions.find(d => d.value === selectedDuration.value)?.label ?? 'Any Duration';
+});
+
+function submitSearch(): void {
+    const queryParts: string[] = [];
+
+    selectedCountries.value.forEach(id => queryParts.push(`countries[]=${id}`));
+    selectedPlaces.value.forEach(id => queryParts.push(`places[]=${id}`));
+    selectedCategories.value.forEach(id => queryParts.push(`categories[]=${id}`));
+    selectedActivities.value.forEach(id => queryParts.push(`activities[]=${id}`));
+
+    if (selectedDuration.value) {
+        const [min, max] = selectedDuration.value.split('-').map(Number);
+        if (min) queryParts.push(`duration_min=${min}`);
+        if (max) queryParts.push(`duration_max=${max}`);
+    }
+
+    const qs = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    window.location.href = `/tours${qs}`;
+}
 </script>
 
 <template>
@@ -51,68 +223,186 @@ import { Head } from '@inertiajs/vue3';
     </section>
 
     <!-- Search Form Widget -->
-    <div class="relative z-[4] -mt-[82px] px-4 sm:px-6 lg:px-8">
+    <div class="relative z-20 -mt-[82px] px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl">
-            <div class="rounded-lg bg-white px-7 py-8 shadow-[0_7px_29px_rgba(0,0,0,0.06)]">
-                <form class="flex flex-col gap-5 lg:flex-row lg:items-center">
-                    <div class="flex flex-1 flex-col gap-5 sm:flex-row sm:flex-wrap">
+            <div class="rounded-lg bg-white px-7 py-6 shadow-[0_7px_29px_rgba(0,0,0,0.06)]">
+                <form class="flex flex-col gap-3 lg:flex-row lg:items-end" @submit.prevent="submitSearch">
+                    <div class="flex flex-1 flex-col gap-3 sm:flex-row">
                         <!-- Destination -->
-                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
-                            <div class="min-w-0 flex-1">
-                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Destination</label>
-                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
-                                    <option>Melborn, Australia</option>
-                                    <option>HaNoi, Vietnam</option>
-                                    <option>Tokyo, Japan</option>
-                                    <option>Seoul, Korea</option>
-                                </select>
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'destination' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('destination')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Destination</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ destinationDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'destination' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Destination Panel -->
+                            <div
+                                v-show="openDropdown === 'destination'"
+                                class="absolute left-0 top-full z-50 mt-1 max-h-[320px] w-[340px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                            >
+                                <div v-for="country in destinations" :key="country.id">
+                                    <!-- Country Header -->
+                                    <label class="flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            :value="country.id"
+                                            v-model="selectedCountries"
+                                            class="h-4 w-4 rounded accent-[#4DA528]"
+                                        />
+                                        <img
+                                            v-if="country.country_code"
+                                            :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
+                                            :alt="country.name"
+                                            class="h-3.5 w-5 rounded-sm border border-gray-200 object-cover"
+                                        />
+                                        <span class="text-[15px] font-semibold text-[#081E2A]">{{ country.name }}</span>
+                                    </label>
+                                    <!-- Places -->
+                                    <div class="pb-1 pl-11 pr-4">
+                                        <label
+                                            v-for="place in country.places"
+                                            :key="place.id"
+                                            class="flex cursor-pointer items-center gap-2.5 py-1.5 transition-colors hover:text-[#4DA528]"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                :value="place.id"
+                                                v-model="selectedPlaces"
+                                                class="h-4 w-4 rounded accent-[#4DA528]"
+                                            />
+                                            <span class="text-[14px] text-gray-600">{{ place.name }}</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Type -->
-                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                            <div class="min-w-0 flex-1">
-                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Type</label>
-                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
-                                    <option>Booking Type</option>
-                                    <option>Group Tour</option>
-                                    <option>Private Tour</option>
-                                    <option>Family Tour</option>
-                                </select>
+                        <!-- Category -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'category' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('category')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Category</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ categoryDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'category' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Category Panel -->
+                            <div
+                                v-show="openDropdown === 'category'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                            >
+                                <label
+                                    v-for="cat in categoryOptions"
+                                    :key="cat.id"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :value="cat.id"
+                                        v-model="selectedCategories"
+                                        class="h-4 w-4 rounded accent-[#4DA528]"
+                                    />
+                                    <span class="text-[15px] text-gray-700">{{ cat.name }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Activity -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'activity' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('activity')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="8" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Activity</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ activityDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'activity' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Activity Panel -->
+                            <div
+                                v-show="openDropdown === 'activity'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                            >
+                                <label
+                                    v-for="act in activityOptions"
+                                    :key="act.id"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :value="act.id"
+                                        v-model="selectedActivities"
+                                        class="h-4 w-4 rounded accent-[#4DA528]"
+                                    />
+                                    <span class="text-[15px] text-gray-700">{{ act.name }}</span>
+                                </label>
                             </div>
                         </div>
 
                         <!-- Duration -->
-                        <div class="relative flex items-start gap-3 pr-5 sm:after:absolute sm:after:right-0 sm:after:top-0 sm:after:h-[61px] sm:after:w-px sm:after:bg-[#EDEEEE]">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                            <div class="min-w-0 flex-1">
-                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Duration</label>
-                                <select class="mt-6 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-sm text-gray-700 outline-none">
-                                    <option>2-4 days</option>
-                                    <option>5-7 days</option>
-                                    <option>1-2 weeks</option>
-                                    <option>2+ weeks</option>
-                                </select>
-                            </div>
-                        </div>
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'duration' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('duration')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Duration</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ durationDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'duration' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
 
-                        <!-- Guests -->
-                        <div class="relative flex items-start gap-3">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-2 shrink-0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                            <div class="min-w-0 flex-1">
-                                <label class="mb-0 block text-[17px] font-bold leading-5 text-[#081E2A]">Guests</label>
-                                <input type="text" value="0" class="mt-6 w-full border-0 bg-transparent p-0 text-sm text-gray-700 outline-none" />
+                            <!-- Duration Panel -->
+                            <div
+                                v-show="openDropdown === 'duration'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[180px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                            >
+                                <label
+                                    v-for="opt in durationOptions"
+                                    :key="opt.value"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                                >
+                                    <input
+                                        type="radio"
+                                        :value="opt.value"
+                                        v-model="selectedDuration"
+                                        class="h-4 w-4 accent-[#4DA528]"
+                                    />
+                                    <span class="text-[15px] text-gray-700">{{ opt.label }}</span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <button type="button" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#4DA528] transition-colors hover:text-[#FF970D]">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="3" y2="18" /></svg>
-                        </button>
-                        <button type="submit" class="flex items-center gap-2.5 rounded-full bg-[#4DA528] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#FF970D]">
+                    <div class="shrink-0">
+                        <button
+                            type="submit"
+                            class="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#4DA528] px-10 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#FF970D] active:scale-[0.98]"
+                        >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                             Search
                         </button>
