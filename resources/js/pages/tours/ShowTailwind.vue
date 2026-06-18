@@ -53,11 +53,11 @@ const enquiryAction = computed(() => tours2Enquiry({ tour: props.tour.id }).url)
 const activeTab = ref('overview');
 
 const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'itinerary', label: 'Itinerary' },
-    { id: 'inclusions', label: 'Inclusions' },
-    { id: 'rates', label: 'Rates' },
-    { id: 'gallery', label: 'Gallery' },
+    { id: 'overview', label: 'Overview', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' },
+    { id: 'itinerary', label: 'Itinerary', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' },
+    { id: 'inclusions', label: 'Inclusions', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+    { id: 'rates', label: 'Rates', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+    { id: 'gallery', label: 'Gallery', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' },
 ];
 
 const countryLabel = computed(() => uniqueCountries.value.length > 1 ? 'Countries' : 'Country');
@@ -139,13 +139,16 @@ function swiperSlidePrev(): void {
     <section class="pb-20">
         <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
             <!-- Tabs nav -->
-            <div class="pb-[50px] pt-0">
-                <ul class="relative z-[2] flex justify-between border-b border-gray-200" role="tablist">
-                    <li v-for="tab in tabs" :key="tab.id" class="nav-item" role="presentation">
+            <div class="-mt-12 pb-[50px] pt-0">
+                <ul class="relative z-[2] flex justify-between rounded-[47px] bg-white p-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]" role="tablist">
+                    <li v-for="tab in tabs" :key="tab.id" class="nav-item flex-1" role="presentation">
                         <button type="button" role="tab" :aria-selected="activeTab === tab.id"
-                            class="px-5 py-4 text-[16px] font-semibold transition-colors"
-                            :class="activeTab === tab.id ? 'border-b-2 border-[#4DA528] text-[#4DA528]' : 'text-[#6B7280] hover:text-[#081E2A]'"
-                            @click="activeTab = tab.id">{{ tab.label }}</button>
+                            class="inline-flex w-full items-center justify-center gap-3.5 rounded-[47px] px-8 py-[26px] text-[16px] font-semibold leading-5 transition-colors"
+                            :class="activeTab === tab.id ? 'bg-[#F4F6F8]' : 'text-[#081E2A] hover:bg-[#F4F6F8]'"
+                            @click="activeTab = tab.id">
+                            <span class="text-[#4DA528]" v-html="tab.svg"></span>
+                            {{ tab.label }}
+                        </button>
                     </li>
                 </ul>
             </div>
