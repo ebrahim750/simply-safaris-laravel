@@ -94,11 +94,18 @@ defineProps<{
 
                     <div v-else class="grid grid-cols-1 gap-8 md:grid-cols-2">
                         <article v-for="post in posts.data" :key="post.id" class="group">
-                            <Link :href="blogShow({ post: post.slug })" class="block overflow-hidden rounded-xl">
+                            <Link :href="blogShow({ post: post.slug })" class="relative block overflow-hidden rounded-xl">
                                 <img v-if="post.featured_image" :src="post.featured_image" :alt="post.title" class="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                 <div v-else class="flex h-52 w-full items-center justify-center bg-gray-100">
                                     <span class="text-gray-400">No image</span>
                                 </div>
+                                <span
+                                    v-if="post.categories.length > 0"
+                                    class="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-gray-700"
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>
+                                    {{ post.categories[0].name }}
+                                </span>
                             </Link>
                             <div class="pt-5">
                                 <div class="mb-3 flex items-center gap-4 text-xs text-gray-500">
