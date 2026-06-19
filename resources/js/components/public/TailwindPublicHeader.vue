@@ -351,6 +351,9 @@ onUnmounted(() => {
                                     <Link href="/blog2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Blog 2</Link>
                                 </li>
                                 <li>
+                                    <Link href="/destinations2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Destinations 2</Link>
+                                </li>
+                                <li>
                                     <Link href="/tours2" class="block px-5 py-2.5 text-[14px] text-[#081E2A] transition-colors hover:bg-gray-50 hover:text-[#4DA528]">Tours 2</Link>
                                 </li>
                             </ul>
@@ -472,6 +475,9 @@ onUnmounted(() => {
                             </li>
                             <li>
                                 <Link href="/blog2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">Blog 2</Link>
+                            </li>
+                            <li>
+                                <Link href="/destinations2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">Destinations 2</Link>
                             </li>
                             <li>
                                 <Link href="/tours2" class="block px-10 py-2.5 text-[14px] text-[#081E2A]" @click="closeMobileMenu">Tours 2</Link>

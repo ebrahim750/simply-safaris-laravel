@@ -31,6 +31,8 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
 Route::get('/destinations/{country:slug}', [DestinationController::class, 'showCountry'])->name('destinations.country');
+Route::get('/destinations2', [DestinationController::class, 'index2'])->name('destinations2.index');
+Route::get('/destinations2/{country:slug}', [DestinationController::class, 'showCountry2'])->name('destinations2.country');
 
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/search', [TourController::class, 'search'])->name('tours.search');
