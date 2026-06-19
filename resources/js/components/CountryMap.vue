@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import 'jsvectormap/dist/jsvectormap.css';
-import { nextTick, onMounted, onUnmounted, shallowRef, useId } from 'vue';
+import { nextTick, onMounted, onUnmounted, shallowRef } from 'vue';
 
 const props = defineProps<{
     countryCode: string;
     countrySlug: string;
 }>();
 
-const containerId = `country-map-${useId()}`;
+const containerId = `country-map-${props.countrySlug}`;
 const mapInstance = shallowRef<any | null>(null);
 let resizeHandler: (() => void) | null = null;
 let resizeObserver: ResizeObserver | null = null;
@@ -100,10 +100,17 @@ function stretchSvgToFill(): void {
 onMounted(async () => {
     await nextTick();
 
-    const [jsVectorMap] = await Promise.all([
+    const [{ default: jsVectorMap }] = await Promise.all([
         import('jsvectormap'),
         import('jsvectormap/dist/maps/world.js'),
-    ]);
+    ]).catch((err) => {
+        console.error('Failed to load map:', err);
+        return [{ default: null }, {}];
+    });
+
+    if (!jsVectorMap) {
+        return;
+    }
 
     const code = props.countryCode.trim().toUpperCase();
 
