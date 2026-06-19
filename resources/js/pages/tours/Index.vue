@@ -132,6 +132,22 @@ const debouncedApplyFilters = debounce(applyFilters, 300);
 watch(priceRange, () => debouncedApplyFilters(), { deep: true, flush: 'sync' });
 watch(durationRange, () => debouncedApplyFilters(), { deep: true, flush: 'sync' });
 
+function clearSearch(): void {
+    debouncedApplyFilters.cancel();
+    const params: QueryParams = {};
+
+    if (selectedCategories.value.length > 0) { params.categories = selectedCategories.value; }
+    if (selectedActivities.value.length > 0) { params.activities = selectedActivities.value; }
+    if (selectedPlaces.value.length > 0) { params.places = selectedPlaces.value; }
+    if (selectedCountries.value.length > 0) { params.countries = selectedCountries.value; }
+    if (priceRange.value[0] !== 100) { params.price_min = priceRange.value[0]; }
+    if (priceRange.value[1] !== 5000) { params.price_max = priceRange.value[1]; }
+    if (durationRange.value[0] !== 1) { params.duration_min = durationRange.value[0]; }
+    if (durationRange.value[1] !== 30) { params.duration_max = durationRange.value[1]; }
+
+    router.get(tourRoutes.index({ query: params }).url, {}, { replace: true });
+}
+
 function clearFilters(): void {
     selectedCountries.value = [];
     selectedPlaces.value = [];
@@ -170,7 +186,7 @@ function clearFilters(): void {
                 <button
                     type="button"
                     class="cursor-pointer rounded-md px-3 py-1 text-[13px] font-medium text-gray-500 transition-colors hover:bg-gray-100"
-                    @click="clearFilters"
+                    @click="clearSearch"
                 >Clear search term</button>
             </div>
             <div class="flex flex-wrap lg:gap-[30px]">
