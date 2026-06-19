@@ -129,8 +129,8 @@ function applyFilters(): void {
 
 const debouncedApplyFilters = debounce(applyFilters, 300);
 
-watch(priceRange, () => debouncedApplyFilters(), { deep: true });
-watch(durationRange, () => debouncedApplyFilters(), { deep: true });
+watch(priceRange, () => debouncedApplyFilters(), { deep: true, flush: 'sync' });
+watch(durationRange, () => debouncedApplyFilters(), { deep: true, flush: 'sync' });
 
 function clearFilters(): void {
     selectedCountries.value = [];
@@ -140,8 +140,7 @@ function clearFilters(): void {
     priceRange.value = [100, 5000];
     durationRange.value = [1, 30];
     debouncedApplyFilters.cancel();
-    window.history.replaceState({}, '', '/tours');
-    router.reload({ preserveScroll: true });
+    router.get('/tours');
 }
 </script>
 
