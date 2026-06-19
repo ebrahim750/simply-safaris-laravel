@@ -510,34 +510,36 @@ onUnmounted(() => {
             leave-to-class="-translate-y-full"
         >
             <div v-if="searchOpen" class="fixed inset-x-0 top-0 z-[9999] flex h-[75vh] flex-col bg-white shadow-2xl">
-                <div class="flex justify-end px-10 py-8 lg:px-20 lg:py-14">
+                <!-- Close Button -->
+                <div class="flex shrink-0 justify-end transition-all duration-500" :class="suggestions.length > 0 || isLoading ? 'px-10 py-2 lg:px-20 lg:py-3' : 'px-10 py-8 lg:px-20 lg:py-14'">
                     <button type="button" class="cursor-pointer p-2 text-gray-400 transition-colors hover:text-gray-900" @click="searchOpen = false">
                         <X class="size-7" stroke-width="1.5" />
                     </button>
                 </div>
 
-                <div class="flex flex-1 justify-center px-6 transition-all duration-500 lg:px-16" :class="suggestions.length > 0 || isLoading ? 'items-start pt-12 lg:pt-20' : 'items-center'">
-                    <div class="w-full max-w-5xl">
-                        <label class="mb-6 block text-sm font-medium tracking-widest text-gray-400 uppercase">
+                <div class="flex flex-1 min-h-0 justify-center px-6 transition-all duration-500 lg:px-16" :class="suggestions.length > 0 || isLoading ? 'items-start pt-0' : 'items-center'">
+                    <div class="flex w-full max-w-5xl flex-col" :class="suggestions.length > 0 ? 'h-full' : ''">
+                        <!-- Label - fades when results appear -->
+                        <label class="mb-6 block shrink-0 text-sm font-medium tracking-widest text-gray-400 uppercase transition-all duration-500" :class="suggestions.length > 0 ? 'opacity-0 -translate-y-2 h-0 mb-0 overflow-hidden' : 'opacity-100'">
                             What are you looking for?
                         </label>
-                        <div class="relative">
+                        <div class="relative shrink-0">
                             <input
                                 ref="searchInput"
                                 v-model="searchQuery"
                                 type="text"
                                 placeholder="Search tours..."
-                                class="w-full border-0 border-b-2 border-gray-200 bg-transparent py-6 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:border-gray-900 focus:outline-none focus:ring-0 lg:pr-14 lg:text-5xl"
+                                class="w-full border-0 border-b-2 border-gray-200 bg-transparent py-4 pr-12 text-3xl text-gray-900 placeholder-gray-300 transition-colors focus:border-gray-900 focus:outline-none focus:ring-0 lg:pr-14 lg:text-5xl"
                                 @keydown.enter="handleSearchSubmit"
                             />
                             <Search class="absolute top-1/2 right-4 size-5 -translate-y-1/2 cursor-pointer text-gray-400 transition-colors hover:text-gray-900 lg:right-6 lg:size-6" @click="handleSearchSubmit" />
                         </div>
 
-                        <div class="mt-8 flex min-h-[3rem] justify-center">
+                        <div class="mt-4 flex shrink-0 min-h-[2rem] justify-center">
                             <Loader2 v-if="isLoading" class="size-10 animate-spin text-gray-400" />
                         </div>
 
-                        <div v-if="suggestions.length > 0" class="mt-6 max-h-[50vh] overflow-y-auto border border-gray-100 bg-white">
+                        <div v-if="suggestions.length > 0" class="mt-2 min-h-0 flex-1 overflow-y-auto border border-gray-100 bg-white">
                             <Link v-for="suggestion in suggestions" :key="suggestion.id" :href="suggestion.url" class="flex items-center gap-4 border-b border-gray-100 px-5 py-3 transition-colors last:border-b-0 hover:bg-gray-50" @click="searchOpen = false">
                                 <div class="h-14 w-20 shrink-0 overflow-hidden rounded-md">
                                     <img :src="suggestion.main_image" :alt="suggestion.name" class="size-full object-cover" />
