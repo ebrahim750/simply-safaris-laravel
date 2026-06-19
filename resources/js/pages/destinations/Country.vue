@@ -4,8 +4,7 @@ import { onMounted, ref } from 'vue';
 import CountryMap from '@/components/CountryMap.vue';
 import { home } from '@/routes';
 import destinations from '@/routes/destinations';
-import tourRoutes from '@/routes/tours';
-import { DollarSign, CalendarCheck, Clock, Globe, Plug, Car, Wallet } from 'lucide-vue-next';
+import { DollarSign, CalendarCheck, Clock, Globe, Plug, Car, Wallet, Clock4 } from 'lucide-vue-next';
 
 const props = defineProps<{
     country: {
@@ -53,15 +52,6 @@ const props = defineProps<{
 }>();
 
 const activeSection = ref('');
-const showOverviewModal = ref(false);
-const overviewRef = ref<HTMLElement | null>(null);
-const isOverviewTruncated = ref(false);
-
-const checkOverviewOverflow = () => {
-    if (overviewRef.value) {
-        isOverviewTruncated.value = overviewRef.value.scrollHeight > overviewRef.value.clientHeight;
-    }
-};
 
 const scrollToSection = (slug: string) => {
     const element = document.getElementById(`place-${slug}`);
@@ -79,9 +69,6 @@ const scrollToSection = (slug: string) => {
 };
 
 onMounted(() => {
-    checkOverviewOverflow();
-    window.addEventListener('resize', checkOverviewOverflow);
-
     const observer = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
@@ -122,7 +109,6 @@ onMounted(() => {
     return () => {
         observer.disconnect();
         removeNavigateListener();
-        window.removeEventListener('resize', checkOverviewOverflow);
     };
 });
 </script>
@@ -131,54 +117,43 @@ onMounted(() => {
     <Head :title="country.name" />
 
     <!-- Hero Section -->
-    <section class="page-title">
-        <div v-if="country.main_image" class="hero-image">
-            <img :src="country.main_image" :alt="country.name" />
-            <div class="hero-overlay"></div>
-        </div>
-        <div class="tf-container full">
-            <div class="row align-items-stretch">
-                <div class="col-lg-9">
-                    <div class="page-title-inner">
-                        <div class="title">{{ country.name }}</div>
-                        <ul class="breadcrumbs">
-                            <li><Link :href="home()">Home</Link></li>
-                            <li><Link :href="destinations.index()">Destinations</Link></li>
-                            <li><span>{{ country.name }}</span></li>
-                        </ul>
+    <section class="relative h-[500px] bg-cover bg-center bg-no-repeat" :style="country.main_image ? { backgroundImage: `url(${country.main_image})` } : {}">
+        <div v-if="country.main_image" class="absolute inset-0" style="background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);"></div>
+        <div v-else class="absolute inset-0" style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89));"></div>
+        <div class="relative z-10 mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-stretch pt-[140px] pb-20">
+                <div class="w-full lg:w-3/4">
+                    <div class="pt-20 pb-10 lg:pt-[120px]">
+                        <h1 class="mb-4 text-[65px] font-bold leading-[1.1] text-white max-lg:text-[48px] max-lg:text-center max-md:text-[36px]">{{ country.name }}</h1>
+                        <nav class="flex items-center text-[18px] leading-[22.68px] max-lg:justify-center">
+                            <Link :href="home()" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-[10px] after:text-white after:content-['\203A']">Home</Link>
+                            <Link :href="destinations.index()" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-[10px] after:text-white after:content-['\203A']">Destinations</Link>
+                            <span class="text-white">{{ country.name }}</span>
+                        </nav>
                     </div>
                 </div>
-                <div class="col-lg-3">
-                    <div class="hero-sidebar">
-                        <div class="map-card">
-                            <div class="map-wrapper">
+                <div class="w-full lg:w-1/4">
+                    <div class="relative z-20 max-lg:mt-0 max-lg:mb-10">
+                        <!-- Map Card -->
+                        <div class="rounded-[16px] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
+                            <div class="overflow-hidden rounded-t-[16px]">
                                 <CountryMap
                                     :country-code="country.country_code || ''"
                                     :country-slug="country.slug"
                                 />
                             </div>
-                            <div class="btn-maps-wrapper">
+                            <div class="p-4">
                                 <a
                                     :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(country.name)}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="btn-maps"
+                                    class="block w-full rounded-[8px] bg-[#4DA528] px-5 py-3 text-center text-[14px] font-medium text-white transition-colors hover:bg-[#3d8a20]"
                                 >
                                     Open Map
                                 </a>
                             </div>
                         </div>
-                        <div v-if="country.overview" ref="overviewRef" class="hero-overview">
-                            <div v-html="country.overview"></div>
-                        </div>
-                        <a
-                            v-if="isOverviewTruncated"
-                            href="#"
-                            class="read-more-link"
-                            @click.prevent="showOverviewModal = true"
-                        >
-                            Read more
-                        </a>
+
                     </div>
                 </div>
             </div>
@@ -186,99 +161,101 @@ onMounted(() => {
     </section>
 
     <!-- Country Info Section -->
-    <section class="section-country-info">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="country-overview-v2">
-                        <h2>Overview</h2>
+    <section class="bg-white py-[60px]">
+        <div class="mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div class="mb-[50px]">
+                <h2 class="mb-5 text-[28px] font-bold text-[#081E2A]">Overview</h2>
 
-                        <div class="overview-grid">
-                            <div class="overview-item">
-                                <DollarSign class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Rates</h4>
-                                    <p>{{ rates_range ?? '-' }}</p>
-                                </div>
-                            </div>
+                <div v-if="country.overview" class="mb-10 max-w-[900px] text-[16px] leading-[1.8] text-gray-500" v-html="country.overview"></div>
 
-                            <div class="overview-item">
-                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Best time to go</h4>
-                                    <p>{{ country.best_time_to_go ?? '-' }}</p>
-                                </div>
-                            </div>
+                <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Rates -->
+                    <div class="flex items-start gap-4">
+                        <DollarSign class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Rates</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ rates_range ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>High Season</h4>
-                                    <p>{{ country.high_season ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- Best time to go -->
+                    <div class="flex items-start gap-4">
+                        <CalendarCheck class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Best time to go</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.best_time_to_go ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <Clock class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Time Zone</h4>
-                                    <p>{{ country.timezone ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- High Season -->
+                    <div class="flex items-start gap-4">
+                        <CalendarCheck class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">High Season</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.high_season ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <Globe class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Language</h4>
-                                    <p>{{ country.languages ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- Time Zone -->
+                    <div class="flex items-start gap-4">
+                        <Clock class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Time Zone</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.timezone ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <Plug class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Electrical</h4>
-                                    <template v-if="country.electrical">
-                                        <p>{{ country.electrical.voltage }}</p>
-                                        <p v-if="country.electrical.plugs"><strong>{{ country.electrical.plugs }}</strong></p>
-                                    </template>
-                                    <p v-else>-</p>
-                                </div>
-                            </div>
+                    <!-- Language -->
+                    <div class="flex items-start gap-4">
+                        <Globe class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Language</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.languages ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <Wallet class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Currency</h4>
-                                    <p>{{ country.currency ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- Electrical -->
+                    <div class="flex items-start gap-4">
+                        <Plug class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Electrical</h4>
+                            <template v-if="country.electrical">
+                                <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.electrical.voltage }}</p>
+                                <p v-if="country.electrical.plugs" class="text-[15px] leading-[1.6] text-gray-500"><strong class="text-gray-600">{{ country.electrical.plugs }}</strong></p>
+                            </template>
+                            <p v-else class="text-[15px] leading-[1.6] text-gray-500">-</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <Car class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Driving Side</h4>
-                                    <p>{{ country.driving_side ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- Currency -->
+                    <div class="flex items-start gap-4">
+                        <Wallet class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Currency</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.currency ?? '-' }}</p>
+                        </div>
+                    </div>
 
-                            <div class="overview-item">
-                                <CalendarCheck class="overview-icon" :size="28" style="color: #4da528;" />
-                                <div class="overview-content">
-                                    <h4>Tourist Info</h4>
-                                    <p v-if="country.tourism_link">
-                                        <a
-                                            :href="country.tourism_link"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="tourism-link"
-                                        >
-                                            <strong>{{ country.name }} Tourism Board</strong>
-                                        </a>
-                                    </p>
-                                    <p v-else>-</p>
-                                </div>
-                            </div>
+                    <!-- Driving Side -->
+                    <div class="flex items-start gap-4">
+                        <Car class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Driving Side</h4>
+                            <p class="text-[15px] leading-[1.6] text-gray-500">{{ country.driving_side ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Tourist Info -->
+                    <div class="flex items-start gap-4">
+                        <CalendarCheck class="mt-0.5 shrink-0 text-[#4da528]" :size="28" />
+                        <div>
+                            <h4 class="mb-1.5 text-[18px] font-semibold text-[#081E2A]">Tourist Info</h4>
+                            <p v-if="country.tourism_link" class="text-[15px] leading-[1.6] text-gray-500">
+                                <a :href="country.tourism_link" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#4a5d4a] no-underline hover:underline">
+                                    {{ country.name }} Tourism Board
+                                </a>
+                            </p>
+                            <p v-else class="text-[15px] leading-[1.6] text-gray-500">-</p>
                         </div>
                     </div>
                 </div>
@@ -287,97 +264,97 @@ onMounted(() => {
     </section>
 
     <!-- Climate Section -->
-    <section v-if="country.climate" class="section-climate">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="climate-inner">
-                        <h2>Climate</h2>
+    <section v-if="country.climate" class="bg-[#f8f9fa] py-[60px]">
+        <div class="mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div>
+                <h2 class="mb-[30px] text-[28px] font-bold text-[#081E2A]">Climate</h2>
 
-                        <div class="climate-grid">
-                            <!-- Month headers -->
-                            <div class="climate-row climate-header">
-                                <div class="climate-label"></div>
-                                <div
-                                    v-for="month in country.climate.months"
-                                    :key="month"
-                                    class="climate-cell"
-                                >
-                                    {{ month }}
-                                </div>
-                            </div>
+                <div class="flex flex-col gap-5">
+                    <!-- Header row -->
+                    <div class="grid grid-cols-[200px_repeat(12,1fr)] items-center gap-[10px] px-4 pb-1 max-lg:grid-cols-[140px_repeat(12,1fr)] max-lg:gap-[6px] max-md:grid-cols-[120px_repeat(12,1fr)] max-md:gap-[3px]">
+                        <div class="pr-3"></div>
+                        <div
+                            v-for="month in country.climate.months"
+                            :key="month"
+                            class="text-center text-[13px] font-semibold tracking-[0.3px] text-gray-400 max-md:text-[10px]"
+                        >
+                            {{ month }}
+                        </div>
+                    </div>
 
-                            <!-- Max temp -->
-                            <div class="climate-row">
-                                <div class="climate-label">Maximum daytime temperature °C</div>
-                                <div
-                                    v-for="(temp, index) in country.climate.max_temp"
-                                    :key="'temp-' + index"
-                                    class="climate-cell"
-                                >
-                                    <span
-                                        v-if="temp !== null"
-                                        class="climate-badge climate-badge-red"
-                                    >
-                                        {{ temp }}
-                                    </span>
-                                    <span v-else class="climate-dash">-</span>
-                                </div>
-                            </div>
+                    <!-- Max temp row -->
+                    <div class="grid grid-cols-[200px_repeat(12,1fr)] items-center gap-[10px] rounded-[12px] px-4 py-[10px] transition-colors hover:bg-black/[0.02] max-lg:grid-cols-[140px_repeat(12,1fr)] max-lg:gap-[6px] max-md:grid-cols-[120px_repeat(12,1fr)] max-md:gap-[3px] max-md:px-[10px] max-md:py-2">
+                        <div class="pr-3 text-[14px] font-medium text-gray-500 max-lg:text-[12px]">Maximum daytime temperature °C</div>
+                        <div
+                            v-for="(temp, index) in country.climate.max_temp"
+                            :key="'temp-' + index"
+                            class="flex items-center justify-center"
+                        >
+                            <span
+                                v-if="temp !== null"
+                                class="flex size-[42px] items-center justify-center rounded-full text-[14px] font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] transition-all duration-200 hover:scale-120 hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)] cursor-default max-lg:size-[36px] max-lg:text-[12px] max-md:size-[30px] max-md:text-[10px]"
+                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay: {{ index * 0.02 }}s;"
+                            >
+                                {{ temp }}
+                            </span>
+                            <span v-else class="text-[14px] text-gray-300">-</span>
+                        </div>
+                    </div>
 
-                            <!-- Sunshine hours -->
-                            <div class="climate-row">
-                                <div class="climate-label">Hours of sunshine (daily)</div>
-                                <div
-                                    v-for="(hours, index) in country.climate.sunshine_hours"
-                                    :key="'sun-' + index"
-                                    class="climate-cell"
-                                >
-                                    <span
-                                        v-if="hours !== null"
-                                        class="climate-badge climate-badge-yellow"
-                                    >
-                                        {{ hours }}
-                                    </span>
-                                    <span v-else class="climate-dash">-</span>
-                                </div>
-                            </div>
+                    <!-- Sunshine hours row -->
+                    <div class="grid grid-cols-[200px_repeat(12,1fr)] items-center gap-[10px] rounded-[12px] px-4 py-[10px] transition-colors hover:bg-black/[0.02] max-lg:grid-cols-[140px_repeat(12,1fr)] max-lg:gap-[6px] max-md:grid-cols-[120px_repeat(12,1fr)] max-md:gap-[3px] max-md:px-[10px] max-md:py-2">
+                        <div class="pr-3 text-[14px] font-medium text-gray-500 max-lg:text-[12px]">Hours of sunshine (daily)</div>
+                        <div
+                            v-for="(hours, index) in country.climate.sunshine_hours"
+                            :key="'sun-' + index"
+                            class="flex items-center justify-center"
+                        >
+                            <span
+                                v-if="hours !== null"
+                                class="flex size-[42px] items-center justify-center rounded-full text-[14px] font-bold text-gray-800 shadow-[0_2px_6px_rgba(0,0,0,0.12)] transition-all duration-200 hover:scale-120 hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)] cursor-default max-lg:size-[36px] max-lg:text-[12px] max-md:size-[30px] max-md:text-[10px]"
+                                style="background: linear-gradient(135deg, #facc15 0%, #eab308 100%); animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay: {{ index * 0.02 }}s;"
+                            >
+                                {{ hours }}
+                            </span>
+                            <span v-else class="text-[14px] text-gray-300">-</span>
+                        </div>
+                    </div>
 
-                            <!-- Rainfall days -->
-                            <div class="climate-row">
-                                <div class="climate-label">Days with some rainfall</div>
-                                <div
-                                    v-for="(days, index) in country.climate.rainfall_days"
-                                    :key="'rain-' + index"
-                                    class="climate-cell"
-                                >
-                                    <span
-                                        v-if="days !== null"
-                                        class="climate-badge climate-badge-blue"
-                                    >
-                                        {{ days }}
-                                    </span>
-                                    <span v-else class="climate-dash">-</span>
-                                </div>
-                            </div>
+                    <!-- Rainfall days row -->
+                    <div class="grid grid-cols-[200px_repeat(12,1fr)] items-center gap-[10px] rounded-[12px] px-4 py-[10px] transition-colors hover:bg-black/[0.02] max-lg:grid-cols-[140px_repeat(12,1fr)] max-lg:gap-[6px] max-md:grid-cols-[120px_repeat(12,1fr)] max-md:gap-[3px] max-md:px-[10px] max-md:py-2">
+                        <div class="pr-3 text-[14px] font-medium text-gray-500 max-lg:text-[12px]">Days with some rainfall</div>
+                        <div
+                            v-for="(days, index) in country.climate.rainfall_days"
+                            :key="'rain-' + index"
+                            class="flex items-center justify-center"
+                        >
+                            <span
+                                v-if="days !== null"
+                                class="flex size-[42px] items-center justify-center rounded-full text-[14px] font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] transition-all duration-200 hover:scale-120 hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)] cursor-default max-lg:size-[36px] max-lg:text-[12px] max-md:size-[30px] max-md:text-[10px]"
+                                style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay: {{ index * 0.02 }}s;"
+                            >
+                                {{ days }}
+                            </span>
+                            <span v-else class="text-[14px] text-gray-300">-</span>
+                        </div>
+                    </div>
 
-                            <!-- Sea temp -->
-                            <div v-if="country.climate.sea_temp" class="climate-row">
-                                <div class="climate-label">Sea temperature °C</div>
-                                <div
-                                    v-for="(temp, index) in country.climate.sea_temp"
-                                    :key="'sea-' + index"
-                                    class="climate-cell"
-                                >
-                                    <span
-                                        v-if="temp !== null"
-                                        class="climate-badge climate-badge-red"
-                                    >
-                                        {{ temp }}
-                                    </span>
-                                    <span v-else class="climate-dash">-</span>
-                                </div>
-                            </div>
+                    <!-- Sea temp row -->
+                    <div v-if="country.climate.sea_temp" class="grid grid-cols-[200px_repeat(12,1fr)] items-center gap-[10px] rounded-[12px] px-4 py-[10px] transition-colors hover:bg-black/[0.02] max-lg:grid-cols-[140px_repeat(12,1fr)] max-lg:gap-[6px] max-md:grid-cols-[120px_repeat(12,1fr)] max-md:gap-[3px] max-md:px-[10px] max-md:py-2">
+                        <div class="pr-3 text-[14px] font-medium text-gray-500 max-lg:text-[12px]">Sea temperature °C</div>
+                        <div
+                            v-for="(temp, index) in country.climate.sea_temp"
+                            :key="'sea-' + index"
+                            class="flex items-center justify-center"
+                        >
+                            <span
+                                v-if="temp !== null"
+                                class="flex size-[42px] items-center justify-center rounded-full text-[14px] font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] transition-all duration-200 hover:scale-120 hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)] cursor-default max-lg:size-[36px] max-lg:text-[12px] max-md:size-[30px] max-md:text-[10px]"
+                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay: {{ index * 0.02 }}s;"
+                            >
+                                {{ temp }}
+                            </span>
+                            <span v-else class="text-[14px] text-gray-300">-</span>
                         </div>
                     </div>
                 </div>
@@ -386,23 +363,26 @@ onMounted(() => {
     </section>
 
     <!-- Places Section with Sidebar -->
-    <section v-if="country.places.length > 0" class="section-places">
-        <div class="tf-container">
-            <div class="row">
+    <section v-if="country.places.length > 0" class="py-[80px]">
+        <div class="mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap">
                 <!-- Sticky Sidebar -->
-                <div class="col-lg-3">
-                    <div class="places-sidebar">
-                        <div class="sidebar-inner">
-                            <h4>Destinations in {{ country.name }}</h4>
+                <div class="w-full lg:w-1/4">
+                    <div class="sticky top-[120px] max-lg:relative max-lg:top-0 max-lg:mb-10">
+                        <div class="rounded-[12px] bg-white p-[30px] shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
+                            <h4 class="mb-5 text-[20px] font-semibold text-[#081E2A]">Destinations in {{ country.name }}</h4>
                             <nav class="places-nav">
-                                <ul>
+                                <ul class="m-0 list-none p-0">
                                     <li
                                         v-for="place in country.places"
                                         :key="place.id"
-                                        :class="{ active: activeSection === place.slug }"
+                                        class="mb-2 last:mb-0"
+                                        :class="{ 'active': activeSection === place.slug }"
                                     >
                                         <a
-                                            href="javascript:void(0)"
+                                            :href="`#${place.slug}`"
+                                            class="block rounded-[8px] px-[15px] py-[10px] text-[15px] text-gray-500 no-underline transition-all duration-300 hover:bg-[#f0f7ed] hover:text-[#4DA528]"
+                                            :class="{ '!bg-[#4DA528] !text-white': activeSection === place.slug }"
                                             @click.prevent="scrollToSection(place.slug)"
                                         >
                                             {{ place.name }}
@@ -410,97 +390,94 @@ onMounted(() => {
                                     </li>
                                 </ul>
                             </nav>
-
+                            <div class="mt-5 border-t border-gray-100 pt-5">
+                                <Link
+                                    :href="`/tours?countries=${country.id}`"
+                                    class="block w-full rounded-[8px] bg-[#4DA528] px-5 py-3 text-center text-[14px] font-medium text-white no-underline transition-colors hover:bg-[#3d8a20]"
+                                >
+                                    View All Tours
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content -->
-                <div class="col-lg-9">
-                    <div class="places-content">
-                        <div
-                            v-for="place in country.places"
-                            :id="`place-${place.slug}`"
-                            :key="place.id"
-                            class="place-section"
-                        >
-                            <div class="place-card">
-                                <div class="row">
-                                    <!-- Place Image (Left) -->
-                                    <div class="col-md-5">
-                                        <div class="place-image-wrapper">
-                                            <div
-                                                v-if="place.main_image"
-                                                class="place-image"
-                                                :style="{ backgroundImage: `url(${place.main_image})` }"
-                                            ></div>
-                                            <div
-                                                v-else
-                                                class="place-image placeholder"
-                                            >
-                                                <span>{{ place.name.charAt(0) }}</span>
+                <!-- Place Cards -->
+                <div class="w-full lg:w-3/4 lg:pl-[30px]">
+                    <div
+                        v-for="place in country.places"
+                        :id="`place-${place.slug}`"
+                        :key="place.id"
+                        class="mb-[60px] last:mb-0 scroll-mt-[140px]"
+                    >
+                        <div class="overflow-hidden rounded-[16px] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.08)]">
+                            <div class="flex flex-wrap">
+                                <!-- Image -->
+                                <div class="w-full md:w-2/5 lg:w-2/5">
+                                    <div
+                                        class="h-full min-h-[350px] bg-cover bg-center bg-no-repeat transition-transform duration-500 hover:scale-105 max-md:min-h-[250px]"
+                                        :style="place.main_image ? { backgroundImage: `url(${place.main_image})` } : {}"
+                                        :class="{ 'flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]': !place.main_image }"
+                                    >
+                                        <span v-if="!place.main_image" class="text-[72px] font-bold text-white/90">{{ place.name.charAt(0) }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Details -->
+                                <div class="w-full md:w-3/5 lg:w-3/5">
+                                    <div class="p-10 max-md:p-[25px]">
+                                        <div class="mb-[15px] flex items-center justify-between gap-4">
+                                            <h3 class="m-0 text-[28px] font-bold text-[#081E2A]">{{ place.name }}</h3>
+                                            <span v-if="place.tours_count > 0" class="shrink-0 rounded-full bg-[#4DA528]/10 px-4 py-1.5 text-[13px] font-semibold text-[#4DA528]">{{ place.tours_count }} {{ place.tours_count === 1 ? 'Tour' : 'Tours' }}</span>
+                                        </div>
+                                        <div v-if="place.overview" class="mb-[25px] text-[15px] leading-[1.8] text-gray-500" v-html="place.overview"></div>
+
+                                        <!-- Sub-tours -->
+                                        <div v-if="place.tours.length > 0">
+                                            <h4 class="mb-5 text-[18px] font-semibold text-[#081E2A]">Tours</h4>
+                                            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                                <div
+                                                    v-for="tour in place.tours"
+                                                    :key="tour.id"
+                                                    class="overflow-hidden rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-[5px] hover:shadow-[0_8px_25px_rgba(0,0,0,0.12)]"
+                                                >
+                                                    <Link
+                                                        :href="`/tours/${tour.id}`"
+                                                        class="block text-inherit no-underline"
+                                                    >
+                                                        <div class="aspect-[16/10] overflow-hidden">
+                                                            <img
+                                                                v-if="tour.main_image"
+                                                                :src="tour.main_image"
+                                                                :alt="tour.name"
+                                                                class="size-full object-cover transition-transform duration-500 hover:scale-110"
+                                                            />
+                                                            <div v-else class="flex size-full items-center justify-center bg-gray-100 text-gray-400">No image</div>
+                                                        </div>
+                                                        <div class="p-[15px]">
+                                                            <h5 class="mb-[10px] text-[15px] font-semibold leading-[1.4] text-[#081E2A] line-clamp-2">{{ tour.name }}</h5>
+                                                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                                                <span v-if="tour.duration_days" class="inline-flex items-center gap-1 text-[13px] text-gray-500">
+                                                                    <Clock4 class="size-3.5 text-[#4DA528]" />
+                                                                    {{ tour.duration_days }} {{ tour.duration_days === 1 ? 'day' : 'days' }}
+                                                                </span>
+                                                                <span class="text-[15px] font-bold text-[#4DA528]">{{ tour.price }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Place Content (Right) -->
-                                    <div class="col-md-7">
-                                        <div class="place-details">
-                                            <div class="place-title-row">
-                                                <h3 class="place-name">{{ place.name }}</h3>
-                                                <a href="#" class="inline-flex shrink-0 items-center rounded-lg bg-[#4da528]/15 px-3 py-1.5 font-medium text-[#4da528] transition-colors hover:bg-[#4da528]/25" style="font-size: 13px;">View tours</a>
-                                            </div>
-                                            <div v-if="place.overview" class="place-overview">
-                                                <div v-html="place.overview"></div>
-                                            </div>
-
-                                            <!-- Related Tours -->
-                                            <div v-if="place.tours.length > 0" class="place-tours">
-                                                <h5 class="tours-heading">
-                                                    Tours in {{ place.name }}
-                                                </h5>
-                                                <div class="tours-grid">
-                                                    <div
-                                                        v-for="tour in place.tours"
-                                                        :key="tour.id"
-                                                        class="tour-card"
-                                                    >
-                                                        <Link
-                                                            :href="tourRoutes.show({ tour: tour.id })"
-                                                            class="tour-link"
-                                                        >
-                                                            <div class="tour-image">
-                                                                <img
-                                                                    v-if="tour.main_image"
-                                                                    :src="tour.main_image"
-                                                                    :alt="tour.name"
-                                                                />
-                                                                <img
-                                                                    v-else
-                                                                    src="/template/images/page/no-image.jpg"
-                                                                    :alt="tour.name"
-                                                                />
-                                                            </div>
-                                                            <div class="tour-info">
-                                                                <h6 class="tour-title">{{ tour.name }}</h6>
-                                                                <div class="tour-meta">
-                                                                    <span v-if="tour.duration_days" class="tour-duration">
-                                                                        <i class="icon-time-left"></i>
-                                                                        {{ tour.duration_days }} {{ tour.duration_days === 1 ? 'day' : 'days' }}
-                                                                    </span>
-                                                                    <span class="tour-price">{{ tour.price }}</span>
-                                                                </div>
-                                                            </div>
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div v-if="place.tours_count > 4" class="view-all-tours">
-                                                    <a href="javascript:void(0)" class="btn-view-all">
-                                                        View {{ place.tours_count - 4 }} More Tours
-                                                        <i class="icon-arrow-right"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
+                                        <!-- View all tours link -->
+                                        <div v-if="place.tours_count > place.tours.length" class="mt-5 text-center">
+                                            <Link
+                                                :href="`/tours?countries=${country.id}&places=${place.id}`"
+                                                class="inline-flex items-center gap-2 rounded-[8px] border-2 border-[#4DA528] bg-transparent px-[25px] py-3 text-[14px] font-medium text-[#4DA528] no-underline transition-all hover:bg-[#4DA528] hover:text-white"
+                                            >
+                                                View All Tours
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>
@@ -512,781 +489,9 @@ onMounted(() => {
         </div>
     </section>
 
-    <!-- Overview Modal -->
-    <div v-if="showOverviewModal" class="modal-overlay" @click.self="showOverviewModal = false">
-        <div class="modal-content">
-            <button class="modal-close" @click="showOverviewModal = false">×</button>
-            <h3>About {{ country.name }}</h3>
-            <div class="modal-body" v-html="country.overview"></div>
-        </div>
-    </div>
 </template>
 
 <style scoped>
-.page-title {
-    position: relative;
-    min-height: 600px;
-    display: flex;
-    align-items: stretch;
-    background: #f8f9fa;
-    padding-bottom: 0;
-}
-
-.hero-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 75%;
-    height: 100%;
-    z-index: 0;
-}
-
-.hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.8) 100%);
-}
-
-.page-title .row {
-    width: 100%;
-    margin: 0;
-}
-
-.page-title .row > .col-lg-9 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding-top: 60px;
-    padding-bottom: 60px;
-}
-
-.page-title-inner {
-    position: relative;
-    z-index: 2;
-}
-
-.page-title-inner .title {
-    color: #fff;
-    font-size: 64px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
-}
-
-.breadcrumbs {
-    justify-content: center;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.breadcrumbs li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.breadcrumbs li:not(:last-child)::after {
-    content: '/';
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.breadcrumbs li a {
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    transition: color 0.3s ease;
-    font-size: 16px;
-}
-
-.breadcrumbs li a:hover {
-    color: #4da528;
-}
-
-.breadcrumbs li span {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 16px;
-}
-
-.page-title .row > .col-lg-3 {
-    display: flex;
-    align-items: flex-start;
-}
-
-.hero-sidebar {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    padding-top: 0;
-    padding-bottom: 40px;
-}
-
-.map-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 0 0 16px;
-    margin-top: 30px;
-    margin-bottom: 16px;
-}
-
-.hero-sidebar .map-wrapper {
-    margin-bottom: 12px;
-}
-
-.hero-sidebar :deep(.country-map) {
-    aspect-ratio: 3 / 2;
-    height: auto;
-    border-radius: 12px;
-}
-
-.btn-maps-wrapper {
-    text-align: center;
-}
-
-.btn-maps {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: #4da528;
-    color: #fff;
-    text-align: center;
-    border-radius: 9999px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 12px;
-    transition: background 0.3s ease;
-}
-
-.btn-maps:hover {
-    background: #3d8a20;
-}
-
-.hero-overview {
-    color: #666;
-    line-height: 1.7;
-    font-size: 14px;
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.hero-overview :deep(p) {
-    margin: 0 0 12px;
-}
-
-.hero-overview :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.read-more-link {
-    display: inline-block;
-    margin-top: 8px;
-    color: #4da528;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.read-more-link:hover {
-    color: #3d8a20;
-    text-decoration: underline;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal-content {
-    background: #fff;
-    border-radius: 16px;
-    max-width: 600px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 30px;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-.modal-content h3 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #081e2a;
-}
-
-.modal-body {
-    color: #666;
-    line-height: 1.8;
-    font-size: 15px;
-}
-
-.modal-body :deep(p) {
-    margin: 0 0 12px;
-}
-
-.modal-body :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.modal-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    font-size: 28px;
-    line-height: 1;
-    color: #666;
-    cursor: pointer;
-}
-
-.modal-close:hover {
-    color: #333;
-}
-
-@media (max-width: 991px) {
-    .hero-image {
-        width: 100%;
-    }
-
-    .page-title .row > .col-lg-9 {
-        padding-top: 80px;
-        padding-bottom: 40px;
-    }
-
-    .hero-sidebar {
-        margin-top: 0;
-        margin-bottom: 40px;
-    }
-
-    .page-title-inner .title {
-        font-size: 48px;
-    }
-}
-
-/* Country Info */
-.section-country-info {
-    padding: 60px 0;
-    background: #fff;
-}
-
-.country-overview-v2 {
-    margin-bottom: 50px;
-}
-
-.country-overview-v2 h2 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #081e2a;
-}
-
-.country-overview-v2 .overview-text {
-    color: #555;
-    line-height: 1.8;
-    font-size: 16px;
-    margin: 0 0 40px;
-    max-width: 900px;
-}
-
-.overview-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
-}
-
-.overview-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-}
-
-.overview-icon {
-    flex-shrink: 0;
-    color: #4a5d4a;
-    margin-top: 2px;
-}
-
-.overview-content h4 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #081e2a;
-}
-
-.overview-content p {
-    color: #666;
-    line-height: 1.6;
-    margin: 0;
-    font-size: 15px;
-}
-
-.overview-content p strong {
-    color: #4a5d4a;
-    font-weight: 600;
-}
-
-.tourism-link {
-    color: #4a5d4a;
-    text-decoration: none;
-}
-
-.tourism-link:hover {
-    text-decoration: underline;
-}
-
-@media (max-width: 991px) {
-    .overview-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-    }
-}
-
-@media (max-width: 767px) {
-    .overview-grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
-    }
-}
-
-/* Places Section */
-.section-places {
-    padding: 80px 0;
-}
-
-/* Sidebar */
-.places-sidebar {
-    position: sticky;
-    top: 120px;
-}
-
-.sidebar-inner {
-    background: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
-}
-
-.sidebar-inner h4 {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #081e2a;
-}
-
-.places-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.places-nav li {
-    margin-bottom: 8px;
-}
-
-.places-nav li a {
-    display: block;
-    padding: 10px 15px;
-    color: #666;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    font-size: 15px;
-}
-
-.places-nav li a:hover {
-    background: #f0f7ed;
-    color: #4da528;
-}
-
-.places-nav li.active a {
-    background: #4da528;
-    color: #fff;
-}
-
-.widget-link {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-
-.widget-link .btn {
-    display: block;
-    width: 100%;
-    padding: 12px 20px;
-    background: #4da528;
-    color: #fff;
-    text-align: center;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background 0.3s ease;
-}
-
-.widget-link .btn:hover {
-    background: #3d8a20;
-}
-
-/* Place Sections */
-.place-section {
-    margin-bottom: 60px;
-}
-
-.place-card {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
-}
-
-.place-image-wrapper {
-    height: 100%;
-    min-height: 350px;
-}
-
-.place-image {
-    width: 100%;
-    height: 100%;
-    min-height: 350px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: transform 0.5s ease;
-}
-
-.place-card:hover .place-image {
-    transform: scale(1.05);
-}
-
-.place-image.placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.place-image.placeholder span {
-    font-size: 72px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.place-details {
-    padding: 40px;
-}
-
-.place-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 15px;
-}
-
-.place-name {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0;
-    color: #081e2a;
-}
-
-
-
-.place-overview {
-    color: #666;
-    line-height: 1.8;
-    margin-bottom: 25px;
-    font-size: 15px;
-}
-
-/* Tours */
-.tours-heading {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #081e2a;
-}
-
-.tours-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.tour-card {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.tour-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-}
-
-.tour-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-}
-
-.tour-image {
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-}
-
-.tour-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.tour-card:hover .tour-image img {
-    transform: scale(1.1);
-}
-
-.tour-info {
-    padding: 15px;
-}
-
-.tour-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #081e2a;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.tour-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.tour-duration {
-    font-size: 13px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.tour-duration i {
-    color: #4da528;
-}
-
-.tour-price {
-    font-size: 15px;
-    font-weight: 700;
-    color: #4da528;
-}
-
-.view-all-tours {
-    margin-top: 20px;
-    text-align: center;
-}
-
-.btn-view-all {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 25px;
-    background: transparent;
-    border: 2px solid #4da528;
-    color: #4da528;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.btn-view-all:hover {
-    background: #4da528;
-    color: #fff;
-}
-
-/* Responsive */
-@media (max-width: 991px) {
-    .places-sidebar {
-        position: relative;
-        top: 0;
-        margin-bottom: 40px;
-    }
-
-    .place-image-wrapper {
-        min-height: 250px;
-    }
-
-    .place-details {
-        padding: 25px;
-    }
-
-    .tours-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
-}
-
-@media (max-width: 767px) {
-    .page-title {
-        min-height: 400px;
-        padding-top: 120px;
-    }
-
-    .page-title .row > .col-lg-9 {
-        padding-top: 40px;
-        padding-bottom: 40px;
-    }
-
-    .page-title-inner .title {
-        font-size: 36px;
-    }
-
-    .hero-sidebar {
-        margin-bottom: 40px;
-    }
-
-    .place-image-wrapper {
-        min-height: 200px;
-    }
-
-    .tours-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Climate Section */
-.section-climate {
-    padding: 60px 0;
-    background: #f8f9fa;
-}
-
-.climate-inner h2 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 30px;
-    color: #081e2a;
-}
-
-.climate-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.climate-row {
-    display: grid;
-    grid-template-columns: 200px repeat(12, 1fr);
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    border-radius: 12px;
-    transition: background-color 0.25s ease;
-}
-
-.climate-row:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-.climate-header {
-    padding: 0 16px 4px;
-}
-
-.climate-header:hover {
-    background-color: transparent;
-}
-
-.climate-header .climate-cell {
-    font-size: 13px;
-    font-weight: 600;
-    color: #888;
-    text-align: center;
-    letter-spacing: 0.3px;
-}
-
-.climate-label {
-    font-size: 14px;
-    color: #555;
-    line-height: 1.4;
-    padding-right: 12px;
-    font-weight: 500;
-}
-
-.climate-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.climate-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    font-size: 14px;
-    font-weight: 700;
-    color: #fff;
-    cursor: default;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.climate-badge:hover {
-    transform: scale(1.2);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-
-.climate-badge-red {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-.climate-badge-yellow {
-    background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
-    color: #1f2937;
-}
-
-.climate-badge-blue {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-}
-
-.climate-dash {
-    color: #ccc;
-    font-size: 14px;
-}
-
-/* Staggered entrance animation */
 @keyframes climate-pop-in {
     0% {
         opacity: 0;
@@ -1300,64 +505,4 @@ onMounted(() => {
         transform: scale(1);
     }
 }
-
-.climate-badge {
-    animation: climate-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* Stagger delays per column */
-.climate-cell:nth-child(2) .climate-badge { animation-delay: 0.02s; }
-.climate-cell:nth-child(3) .climate-badge { animation-delay: 0.04s; }
-.climate-cell:nth-child(4) .climate-badge { animation-delay: 0.06s; }
-.climate-cell:nth-child(5) .climate-badge { animation-delay: 0.08s; }
-.climate-cell:nth-child(6) .climate-badge { animation-delay: 0.10s; }
-.climate-cell:nth-child(7) .climate-badge { animation-delay: 0.12s; }
-.climate-cell:nth-child(8) .climate-badge { animation-delay: 0.14s; }
-.climate-cell:nth-child(9) .climate-badge { animation-delay: 0.16s; }
-.climate-cell:nth-child(10) .climate-badge { animation-delay: 0.18s; }
-.climate-cell:nth-child(11) .climate-badge { animation-delay: 0.20s; }
-.climate-cell:nth-child(12) .climate-badge { animation-delay: 0.22s; }
-.climate-cell:nth-child(13) .climate-badge { animation-delay: 0.24s; }
-
-/* Row stagger - each row starts slightly later */
-.climate-row:nth-child(2) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.05s); }
-.climate-row:nth-child(3) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.10s); }
-.climate-row:nth-child(4) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.15s); }
-.climate-row:nth-child(5) .climate-badge { animation-delay: calc(var(--delay, 0s) + 0.20s); }
-
-@media (max-width: 991px) {
-    .climate-row {
-        grid-template-columns: 140px repeat(12, 1fr);
-        gap: 6px;
-    }
-
-    .climate-badge {
-        width: 36px;
-        height: 36px;
-        font-size: 12px;
-    }
-
-    .climate-label {
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 767px) {
-    .climate-row {
-        grid-template-columns: 120px repeat(12, 1fr);
-        gap: 3px;
-        padding: 8px 10px;
-    }
-
-    .climate-badge {
-        width: 30px;
-        height: 30px;
-        font-size: 10px;
-    }
-
-    .climate-header .climate-cell {
-        font-size: 10px;
-    }
-}
 </style>
-

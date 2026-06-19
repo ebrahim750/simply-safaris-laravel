@@ -1,2777 +1,953 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import {
-    animateCountTo,
-    useScrollAnimate,
-} from '@/composables/useScrollAnimate';
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import BlogCard from '@/components/blog/BlogCard.vue';
+import TourCardTailwind from '@/components/tours/TourCardTailwind.vue';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
-useScrollAnimate();
+interface BlogCategory {
+    id: number;
+    name: string;
+}
 
-const activeTourTab = ref('new-york');
-const activeActivityTab = ref('camping');
-const activeAdventureTab = ref('hiking');
+interface BlogPost {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt?: string | null;
+    featured_image?: string | null;
+    published_at_display?: string | null;
+    author?: string;
+    categories: BlogCategory[];
+}
+
+interface HomeCountry {
+    id: number;
+    name: string;
+    country_code: string | null;
+    places: Array<{ id: number; name: string }>;
+}
+
+const props = defineProps<{
+    blogPosts?: BlogPost[];
+    countries?: HomeCountry[];
+    categories?: Array<{ id: number; name: string }>;
+    activities?: Array<{ id: number; name: string }>;
+    featuredTours?: Array<{
+        id: number;
+        name: string;
+        main_image: string | null;
+        price: string;
+        duration_days: number | null;
+        categories: Array<{ id: number; name: string }>;
+        places: Array<{ id: number; name: string; country?: string | null; country_code?: string | null }>;
+    }>;
+}>();
 
 const openDropdown = ref<string | null>(null);
-const showAdvancedSearch = ref(false);
+const selectedCountries = ref<number[]>([]);
+const selectedPlaces = ref<number[]>([]);
+const selectedCategories = ref<number[]>([]);
+const selectedActivities = ref<number[]>([]);
+const activeActivityTab = ref(0);
 
-const searchForm = ref({
-    destination: 'Melborn, Australia',
-    type: 'Booking Type',
-    duration: '2-4 days',
-    guests: '0',
+const activityTabs = [
+    { label: 'Couple camping or cabin', icon: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z' },
+    { label: 'Adventure & Climbing', icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
+    { label: 'Fishing & Swimming', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+    { label: 'Mountain & Hill Hiking', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+    { label: 'Trailers & RV Sports', icon: 'M1 3h15v13M16 8h4l3 3v5h-7V8z M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z' },
+];
+
+const activeActivityContent = computed(() => activityContent[activeActivityTab.value]);
+
+const activityContent = [
+    {
+        image: '/template/images/about-us/about-h4.jpg',
+        subtitle: 'Welcome to our Print',
+        title: 'Real adventure & enjoy your dream tours',
+        features: ['Real adventure Feel', 'Comfort & Secure trip'],
+        cta: 'Get Started Today',
+    },
+    {
+        image: '/template/images/gallery/9.jpg',
+        subtitle: 'Push Your Limits',
+        title: 'Conquer peaks & chase the thrill',
+        features: ['Expert guides', 'All gear included'],
+        cta: 'Start Climbing',
+    },
+    {
+        image: '/template/images/gallery/10.jpg',
+        subtitle: 'Dive Into Nature',
+        title: 'Cast your line & swim wild waters',
+        features: ['Prime fishing spots', 'Guided swim tours'],
+        cta: 'Explore Waters',
+    },
+    {
+        image: '/template/images/gallery/11.jpg',
+        subtitle: 'Trail Blazer',
+        title: 'Summit views & mountain solitude',
+        features: ['Scenic trails', 'All skill levels'],
+        cta: 'Hit the Trail',
+    },
+    {
+        image: '/template/images/gallery/8.jpg',
+        subtitle: 'Road Ready',
+        title: 'Freedom on wheels with endless horizons',
+        features: ['RV rentals', 'Campsite bookings'],
+        cta: 'Plan Your Route',
+    },
+];
+
+const activeTourTab = ref<number | null>(null);
+
+const filteredTours = computed(() => {
+    const list = props.featuredTours ?? [];
+
+    if (activeTourTab.value === null) {
+        return list;
+    }
+
+    const countryName = props.countries?.find((c) => c.id === activeTourTab.value)?.name;
+
+    if (!countryName) {
+        return list;
+    }
+
+    return list.filter((tour) => tour.places.some((p) => p.country === countryName));
 });
 
-const destinationOptions = [
-    'Melborn, Australia',
-    'HaNoi, Vietnam',
-    'Tokyo, Japan',
-    'Seoul, Korea',
-];
-const typeOptions = [
-    'Booking Type',
-    'Group Tour',
-    'Private Tour',
-    'Family Tour',
-];
-const durationRange = ref([2, 4]);
-const durationMin = computed(() => durationRange.value[0] ?? 1);
-const durationMax = computed(() => durationRange.value[1] ?? 30);
-const durationDays = computed(
-    () => `${durationMin.value}-${durationMax.value} days`,
-);
+const priceRange = ref([100, 5000]);
 
-function selectOption(
-    field: 'destination' | 'type' | 'duration',
-    value: string,
-) {
-    searchForm.value[field] = value;
+function toggleDropdown(name: string): void {
+    openDropdown.value = openDropdown.value === name ? null : name;
+}
+
+function closeDropdowns(): void {
     openDropdown.value = null;
 }
 
-const tourTabs = [
-    { id: 'new-york', label: 'New York' },
-    { id: 'london', label: 'London' },
-    { id: 'tokyo', label: 'Tokyo' },
-    { id: 'los-angeles', label: 'Los Angelas' },
-    { id: 'manila', label: 'Manila' },
-];
-
-const activityTabs = [
-    { id: 'camping', label: 'Couple camping or cabin', icon: 'icon-Group-22' },
-    { id: 'climbing', label: 'Adventure & Climbing', icon: 'icon-Group-31' },
-    { id: 'fishing', label: 'Fishing & Swimming', icon: 'icon-fishing-1' },
-    { id: 'hiking', label: 'Mountain & Hill Hiking', icon: 'icon-Group-4' },
-    { id: 'trailers', label: 'Trailers & RV Sports', icon: '' },
-];
-
-const adventureTabs = [
-    { id: 'hiking', label: 'Hiking & Tracking', icon: 'icon-Group1' },
-    { id: 'river', label: 'River Cruises', icon: 'icon-river-1' },
-    { id: 'adventure', label: 'Adventure Tour', icon: 'icon-adventure-1' },
-    { id: 'animals', label: 'Animals plant', icon: 'icon-deer-1' },
-];
-
-const destinations = [
-    {
-        image: '/template/images/destination/list.jpg',
-        nation: 'Switzerland',
-        tours: 3,
-    },
-    {
-        image: '/template/images/destination/list1.jpg',
-        nation: 'Thailand',
-        tours: 7,
-    },
-    {
-        image: '/template/images/destination/list2.jpg',
-        nation: 'United Kingdom',
-        tours: 9,
-    },
-    {
-        image: '/template/images/destination/list3.jpg',
-        nation: 'Hongkong',
-        tours: 4,
-    },
-    {
-        image: '/template/images/destination/list4.jpg',
-        nation: 'Sri Lanka',
-        tours: 3,
-    },
-    {
-        image: '/template/images/destination/list.jpg',
-        nation: 'Singapore',
-        tours: 3,
-    },
-];
-
-const adventures = [
-    {
-        image: '/template/images/tour/tour1.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour2.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour3.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour4.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour5.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour6.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour7.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-    {
-        image: '/template/images/tour/tour8.jpg',
-        title: 'Switzerland',
-        tours: 3,
-        price: '$169.00',
-    },
-];
-
-const blogPosts = [
-    {
-        image: '/template/images/blog/bl1.jpg',
-        category: 'Traveling',
-        date: '02 Apr 2021',
-        comments: '03',
-        title: 'The 8 best things about Touristy',
-    },
-    {
-        image: '/template/images/blog/bl2.jpg',
-        category: 'Business',
-        date: '02 Apr 2021',
-        comments: '03',
-        title: 'The 8 best things about Touristy',
-    },
-    {
-        image: '/template/images/blog/bl3.jpg',
-        category: 'Cavesse',
-        date: '02 Apr 2021',
-        comments: '03',
-        title: 'The 8 best things about Touristy',
-    },
-];
-
-// Countdown timer
-const countdown = ref({ days: 12, hours: 8, minutes: 45, seconds: 30 });
-let countdownInterval: ReturnType<typeof setInterval> | null = null;
-
-function startCountdown() {
-    const end = new Date();
-    end.setDate(end.getDate() + 12);
-    end.setHours(end.getHours() + 8);
-    end.setMinutes(end.getMinutes() + 45);
-    end.setSeconds(end.getSeconds() + 30);
-
-    function tick() {
-        const now = new Date().getTime();
-        const distance = end.getTime() - now;
-        if (distance <= 0) {
-            countdown.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-            if (countdownInterval) clearInterval(countdownInterval);
-            return;
-        }
-        countdown.value = {
-            days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-            hours: Math.floor(
-                (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-            ),
-            minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((distance % (1000 * 60)) / 1000),
-        };
+function handleClickOutside(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.search-dropdown')) {
+        closeDropdowns();
     }
-    tick();
-    countdownInterval = setInterval(tick, 1000);
 }
 
-// Counter animations
-const counter1 = ref<HTMLElement | null>(null);
-const counter2 = ref<HTMLElement | null>(null);
-const counter3 = ref<HTMLElement | null>(null);
-const counter4 = ref<HTMLElement | null>(null);
-
 onMounted(() => {
-    // Load Swiper script dynamically
-    const swiperScript = document.createElement('script');
-    swiperScript.src = '/template/js/swiper-bundle.min.js';
-    swiperScript.onload = () => {
-        // @ts-ignore
-        if (window.Swiper) {
-            // Testimonials
-            // @ts-ignore
-            const thumbSwiper = new window.Swiper('.testimonial-image', {
-                spaceBetween: 22,
-                slidesPerView: 3,
-                freeMode: true,
-                watchSlidesProgress: true,
-            });
-            // @ts-ignore
-            new window.Swiper('.mySwiper2', {
-                speed: 1500,
-                spaceBetween: 30,
-                autoplay: { delay: 5000, disableOnInteraction: false },
-                thumbs: { swiper: thumbSwiper },
-            });
-            // @ts-ignore
-            new window.Swiper('.offer-package-swipper', {
-                slidesPerView: 2,
-                spaceBetween: 30,
-                observer: true,
-                observeParents: true,
-                speed: 1500,
-                breakpoints: {
-                    0: {
-                        slidesPerView: 1,
-                    },
-                    600: {
-                        slidesPerView: 2,
-                    },
-                },
-            });
+    document.addEventListener('mousedown', handleClickOutside);
+    if (props.countries && props.countries.length > 0 && activeTourTab.value === null) {
+        activeTourTab.value = props.countries[0].id;
+    }
+});
+
+onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside));
+
+const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
+
+const destinationDisplay = computed(() => {
+    const list = props.countries ?? [];
+    if (destinationCount.value === 0) return 'All Destinations';
+    if (destinationCount.value === 1) {
+        if (selectedCountries.value.length === 1) {
+            return list.find(d => d.id === selectedCountries.value[0])?.name ?? 'All Destinations';
         }
-    };
-    document.head.appendChild(swiperScript);
-
-    startCountdown();
-
-    // Counter observer
-    const counterObserver = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    if (entry.target === counter1.value)
-                        animateCountTo(counter1.value!, 5489, 2000);
-                    if (entry.target === counter2.value)
-                        animateCountTo(counter2.value!, 99.9, 2000, '%', 1);
-                    if (entry.target === counter3.value)
-                        animateCountTo(counter3.value!, 190, 2000, '+');
-                    if (entry.target === counter4.value)
-                        animateCountTo(counter4.value!, 5489, 2000);
-                    counterObserver.unobserve(entry.target);
-                }
-            });
-        },
-        { threshold: 0.5 },
-    );
-
-    [counter1, counter2, counter3, counter4].forEach((ref) => {
-        if (ref.value) counterObserver.observe(ref.value);
-    });
+        if (selectedPlaces.value.length === 1) {
+            for (const d of list) {
+                const p = d.places.find(pl => pl.id === selectedPlaces.value[0]);
+                if (p) return p.name;
+            }
+        }
+    }
+    return `${destinationCount.value} selected`;
 });
 
-onUnmounted(() => {
-    if (countdownInterval) clearInterval(countdownInterval);
+const categoryDisplay = computed(() => {
+    const list = props.categories ?? [];
+    if (selectedCategories.value.length === 0) return 'All Categories';
+    if (selectedCategories.value.length === 1) {
+        return list.find(c => c.id === selectedCategories.value[0])?.name ?? 'All Categories';
+    }
+    return `${selectedCategories.value.length} selected`;
 });
+
+const activityDisplay = computed(() => {
+    const list = props.activities ?? [];
+    if (selectedActivities.value.length === 0) return 'All Activities';
+    if (selectedActivities.value.length === 1) {
+        return list.find(a => a.id === selectedActivities.value[0])?.name ?? 'All Activities';
+    }
+    return `${selectedActivities.value.length} selected`;
+});
+
+function formatPrice(value: number): string {
+    return `$${value.toLocaleString()}`;
+}
+
+const priceDisplay = computed(() => `${formatPrice(priceRange.value[0])} - ${formatPrice(priceRange.value[1])}`);
+
+function submitSearch(): void {
+    const queryParts: string[] = [];
+
+    selectedCountries.value.forEach(id => queryParts.push(`countries[]=${id}`));
+    selectedPlaces.value.forEach(id => queryParts.push(`places[]=${id}`));
+    selectedCategories.value.forEach(id => queryParts.push(`categories[]=${id}`));
+    selectedActivities.value.forEach(id => queryParts.push(`activities[]=${id}`));
+
+    if (priceRange.value[0] !== 100) queryParts.push(`price_min=${priceRange.value[0]}`);
+    if (priceRange.value[1] !== 5000) queryParts.push(`price_max=${priceRange.value[1]}`);
+
+    const qs = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    window.location.href = `/tours${qs}`;
+}
 </script>
 
 <template>
     <Head title="Home" />
 
-    <!-- Hero -->
-    <section class="slider relative">
-        <div class="slider-home1 relative overflow-hidden">
-            <div class="silider-image">
-                <img
-                    src="/template/images/slide/slide1.jpg"
-                    alt="Image"
-                    class="image-slide"
-                />
-                <img
-                    src="/template/images/slide/mask-slide.png"
-                    alt="Image"
-                    class="mask-slide"
-                />
-                <img
-                    src="/template/images/slide/mask-fly.png"
-                    alt="Image"
-                    class="mask-flane"
-                />
-                <div class="booking-title tf-anime-rorate">
-                    <p class="booking">Booking</p>
-                    <span></span>
-                </div>
-            </div>
-            <div class="slider-content">
-                <div class="tf-container">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <span class="sub-title text-main font-yes fs-28-46"
-                                >Explore the world</span
-                            >
-                            <h1 class="title-slide mb-32 text-white">
-                                Tour Travel &amp; adventure
-                                <span class="animationtext clip text-main">
-                                    <span class="cd-words-wrapper">
-                                        <span class="item-text is-visible"
-                                            >Camping</span
-                                        >
-                                    </span>
-                                </span>
-                            </h1>
-                            <p class="des mb-45 text-white">
-                                Discover breathtaking destinations and
-                                unforgettable experiences with Simply Safaris.
-                            </p>
-                            <div class="btn-group">
-                                <a href="#" class="btn-main">
-                                    <p class="btn-main-text">
-                                        Let's get started
-                                    </p>
-                                    <p class="iconer">
-                                        <i class="icon-arrow-right"></i>
-                                    </p>
-                                </a>
-                                <a href="#" class="btn-w-wa"
-                                    >Who we are <i class="icon-Group-13"></i
-                                ></a>
-                            </div>
-                        </div>
+    <!-- Hero Section -->
+    <section class="relative h-[750px] overflow-hidden">
+        <div class="absolute inset-0">
+            <img src="/template/images/slide/slide1.jpg" alt="Safari hero" class="h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-black/30"></div>
+        </div>
+        <img src="/template/images/slide/mask-slide.png" alt="" class="pointer-events-none absolute bottom-0 left-0 w-full" />
+
+        <div class="relative z-10 flex h-full items-center">
+            <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="max-w-2xl">
+                    <span class="text-lg font-light italic text-white/90">Explore the world</span>
+                    <h1 class="mb-6 mt-3 text-4xl leading-tight font-bold text-white md:text-5xl lg:text-6xl">
+                        Tour Travel &amp; Adventure<br />
+                        <span class="text-[#66c333]">Camping</span>
+                    </h1>
+                    <p class="mb-8 max-w-lg text-base text-white/80 md:text-lg">
+                        Discover breathtaking destinations and unforgettable experiences with Simply Safaris.
+                    </p>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <a href="#" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3.5 font-semibold text-white transition-colors hover:bg-[#3d8420]">
+                            Let's get started
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                        </a>
+                        <a href="#" class="inline-flex items-center gap-2 font-medium text-white transition-colors hover:text-[#8dd266]">
+                            Who we are
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m10 8 4 4-4 4" /></svg>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Hero -->
 
-    <!-- Widget Select Form -->
-    <div class="mt--82 z-index4 relative">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="search-form-widget-slider relative">
-                        <form action="#" id="search-form-slider">
-                            <div class="wd-search flex">
-                                <div class="form-group flex">
-                                    <i class="icon-18"></i>
-                                    <div class="search-bar-group">
-                                        <label>Destination</label>
-                                        <div
-                                            class="nice-select"
-                                            :class="{
-                                                open:
-                                                    openDropdown ===
-                                                    'destination',
-                                            }"
-                                            tabindex="0"
-                                            @click.stop="
-                                                openDropdown =
-                                                    openDropdown ===
-                                                    'destination'
-                                                        ? null
-                                                        : 'destination'
-                                            "
-                                        >
-                                            <span class="current">{{
-                                                searchForm.destination
-                                            }}</span>
-                                            <ul class="list">
-                                                <li
-                                                    v-for="opt in destinationOptions"
-                                                    :key="opt"
-                                                    class="option"
-                                                    :class="{
-                                                        selected:
-                                                            searchForm.destination ===
-                                                            opt,
-                                                    }"
-                                                    @click.stop="
-                                                        selectOption(
-                                                            'destination',
-                                                            opt,
-                                                        )
-                                                    "
-                                                >
-                                                    {{ opt }}
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group flex">
-                                    <i class="icon-hiking-1-1"></i>
-                                    <div class="search-bar-group">
-                                        <label>Type</label>
-                                        <div
-                                            class="nice-select"
-                                            :class="{
-                                                open: openDropdown === 'type',
-                                            }"
-                                            tabindex="0"
-                                            @click.stop="
-                                                openDropdown =
-                                                    openDropdown === 'type'
-                                                        ? null
-                                                        : 'type'
-                                            "
-                                        >
-                                            <span class="current">{{
-                                                searchForm.type
-                                            }}</span>
-                                            <ul class="list">
-                                                <li
-                                                    v-for="opt in typeOptions"
-                                                    :key="opt"
-                                                    class="option"
-                                                    :class="{
-                                                        selected:
-                                                            searchForm.type ===
-                                                            opt,
-                                                    }"
-                                                    @click.stop="
-                                                        selectOption(
-                                                            'type',
-                                                            opt,
-                                                        )
-                                                    "
-                                                >
-                                                    {{ opt }}
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group flex">
-                                    <i class="icon-time-left"></i>
-                                    <div class="search-bar-group relative">
-                                        <label>Duration</label>
-                                        <div
-                                            class="nice-select"
-                                            :class="{
-                                                open:
-                                                    openDropdown === 'duration',
-                                            }"
-                                            tabindex="0"
-                                            @click.stop="
-                                                openDropdown =
-                                                    openDropdown === 'duration'
-                                                        ? null
-                                                        : 'duration'
-                                            "
-                                        >
-                                            <span class="current">{{
-                                                durationDays
-                                            }}</span>
-                                        </div>
-                                        <div
-                                            v-show="openDropdown === 'duration'"
-                                            class="duration-slider-panel"
-                                        >
-                                            <div class="slider-header flex-two">
-                                                <span
-                                                    >{{ durationMin }} -
-                                                    {{ durationMax }} days</span
-                                                >
-                                                <button
-                                                    class="slider-close"
-                                                    @click.stop="
-                                                        openDropdown = null
-                                                    "
-                                                >
-                                                    &times;
-                                                </button>
-                                            </div>
-                                            <SliderRoot
-                                                v-model="durationRange"
-                                                class="range-slider"
-                                                :min="1"
-                                                :max="30"
-                                                :step="1"
-                                                :min-steps-between-thumbs="1"
-                                            >
-                                                <SliderTrack
-                                                    class="slider-track"
-                                                >
-                                                    <SliderRange
-                                                        class="slider-fill"
-                                                    />
-                                                </SliderTrack>
-                                                <SliderThumb
-                                                    v-for="(
-                                                        _, index
-                                                    ) in durationRange"
-                                                    :key="index"
-                                                    class="slider-thumb"
-                                                    :aria-label="
-                                                        index === 0
-                                                            ? 'Minimum duration'
-                                                            : 'Maximum duration'
-                                                    "
-                                                />
-                                            </SliderRoot>
-                                            <div class="slider-labels flex-two">
-                                                <span>1 day</span>
-                                                <span>30 days</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group flex">
-                                    <i class="icon-user"></i>
-                                    <div class="search-bar-group">
-                                        <label>Guests</label>
-                                        <input
-                                            type="text"
-                                            v-model="searchForm.guests"
-                                        />
-                                    </div>
-                                </div>
-                                <div class="form-group flex-two">
-                                    <div
-                                        class="icon-icon-filter"
-                                        @click="
-                                            showAdvancedSearch =
-                                                !showAdvancedSearch
-                                        "
-                                    >
-                                        <i class="icon-14"></i>
-                                    </div>
-                                    <a href="#" class="btn-search"
-                                        ><i class="icon-Vector5"></i>Search</a
-                                    >
-                                </div>
-                            </div>
-                            <div
-                                class="wd-search-form"
-                                :class="{ show: showAdvancedSearch }"
+        <div class="absolute right-12 top-1/3 hidden lg:block">
+            <div class="relative h-24 w-24 animate-spin" style="animation-duration:10s">
+                <svg viewBox="0 0 100 100" class="h-full w-full">
+                    <defs><path id="circle-home" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" /></defs>
+                    <text fill="white" font-size="10.5" font-weight="600" letter-spacing="3">
+                        <textPath href="#circle-home">BOOKING * BOOKING * BOOKING *</textPath>
+                    </text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Form Widget -->
+    <div class="relative z-20 -mt-[82px] px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl">
+            <div class="rounded-lg bg-white px-7 py-6 shadow-[0_7px_29px_rgba(0,0,0,0.06)]">
+                <form class="flex flex-col gap-3 lg:flex-row lg:items-end" @submit.prevent="submitSearch">
+                    <div class="flex flex-1 flex-col gap-3 sm:flex-row">
+                        <!-- Destination -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'destination' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('destination')"
                             >
-                                <div class="input-group-grid">
-                                    <fieldset class="group-select relative">
-                                        <label>Filter By Price</label>
-                                        <div class="widget widget-price">
-                                            <div class="slider-labels">
-                                                <div class="caption flex-three">
-                                                    <p class="price-range">
-                                                        Price:
-                                                    </p>
-                                                    <div class="number-range">
-                                                        <span>$100</span> -
-                                                        <span>$5,000</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                    <fieldset
-                                        class="group-select input-npd relative"
-                                    >
-                                        <div class="search-bar-group relative">
-                                            <label>Language</label>
-                                            <div
-                                                class="nice-select"
-                                                :class="{
-                                                    open:
-                                                        openDropdown ===
-                                                        'language',
-                                                }"
-                                                tabindex="0"
-                                                @click.stop="
-                                                    openDropdown =
-                                                        openDropdown ===
-                                                        'language'
-                                                            ? null
-                                                            : 'language'
-                                                "
-                                            >
-                                                <span class="current"
-                                                    >English</span
-                                                >
-                                                <ul class="list">
-                                                    <li
-                                                        class="option selected"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        English
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        Japanese
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        Vietnamese
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        Korean
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                    <fieldset
-                                        class="group-select input-npd relative"
-                                    >
-                                        <div class="search-bar-group relative">
-                                            <label>Month</label>
-                                            <div
-                                                class="nice-select"
-                                                :class="{
-                                                    open:
-                                                        openDropdown ===
-                                                        'month',
-                                                }"
-                                                tabindex="0"
-                                                @click.stop="
-                                                    openDropdown =
-                                                        openDropdown === 'month'
-                                                            ? null
-                                                            : 'month'
-                                                "
-                                            >
-                                                <span class="current">Any</span>
-                                                <ul class="list">
-                                                    <li
-                                                        class="option selected"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        Any
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        1 Month
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        2 Months
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        3 Months
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                    <fieldset
-                                        class="group-select input-npd relative"
-                                    >
-                                        <div class="search-bar-group relative">
-                                            <label>Duration</label>
-                                            <div
-                                                class="nice-select"
-                                                :class="{
-                                                    open:
-                                                        openDropdown ===
-                                                        'adv-duration',
-                                                }"
-                                                tabindex="0"
-                                                @click.stop="
-                                                    openDropdown =
-                                                        openDropdown ===
-                                                        'adv-duration'
-                                                            ? null
-                                                            : 'adv-duration'
-                                                "
-                                            >
-                                                <span class="current">Any</span>
-                                                <ul class="list">
-                                                    <li
-                                                        class="option selected"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        Any
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        10-15 days
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        15-30 days
-                                                    </li>
-                                                    <li
-                                                        class="option"
-                                                        @click.stop="
-                                                            openDropdown = null
-                                                        "
-                                                    >
-                                                        20-30 days
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                    <div class="group-check-box-wrap">
-                                        <div class="checkbox">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Destination</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ destinationDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'destination' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Destination Panel -->
+                            <div
+                                v-show="openDropdown === 'destination'"
+                                class="absolute left-0 top-full z-50 mt-1 max-h-[320px] w-[340px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                            >
+                                <div v-for="country in countries ?? []" :key="country.id">
+                                    <!-- Country Header -->
+                                    <label class="flex cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            :value="country.id"
+                                            v-model="selectedCountries"
+                                            class="h-4 w-4 rounded accent-[#4DA528]"
+                                        />
+                                        <img
+                                            v-if="country.country_code"
+                                            :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
+                                            :alt="country.name"
+                                            class="h-3.5 w-5 rounded-sm border border-gray-200 object-cover"
+                                        />
+                                        <span class="text-[15px] font-semibold text-[#081E2A]">{{ country.name }}</span>
+                                    </label>
+                                    <!-- Places -->
+                                    <div class="pb-1 pl-11 pr-4">
+                                        <label
+                                            v-for="place in country.places"
+                                            :key="place.id"
+                                            class="flex cursor-pointer items-center gap-2.5 py-1.5 transition-colors hover:text-[#4DA528]"
+                                        >
                                             <input
-                                                id="check4"
                                                 type="checkbox"
-                                                name="check"
-                                                value="check"
+                                                :value="place.id"
+                                                v-model="selectedPlaces"
+                                                class="h-4 w-4 rounded accent-[#4DA528]"
                                             />
-                                            <label for="check4"
-                                                >Accepts Credit Cards</label
-                                            >
-                                        </div>
-                                        <div class="checkbox">
-                                            <input
-                                                id="check5"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check5"
-                                                >Car Parking</label
-                                            >
-                                        </div>
-                                    </div>
-                                    <div class="group-check-box-wrap">
-                                        <div class="checkbox">
-                                            <input
-                                                id="check6"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check6"
-                                                >Free Coupons</label
-                                            >
-                                        </div>
-                                        <div class="checkbox">
-                                            <input
-                                                id="check7"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check7"
-                                                >Laundry Service</label
-                                            >
-                                        </div>
-                                    </div>
-                                    <div class="group-check-box-wrap">
-                                        <div class="checkbox">
-                                            <input
-                                                id="check8"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check8"
-                                                >Outdoor Seating</label
-                                            >
-                                        </div>
-                                        <div class="checkbox">
-                                            <input
-                                                id="check9"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check9"
-                                                >Reservations</label
-                                            >
-                                        </div>
-                                    </div>
-                                    <div class="group-check-box-wrap">
-                                        <div class="checkbox">
-                                            <input
-                                                id="check10"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check10"
-                                                >Restaurant</label
-                                            >
-                                        </div>
-                                        <div class="checkbox">
-                                            <input
-                                                id="check11"
-                                                type="checkbox"
-                                                name="check"
-                                                value="check"
-                                            />
-                                            <label for="check11"
-                                                >Smoking Allowed</label
-                                            >
-                                        </div>
+                                            <span class="text-[14px] text-gray-600">{{ place.name }}</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
-                        </form>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'category' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('category')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Category</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ categoryDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'category' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Category Panel -->
+                            <div
+                                v-show="openDropdown === 'category'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                            >
+                                <label
+                                    v-for="cat in categories ?? []"
+                                    :key="cat.id"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :value="cat.id"
+                                        v-model="selectedCategories"
+                                        class="h-4 w-4 rounded accent-[#4DA528]"
+                                    />
+                                    <span class="text-[15px] text-gray-700">{{ cat.name }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Activity -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'activity' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('activity')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="8" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Activity</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ activityDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'activity' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Activity Panel -->
+                            <div
+                                v-show="openDropdown === 'activity'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                            >
+                                <label
+                                    v-for="act in activities ?? []"
+                                    :key="act.id"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :value="act.id"
+                                        v-model="selectedActivities"
+                                        class="h-4 w-4 rounded accent-[#4DA528]"
+                                    />
+                                    <span class="text-[15px] text-gray-700">{{ act.name }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="search-dropdown relative flex-1">
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors"
+                                :class="openDropdown === 'duration' ? 'border-[#4DA528] bg-white ring-1 ring-[#4DA528]/20' : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                                @click.stop="toggleDropdown('duration')"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DA528" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block text-[13px] font-medium leading-4 text-gray-500">Price Range</span>
+                                    <span class="mt-0.5 block truncate text-[15px] font-semibold text-[#081E2A]">{{ priceDisplay }}</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 transition-transform" :class="{ 'rotate-180': openDropdown === 'duration' }"><path d="m6 9 6 6 6-6" /></svg>
+                            </button>
+
+                            <!-- Price Range Panel -->
+                            <div
+                                v-show="openDropdown === 'duration'"
+                                class="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-lg"
+                            >
+                                <div class="mb-3 flex items-center justify-between">
+                                    <span class="text-[13px] font-medium text-gray-500">Min</span>
+                                    <span class="text-[13px] font-medium text-gray-500">Max</span>
+                                </div>
+                                <div class="mb-4 flex items-center justify-between">
+                                    <span class="text-[15px] font-semibold text-[#081E2A]">{{ formatPrice(priceRange[0]) }}</span>
+                                    <span class="text-[15px] font-semibold text-[#081E2A]">{{ formatPrice(priceRange[1]) }}</span>
+                                </div>
+                                <SliderRoot v-model="priceRange" class="range-slider" :min="100" :max="5000" :step="100" :min-steps-between-thumbs="1">
+                                    <SliderTrack class="slider-track">
+                                        <SliderRange class="slider-fill" />
+                                    </SliderTrack>
+                                    <SliderThumb v-for="(_, index) in priceRange" :key="index" class="slider-thumb" :aria-label="index === 0 ? 'Minimum price' : 'Maximum price'" />
+                                </SliderRoot>
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    <div class="shrink-0">
+                        <button
+                            type="submit"
+                            class="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-transparent bg-[#4DA528] px-10 py-5 text-[15px] font-semibold text-white transition-colors hover:bg-[#FF970D] active:scale-[0.98]"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                            Search
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    <!-- Widget Select Form -->
 
-    <!-- Widget Aboutus -->
-    <section class="about-us pb-150">
-        <div class="tf-container">
-            <div class="row pt-35">
-                <div class="col-lg-12 wow fadeInUp flex">
-                    <div class="image-list flex-three">
-                        <img
-                            src="/template/images/avata/6.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <img
-                            src="/template/images/avata/5.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <img
-                            src="/template/images/avata/4.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <img
-                            src="/template/images/avata/3.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <img
-                            src="/template/images/avata/1.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <img
-                            src="/template/images/avata/2.jpg"
-                            alt="Image"
-                            class="item"
-                        />
-                        <div class="icon item flex-five text-white">
-                            <i class="icon-uniE914"></i>
-                        </div>
-                    </div>
-                    <p class="client">
-                        2,500 people booked Tomorrowland Event in last 24 hours
-                    </p>
-                </div>
-            </div>
-            <div class="row pt-115">
-                <div class="col-lg-6">
-                    <div class="travel-video relative">
-                        <img
-                            src="/template/images/about-us/image-video.png"
-                            alt="Image"
-                            class="image-video"
-                        />
-                        <div class="video-wrap">
-                            <a
-                                href="https://www.youtube.com/watch?v=n9LgeoJE4EI"
-                                class="widget-icon-video widget-videos flex-five z-index3"
-                            >
-                                <i class="icon-Polygon-4"></i>
-                            </a>
-                        </div>
-                        <img
-                            src="/template/images/about-us/vali.png"
-                            alt="Image"
-                            class="mask-video tf-anime-rorate"
-                        />
-                        <img
-                            src="/template/images/page/enjoy.png"
-                            alt="Image"
-                            class="mask-enjoy"
-                        />
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="inner-content-about">
-                        <span
-                            class="sub-title-heading text-main wow fadeInUp mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading wow fadeInUp mb-18">
-                            Great opportunity for
-                            <span class="text-gray font-yes">adventure</span>
-                            &amp; travels
-                        </h2>
-                        <p class="des-heading wow fadeInUp">
-                            Welcome to Simply Safaris! We are a professional and
-                            reliable travel company that offers a wide range of
-                            safari and adventure tours to the world's most
-                            stunning destinations.
-                        </p>
-                        <div class="row wow fadeInUp mt-27">
-                            <div class="col-sm-6">
-                                <div class="icon-box-style3">
-                                    <div class="icon flex-three">
-                                        <svg
-                                            width="51"
-                                            height="51"
-                                            viewBox="0 0 51 51"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <g clip-path="url(#clip0_40_471)">
-                                                <path
-                                                    d="M37.5511 9.06618C37.5511 5.77106 34.8703 3.09027 31.5752 3.09027C28.2801 3.09027 25.5993 5.77106 25.5993 9.06618C25.5993 12.3613 28.2801 15.0421 31.5752 15.0421C34.8703 15.0421 37.5511 12.3613 37.5511 9.06618ZM31.5752 12.0541C29.9277 12.0541 28.5873 10.7137 28.5873 9.06618C28.5873 7.41862 29.9277 6.07823 31.5752 6.07823C33.2228 6.07823 34.5632 7.41862 34.5632 9.06618C34.5632 10.7137 33.2228 12.0541 31.5752 12.0541Z"
-                                                    fill="currentColor"
-                                                />
-                                                <path
-                                                    d="M50.2947 10.8487C49.0667 8.96556 46.5591 8.33461 44.586 9.41226L34.279 15.0416C33.3084 15.0416 16.1894 15.0416 15.1914 15.0416V1.49617C15.1914 0.671101 14.5225 0.00219727 13.6974 0.00219727H1.49398C0.668903 0.00219727 0 0.671101 0 1.49617V10.5596C0 11.3847 0.668903 12.0536 1.49398 12.0536H12.2033V49.5026C12.2033 50.3277 12.8722 50.9966 13.6973 50.9966C14.5224 50.9966 15.1913 50.3277 15.1913 49.5026V24.0054H24.1551V46.5147C24.1551 50.399 28.7646 52.4156 31.625 49.8526C34.4825 52.4131 39.0949 50.4048 39.0949 46.5147V23.3212L49.0299 16.8488C51.038 15.5407 51.6042 12.8565 50.2947 10.8487ZM2.98795 9.06556V2.99005H12.2033V9.06556H2.98795ZM34.613 48.0086C33.7892 48.0086 33.119 47.3384 33.119 46.5146C33.119 45.3559 33.119 38.5353 33.119 37.4511C33.119 36.626 32.4501 35.9571 31.625 35.9571C30.7999 35.9571 30.131 36.626 30.131 37.4511V46.5146C30.131 47.3384 29.4608 48.0086 28.637 48.0086C27.8133 48.0086 27.1431 47.3384 27.1431 46.5146V32.9692H36.1069V46.5146C36.1069 47.3384 35.4367 48.0086 34.613 48.0086ZM47.399 14.3452L36.7854 21.2596C36.3622 21.5354 36.1069 22.0063 36.1069 22.5114V29.9812H27.1431V22.5114C27.1431 21.6863 26.4742 21.0174 25.6491 21.0174H15.1913V18.0294C35.5362 17.9654 34.7563 18.1854 35.3764 17.8467L46.0182 12.0346C46.6312 11.6997 47.4104 11.8957 47.7919 12.4809C48.1988 13.1046 48.0231 13.9387 47.399 14.3452Z"
-                                                    fill="currentColor"
-                                                />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_40_471">
-                                                    <rect
-                                                        width="51"
-                                                        height="51"
-                                                        fill="white"
-                                                    />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </div>
-                                    <h6 class="title mb-10">
-                                        <a href="#">Trusted travel guide</a>
-                                    </h6>
-                                    <p class="des">
-                                        Expert guides with years of experience
-                                        in safari adventures worldwide.
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="icon-box-style3">
-                                    <div class="icon flex-three">
-                                        <svg
-                                            width="40"
-                                            height="40"
-                                            viewBox="0 0 40 40"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <mask
-                                                id="mask0_40_476"
-                                                style="mask-type: luminance"
-                                                maskUnits="userSpaceOnUse"
-                                                x="0"
-                                                y="0"
-                                                width="40"
-                                                height="40"
-                                            >
-                                                <path
-                                                    d="M0 0H40V40H0V0Z"
-                                                    fill="white"
-                                                />
-                                            </mask>
-                                            <g mask="url(#mask0_40_476)">
-                                                <path
-                                                    d="M20 23.125V38.8281H38.8281V12.2656H34.1406"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M5.85938 12.2656H1.17188V38.8281H20V23.2031"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M26.9598 9.14062H34.1406V34.1406H26.5035C23.5528 34.1406 20.933 36.0287 20 38.8281"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M13.0402 9.14062H5.85938V34.1406H13.4965C16.4472 34.1406 19.067 36.0287 20 38.8281"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M20 1.17188C14.6974 1.17188 11.3111 6.82758 13.8151 11.5017L20 23.0469L26.1849 11.5017C28.6889 6.82758 25.3027 1.17188 20 1.17188Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M22.3438 8.20312C22.3438 9.4975 21.2944 10.5469 20 10.5469C18.7056 10.5469 17.6562 9.4975 17.6562 8.20312C17.6562 6.90875 18.7056 5.85937 20 5.85937C21.2944 5.85937 22.3438 6.90875 22.3438 8.20312Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-miterlimit="10"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </g>
-                                        </svg>
-                                    </div>
-                                    <h6 class="title mb-10">
-                                        <a href="#">Personalized Trips</a>
-                                    </h6>
-                                    <p class="des">
-                                        Tailored safari experiences designed
-                                        around your preferences and schedule.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-three btn-wrap-about mb-30">
-                            <a href="#" class="btn-main">
-                                <p class="btn-main-text">More about us</p>
-                                <p class="iconer">
-                                    <i class="icon-arrow-right"></i>
-                                </p>
-                            </a>
-                            <div class="profile flex-three">
-                                <div class="image">
-                                    <img
-                                        src="/template/images/avata/10.jpg"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="content">
-                                    <img
-                                        src="/template/images/page/name.png"
-                                        alt=""
-                                    />
-                                    <span class="text-main"
-                                        >Ceo &amp; Founder</span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <div class="map-check flex-three">
-                            <div class="icon">
-                                <svg
-                                    width="33"
-                                    height="30"
-                                    viewBox="0 0 33 30"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <g clip-path="url(#clip0_321_31)">
-                                        <path
-                                            d="M24.3102 0.240601C26.0182 0.240601 27.5818 0.938222 28.7124 2.04479C29.819 3.17542 30.5166 4.73906 30.5166 6.44703C30.5166 7.45738 30.2761 8.39556 29.8671 9.23751C29.0733 10.8252 25.0078 13.6157 24.3102 16.6467C23.1555 13.7119 19.5471 10.8252 18.7533 9.23751C18.3203 8.39556 18.0797 7.45738 18.0797 6.44703C18.0797 3.00703 20.8702 0.240601 24.3102 0.240601Z"
-                                            fill="currentColor"
-                                        />
-                                        <path
-                                            d="M24.3102 3.29565C26.0181 3.29565 27.3893 4.6909 27.3893 6.37481C27.3893 8.08278 26.0181 9.45397 24.3102 9.45397C22.6022 9.45397 21.231 8.08278 21.231 6.37481C21.231 4.6909 22.6022 3.29565 24.3102 3.29565Z"
-                                            fill="#FEFEFE"
-                                        />
-                                        <path
-                                            d="M9.44363 6.78381C11.8011 6.78381 13.894 7.72199 15.4336 9.26157C16.9731 10.8012 17.9113 12.9181 17.9113 15.2515C17.9113 16.5986 17.5986 17.8976 17.0212 19.0283C15.9387 21.1933 10.4299 24.9941 9.44363 29.1077C7.87999 25.1144 2.97259 21.1933 1.89007 19.0283C1.31273 17.8976 1 16.5986 1 15.2515C1 10.5606 4.77678 6.78381 9.44363 6.78381Z"
-                                            fill="currentColor"
-                                        />
-                                        <path
-                                            d="M9.4436 10.9695C11.777 10.9695 13.6534 12.8458 13.6534 15.1552C13.6534 17.4646 11.777 19.3409 9.4436 19.3409C7.13424 19.3409 5.25787 17.4646 5.25787 15.1552C5.25787 12.8458 7.13424 10.9695 9.4436 10.9695Z"
-                                            fill="#FEFEFE"
-                                        />
-                                    </g>
-                                    <defs>
-                                        <clipPath id="clip0_321_31">
-                                            <rect
-                                                width="33"
-                                                height="30"
-                                                fill="white"
-                                            />
-                                        </clipPath>
-                                    </defs>
-                                </svg>
-                            </div>
-                            <span class="text-main"
-                                >Checkout Beautiful Places Around the
-                                World.</span
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Aboutus -->
-
-    <!-- Widget Tourpackage -->
-    <section class="tour-package pd-main">
-        <div class="tf-container w-1456">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="center m0-auto w-text-heading">
-                        <span
-                            class="sub-title-heading text-main wow fadeInUp mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading wow fadeInUp mb-40">
-                            Amazing Featured Tour
-                            <span class="text-gray font-yes">Package</span> the
-                            world
-                        </h2>
-                    </div>
-                    <div class="tab-tour-list">
-                        <ul class="nav justify-content-center tab-list mb-37">
-                            <li
-                                class="nav-item"
-                                v-for="tab in tourTabs"
-                                :key="tab.id"
-                            >
-                                <button
-                                    class="nav-link"
-                                    :class="{
-                                        active: activeTourTab === tab.id,
-                                    }"
-                                    @click="activeTourTab = tab.id"
-                                >
-                                    {{ tab.label }}
-                                </button>
-                            </li>
-                        </ul>
-                        <div class="tab-content">
-                            <div
-                                v-for="tab in tourTabs"
-                                :key="tab.id"
-                                v-show="activeTourTab === tab.id"
-                            >
-                                <div class="row">
-                                    <div class="col-sm-6 col-lg-3">
-                                        <div class="tour-listing">
-                                            <a
-                                                href="#"
-                                                class="tour-listing-image"
-                                            >
-                                                <div class="badge-top flex-two">
-                                                    <span class="feature"
-                                                        >Featured</span
-                                                    >
-                                                    <div
-                                                        class="badge-media flex-five"
-                                                    >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002909"
-                                                            ></i
-                                                            >5</span
-                                                        >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002910"
-                                                            ></i
-                                                            >2</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <img
-                                                    src="/template/images/travel-list/1.jpg"
-                                                    alt="Image Listing"
-                                                />
-                                            </a>
-                                            <div class="tour-listing-content">
-                                                <span class="tag-listing"
-                                                    >Bestseller</span
-                                                >
-                                                <span class="map"
-                                                    ><i class="icon-Vector4"></i
-                                                    >United States USA</span
-                                                >
-                                                <h3 class="title-tour-list">
-                                                    <a href="#"
-                                                        >Days and 6 nights From
-                                                        Moscow</a
-                                                    >
-                                                </h3>
-                                                <div class="review">
-                                                    <i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i>
-                                                    <span>(1 Review)</span>
-                                                </div>
-                                                <div
-                                                    class="icon-box flex-three"
-                                                >
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <i
-                                                            class="icon-time-left"
-                                                        ></i
-                                                        ><span>5 days</span>
-                                                    </div>
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <svg
-                                                            width="21"
-                                                            height="16"
-                                                            viewBox="0 0 21 16"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <path
-                                                                d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M17.1035 15.1797V9.02734"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M20.1797 12.1035H14.0273"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                        </svg>
-                                                        <span>12 Person</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two">
-                                                    <div
-                                                        class="price-box flex-three"
-                                                    >
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="price-sale"
-                                                                >$169.00</span
-                                                            >
-                                                        </p>
-                                                        <span class="price"
-                                                            >$199.00</span
-                                                        >
-                                                    </div>
-                                                    <div class="icon-bookmark">
-                                                        <i
-                                                            class="icon-Vector-151"
-                                                        ></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <div class="tour-listing">
-                                            <a
-                                                href="#"
-                                                class="tour-listing-image"
-                                            >
-                                                <div class="badge-top flex-two">
-                                                    <span class="feature"
-                                                        >Featured</span
-                                                    >
-                                                    <div
-                                                        class="badge-media flex-five"
-                                                    >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002909"
-                                                            ></i
-                                                            >5</span
-                                                        >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002910"
-                                                            ></i
-                                                            >2</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <img
-                                                    src="/template/images/travel-list/2.jpg"
-                                                    alt="Image Listing"
-                                                />
-                                            </a>
-                                            <div class="tour-listing-content">
-                                                <span class="tag-listing"
-                                                    >Trending</span
-                                                >
-                                                <span class="map"
-                                                    ><i class="icon-Vector4"></i
-                                                    >United States USA</span
-                                                >
-                                                <h3 class="title-tour-list">
-                                                    <a href="#"
-                                                        >Days and 6 nights From
-                                                        Moscow</a
-                                                    >
-                                                </h3>
-                                                <div class="review">
-                                                    <i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i>
-                                                    <span>(1 Review)</span>
-                                                </div>
-                                                <div
-                                                    class="icon-box flex-three"
-                                                >
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <i
-                                                            class="icon-time-left"
-                                                        ></i
-                                                        ><span>5 days</span>
-                                                    </div>
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <svg
-                                                            width="21"
-                                                            height="16"
-                                                            viewBox="0 0 21 16"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <path
-                                                                d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M17.1035 15.1797V9.02734"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M20.1797 12.1035H14.0273"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                        </svg>
-                                                        <span>12 Person</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two">
-                                                    <div
-                                                        class="price-box flex-three"
-                                                    >
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="price-sale"
-                                                                >$169.00</span
-                                                            >
-                                                        </p>
-                                                        <span class="price"
-                                                            >$199.00</span
-                                                        >
-                                                    </div>
-                                                    <div class="icon-bookmark">
-                                                        <i
-                                                            class="icon-Vector-151"
-                                                        ></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <div class="tour-listing">
-                                            <a
-                                                href="#"
-                                                class="tour-listing-image"
-                                            >
-                                                <div class="badge-top flex-two">
-                                                    <span class="feature"
-                                                        >Featured</span
-                                                    >
-                                                    <div
-                                                        class="badge-media flex-five"
-                                                    >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002909"
-                                                            ></i
-                                                            >5</span
-                                                        >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002910"
-                                                            ></i
-                                                            >2</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <img
-                                                    src="/template/images/travel-list/3.jpg"
-                                                    alt="Image Listing"
-                                                />
-                                            </a>
-                                            <div class="tour-listing-content">
-                                                <span class="tag-listing"
-                                                    >Hot sell</span
-                                                >
-                                                <span class="map"
-                                                    ><i class="icon-Vector4"></i
-                                                    >United States USA</span
-                                                >
-                                                <h3 class="title-tour-list">
-                                                    <a href="#"
-                                                        >Days and 6 nights From
-                                                        Moscow</a
-                                                    >
-                                                </h3>
-                                                <div class="review">
-                                                    <i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i>
-                                                    <span>(1 Review)</span>
-                                                </div>
-                                                <div
-                                                    class="icon-box flex-three"
-                                                >
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <i
-                                                            class="icon-time-left"
-                                                        ></i
-                                                        ><span>5 days</span>
-                                                    </div>
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <svg
-                                                            width="21"
-                                                            height="16"
-                                                            viewBox="0 0 21 16"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <path
-                                                                d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M17.1035 15.1797V9.02734"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M20.1797 12.1035H14.0273"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                        </svg>
-                                                        <span>12 Person</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two">
-                                                    <div
-                                                        class="price-box flex-three"
-                                                    >
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="price-sale"
-                                                                >$169.00</span
-                                                            >
-                                                        </p>
-                                                        <span class="price"
-                                                            >$199.00</span
-                                                        >
-                                                    </div>
-                                                    <div class="icon-bookmark">
-                                                        <i
-                                                            class="icon-Vector-151"
-                                                        ></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <div class="tour-listing">
-                                            <a
-                                                href="#"
-                                                class="tour-listing-image"
-                                            >
-                                                <div class="badge-top flex-two">
-                                                    <span class="feature"
-                                                        >Featured</span
-                                                    >
-                                                    <div
-                                                        class="badge-media flex-five"
-                                                    >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002909"
-                                                            ></i
-                                                            >5</span
-                                                        >
-                                                        <span class="media"
-                                                            ><i
-                                                                class="icon-Group-1000002910"
-                                                            ></i
-                                                            >2</span
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <img
-                                                    src="/template/images/travel-list/4.jpg"
-                                                    alt="Image Listing"
-                                                />
-                                            </a>
-                                            <div class="tour-listing-content">
-                                                <span class="tag-listing"
-                                                    >Bestseller</span
-                                                >
-                                                <span class="map"
-                                                    ><i class="icon-Vector4"></i
-                                                    >United States USA</span
-                                                >
-                                                <h3 class="title-tour-list">
-                                                    <a href="#"
-                                                        >Days and 6 nights From
-                                                        Moscow</a
-                                                    >
-                                                </h3>
-                                                <div class="review">
-                                                    <i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i
-                                                    ><i class="icon-Star"></i>
-                                                    <span>(1 Review)</span>
-                                                </div>
-                                                <div
-                                                    class="icon-box flex-three"
-                                                >
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <i
-                                                            class="icon-time-left"
-                                                        ></i
-                                                        ><span>5 days</span>
-                                                    </div>
-                                                    <div
-                                                        class="icons flex-three"
-                                                    >
-                                                        <svg
-                                                            width="21"
-                                                            height="16"
-                                                            viewBox="0 0 21 16"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <path
-                                                                d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M17.1035 15.1797V9.02734"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                            <path
-                                                                d="M20.1797 12.1035H14.0273"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.7"
-                                                                stroke-miterlimit="10"
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                            />
-                                                        </svg>
-                                                        <span>12 Person</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-two">
-                                                    <div
-                                                        class="price-box flex-three"
-                                                    >
-                                                        <p>
-                                                            From
-                                                            <span
-                                                                class="price-sale"
-                                                                >$169.00</span
-                                                            >
-                                                        </p>
-                                                        <span class="price"
-                                                            >$199.00</span
-                                                        >
-                                                    </div>
-                                                    <div class="icon-bookmark">
-                                                        <i
-                                                            class="icon-Vector-151"
-                                                        ></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-lg-12 center mt-44">
-                                        <a href="#" class="btn-main">
-                                            <p class="btn-main-text">
-                                                View all tour
-                                            </p>
-                                            <p class="iconer">
-                                                <i class="icon-13"></i>
-                                            </p>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Tourpackage -->
-
-    <!-- Widget activities -->
-    <section class="tf-widget-activities pd-main relative overflow-hidden">
-        <img
-            src="/template/images/page/mask-activiti.png"
-            alt="image"
-            class="mask-top"
-        />
-        <img
-            src="/template/images/page/mask-print-2.png"
-            alt="image"
-            class="mask-bottom"
-        />
-        <div class="tf-container">
-            <div class="row z-index3 relative">
-                <div class="col-lg-12 wow fadeInUp mb-60">
-                    <div class="clip-text">Activities</div>
-                </div>
-                <div class="col-lg-12">
-                    <ul class="nav nav-tabs-activities justify-content-center">
-                        <li
-                            class="nav-item"
-                            v-for="tab in activityTabs"
-                            :key="tab.id"
-                        >
-                            <button
-                                class="nav-link"
-                                :class="{
-                                    active: activeActivityTab === tab.id,
-                                }"
-                                @click="activeActivityTab = tab.id"
-                            >
-                                <span class="icon flex-five" v-if="tab.icon"
-                                    ><i :class="tab.icon"></i
-                                ></span>
-                                <span>{{ tab.label }}</span>
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content mt-44">
-                        <div
-                            v-for="tab in activityTabs"
-                            :key="tab.id"
-                            v-show="activeActivityTab === tab.id"
-                        >
-                            <div class="tabs-activities-content flex">
-                                <div class="activities-image">
-                                    <img
-                                        src="/template/images/page/1.jpg"
-                                        alt="Image"
-                                    />
-                                </div>
-                                <div class="activities-content relative">
-                                    <span class="sub-title text-white"
-                                        >Welcome to our Print</span
-                                    >
-                                    <h3
-                                        class="title-activitis mb-60 text-white"
-                                    >
-                                        Real adventure &amp; enjoy your dream
-                                        tours
-                                    </h3>
-                                    <div class="flex-three mb-30">
-                                        <div
-                                            class="flex-three icon-list-wrap text-white"
-                                        >
-                                            <div class="icon">
-                                                <i class="icon-Page-1"></i>
-                                            </div>
-                                            <span class="icon-lists"
-                                                >Real adventure Feel</span
-                                            >
-                                        </div>
-                                        <div
-                                            class="flex-three icon-list-wrap text-white"
-                                        >
-                                            <div class="icon">
-                                                <i
-                                                    class="icon-rubber-ring-1"
-                                                ></i>
-                                            </div>
-                                            <span class="icon-lists"
-                                                >Comfort &amp; Secure trip</span
-                                            >
-                                        </div>
-                                    </div>
-                                    <div class="flex-three btn-wrap-activitis">
-                                        <a
-                                            href="#"
-                                            class="icon-activitis flex-five"
-                                            ><i class="icon-Vector-21"></i
-                                        ></a>
-                                        <a href="#" class="get-start text-white"
-                                            >Get Started Today</a
-                                        >
-                                    </div>
-                                    <img
-                                        src="/template/images/page/mask-tap.png"
-                                        alt="image"
-                                        class="mask-tab"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget activities -->
-
-    <!-- Widget Offer Package -->
-    <section class="offer-package pd-main bg-1 relative">
-        <img
-            src="/template/images/page/feature.jpg"
-            alt="image"
-            class="feature-ofer"
-        />
-        <div class="tf-container">
-            <div class="row align-center z-index3 relative">
-                <div class="col-lg-5">
-                    <div class="content">
-                        <div class="mb-50">
-                            <span class="sub-title-heading text-main mb-15"
-                                >Explore the world</span
-                            >
-                            <h2 class="title-heading wow fadeInUp mb-32">
-                                Amazing Featured Tour<span
-                                    class="text-gray font-yes"
-                                >
-                                    Package</span
-                                >
-                                the world
-                            </h2>
-                            <p class="des-heading wow fadeInUp">
-                                Discover exclusive tour packages with unbeatable
-                                prices and unforgettable experiences.
-                            </p>
-                        </div>
-                        <div class="inner-content flex-three">
-                            <div class="offer">
-                                <span class="number"
-                                    >25 <span>% off</span></span
-                                >
-                            </div>
-                            <p class="font-italic">
-                                Discover Great
-                                <span class="text-main">Discount</span> Deals
-                                Around the World
-                            </p>
-                        </div>
-                        <div class="count-dow-wrap flex-three mb-50">
-                            <div class="title-counters">
-                                <span>Hurry Up!</span>
-                                <p>Offer Ends in:</p>
-                            </div>
-                            <div class="count-down relative">
-                                <div class="featured-countdown">
-                                    <div class="countdown__item">
-                                        <span class="countdown__value">{{
-                                            countdown.days
-                                                .toString()
-                                                .padStart(2, '0')
-                                        }}</span>
-                                        <span class="countdown__label"
-                                            >Days</span
-                                        >
-                                    </div>
-                                    <div class="countdown__item">
-                                        <span class="countdown__value">{{
-                                            countdown.hours
-                                                .toString()
-                                                .padStart(2, '0')
-                                        }}</span>
-                                        <span class="countdown__label"
-                                            >Hours</span
-                                        >
-                                    </div>
-                                    <div class="countdown__item">
-                                        <span class="countdown__value">{{
-                                            countdown.minutes
-                                                .toString()
-                                                .padStart(2, '0')
-                                        }}</span>
-                                        <span class="countdown__label"
-                                            >Minutes</span
-                                        >
-                                    </div>
-                                    <div class="countdown__item">
-                                        <span class="countdown__value">{{
-                                            countdown.seconds
-                                                .toString()
-                                                .padStart(2, '0')
-                                        }}</span>
-                                        <span class="countdown__label"
-                                            >Seconds</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="btn-wap">
-                            <a href="#" class="btn-main">
-                                <p class="btn-main-text">Explore More</p>
-                                <p class="iconer">
-                                    <i class="icon-arrow-right"></i>
-                                </p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                    <div class="on-week-swipper-wrap relative">
-                        <div
-                            class="swiper offer-package-swipper relative overflow-hidden"
-                        >
-                            <div class="swiper-wrapper">
-                                <div
-                                    v-for="n in 4"
-                                    :key="n"
-                                    class="swiper-slide"
-                                >
-                                    <div class="tour-listing">
-                                        <a href="#" class="tour-listing-image">
-                                            <div class="badge-top flex-two">
-                                                <span class="feature"
-                                                    >Featured</span
-                                                >
-                                                <div
-                                                    class="badge-media flex-five"
-                                                >
-                                                    <span class="media"
-                                                        ><i
-                                                            class="icon-Group-1000002909"
-                                                        ></i
-                                                        >5</span
-                                                    >
-                                                    <span class="media"
-                                                        ><i
-                                                            class="icon-Group-1000002910"
-                                                        ></i
-                                                        >2</span
-                                                    >
-                                                </div>
-                                            </div>
-                                            <img
-                                                :src="`/template/images/travel-list/${14 + n}.jpg`"
-                                                alt="Image Listing"
-                                            />
-                                        </a>
-                                        <div class="tour-listing-content">
-                                            <span class="tag-listing"
-                                                >Bestseller</span
-                                            >
-                                            <span class="map"
-                                                ><i class="icon-Vector4"></i
-                                                >United States USA</span
-                                            >
-                                            <h3 class="title-tour-list">
-                                                <a href="#"
-                                                    >Days and 6 nights From
-                                                    Moscow</a
-                                                >
-                                            </h3>
-                                            <div class="review">
-                                                <i class="icon-Star"></i
-                                                ><i class="icon-Star"></i
-                                                ><i class="icon-Star"></i
-                                                ><i class="icon-Star"></i
-                                                ><i class="icon-Star"></i>
-                                                <span>(1 Review)</span>
-                                            </div>
-                                            <div class="icon-box flex-three">
-                                                <div class="icons flex-three">
-                                                    <i
-                                                        class="icon-time-left"
-                                                    ></i
-                                                    ><span>5 days</span>
-                                                </div>
-                                                <div class="icons flex-three">
-                                                    <svg
-                                                        width="21"
-                                                        height="16"
-                                                        viewBox="0 0 21 16"
-                                                        fill="none"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path
-                                                            d="M4.34766 4.79761C4.34766 2.94013 5.85346 1.43433 7.71094 1.43433C9.56841 1.43433 11.0742 2.94013 11.0742 4.79761C11.0742 6.65508 9.56841 8.16089 7.71094 8.16089C5.85346 8.16089 4.34766 6.65508 4.34766 4.79761Z"
-                                                            stroke="currentColor"
-                                                            stroke-width="1.7"
-                                                            stroke-miterlimit="10"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                        <path
-                                                            d="M9.5977 15.1797H2.46098C1.34827 15.1797 0.558268 14.0954 0.898984 13.0362C1.80408 10.222 4.57804 8.18566 7.69301 8.18566C9.17897 8.18566 10.5566 8.64906 11.6895 9.43922"
-                                                            stroke="currentColor"
-                                                            stroke-width="1.7"
-                                                            stroke-miterlimit="10"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                        <path
-                                                            d="M17.1035 15.1797V9.02734"
-                                                            stroke="currentColor"
-                                                            stroke-width="1.7"
-                                                            stroke-miterlimit="10"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                        <path
-                                                            d="M20.1797 12.1035H14.0273"
-                                                            stroke="currentColor"
-                                                            stroke-width="1.7"
-                                                            stroke-miterlimit="10"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                        />
-                                                    </svg>
-                                                    <span>12 Person</span>
-                                                </div>
-                                            </div>
-                                            <div class="flex-two">
-                                                <div
-                                                    class="price-box flex-three"
-                                                >
-                                                    <p>
-                                                        From
-                                                        <span class="price-sale"
-                                                            >$169.00</span
-                                                        >
-                                                    </p>
-                                                    <span class="price"
-                                                        >$199.00</span
-                                                    >
-                                                </div>
-                                                <div class="icon-bookmark">
-                                                    <i
-                                                        class="icon-Vector-151"
-                                                    ></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Offer Package -->
-
-    <!-- Widget Counter -->
-    <section class="widget-counter relative">
-        <img
-            src="/template/images/page/couter-top.png"
-            alt="image"
-            class="counter-top"
-        />
-        <img
-            src="/template/images/page/counter-bottom.png"
-            alt="image"
-            class="counter-bottom"
-        />
-        <div class="tf-container">
-            <div class="row mb-50">
-                <div class="col-lg-9 flex-three cta-wrap">
-                    <div class="image">
-                        <img
-                            src="/template/images/page/ready.png"
-                            alt="Image"
-                        />
-                    </div>
-                    <div class="content">
-                        <h2 class="title-call mb-18 text-white">
-                            Ready to adventure and enjoy natural
-                        </h2>
-                        <p class="des text-white">
-                            Lorem ipsum dolor sit amet, consectetur notted
-                            adipisicin
-                        </p>
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="callt-to-action-button text-end">
-                        <a href="#" class="get-call">Let's get started</a>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb--20em z-index3 relative">
-                <div class="col-lg-3 col-6">
-                    <div class="tf-counter center tf-countto">
-                        <div class="icon mb-32">
-                            <svg
-                                width="85"
-                                height="78"
-                                viewBox="0 0 85 78"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <g clip-path="url(#clip0_73_163)">
-                                    <path
-                                        d="M0.0001297 62.7258V40.8836H13.8123L23.6738 56.5469V30.7932C21.8717 30.3047 20.5539 28.7854 20.5539 26.9907C20.5539 25.1959 21.8719 23.6766 23.6738 23.1882V19.6274H26.164V23.0228H34.0214L42.2742 20.2923C40.5417 19.4812 39.2295 18.1339 38.5631 16.4693L37.0245 12.6269C36.3224 10.8736 36.4162 8.97097 37.2889 7.26997C38.1617 5.56883 39.7044 4.28055 41.6335 3.64238C45.629 2.32045 50.0632 4.19982 51.5178 7.83194L52.8295 11.1081H56.9344V13.3717H53.4829C53.6137 14.5576 53.4036 15.7347 52.9075 16.8001C53.9147 16.5731 54.9711 16.6649 55.929 17.0709C56.0077 17.1043 56.0845 17.1399 56.1604 17.1769L65.7933 16.4479L69.3985 24.9877L67.0736 25.7987L64.1378 18.8444L58.2401 19.2907C58.256 19.3271 58.2726 19.363 58.2874 19.3998L66.2437 38.2462L70.9088 34.8833L67.9658 27.9121L70.2907 27.1011L73.8887 35.6241L67.2858 40.3839C68.9118 43.0765 71.0927 47.0103 67.9751 52.0045L75.2358 68.2575V71.7799H85V74.0435H0.0001297V64.9892H2.49036V71.7799H55.9091L43.2514 61.9348H18.818V59.6712H22.7718L12.3683 43.1471H2.49036V62.7258H0.0001297ZM42.4663 52.8814H37.4858V57.4085H36.2407C34.5033 57.4085 34.208 57.9361 34.082 58.1612C33.8733 58.5338 33.7961 59.0659 33.7674 59.6712H42.4661V52.8814H42.4663ZM31.8627 57.1345C32.4504 56.0851 33.5014 55.4469 34.9957 55.2293V44.618C34.9957 41.4976 37.7885 38.9591 41.2213 38.9591H49.0128L43.2766 30.034L36.6066 30.9582H26.1642V59.671H31.2763C31.3129 58.7726 31.4375 57.8938 31.8627 57.1345ZM23.0439 26.9907C23.0439 27.9303 23.885 28.6948 24.9188 28.6948H28.3347V25.2863H24.9189C23.885 25.2863 23.0439 26.051 23.0439 26.9907ZM49.1776 8.60609C48.4067 6.68069 46.3994 5.48281 44.2657 5.48281C43.674 5.48281 43.0724 5.57501 42.485 5.76923C40.0504 6.57476 38.6741 8.86534 39.1402 11.1079H50.1792L49.1776 8.60609ZM39.9726 13.3717L40.9031 15.6951C41.3776 16.8803 42.3376 17.8292 43.6063 18.3669C44.874 18.9043 46.29 18.963 47.593 18.5326L47.5977 18.5311C49.9664 17.7462 51.3333 15.5556 50.9743 13.3717H39.9726ZM55.9589 20.2021L55.3208 18.6833L51.4385 19.995L52.0766 21.5138L55.9589 20.2021ZM61.0878 20.9075L60.4497 19.3887L56.5674 20.7004L57.2055 22.2192L61.0878 20.9075ZM42.7136 25.1808L55.7456 30.3936L42.7136 36.8623V25.1808Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M7.47058 45.4106H4.98035V47.6742H7.47058V45.4106Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M7.47058 49.938H4.98035V52.2016H7.47058V49.938Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M54.4991 23.7441L53.6076 21.63L51.2819 22.4403L52.1734 24.5544L54.4991 23.7441Z"
-                                        fill="currentColor"
-                                    />
-                                    <path
-                                        d="M56.2822 27.9688L55.3907 25.8546L53.0648 26.6649L53.9563 28.7791L56.2822 27.9688Z"
-                                        fill="currentColor"
-                                    />
-                                </g>
-                                <defs>
-                                    <clipPath id="clip0_73_163">
-                                        <rect
-                                            width="85"
-                                            height="77.2632"
-                                            fill="white"
-                                            transform="matrix(-1 0 0 1 85 0)"
-                                        />
-                                    </clipPath>
-                                </defs>
-                            </svg>
-                        </div>
-                        <div ref="counter1" class="number-counter">0</div>
-                        <span class="line"></span>
-                        <p class="title-counter">Happy <br />Traveller</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="tf-counter center tf-countto">
-                        <div class="icon mb-32">
-                            <svg
-                                width="69"
-                                height="68"
-                                viewBox="0 0 69 68"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <g clip-path="url(#clip0_73_177)">
-                                    <mask
-                                        id="mask0_73_177"
-                                        style="mask-type: luminance"
-                                        maskUnits="userSpaceOnUse"
-                                        x="0"
-                                        y="0"
-                                        width="69"
-                                        height="68"
-                                    >
-                                        <path
-                                            d="M0.947388 0.30294H68.0527V67.4082H0.947388V0.30294Z"
-                                            fill="white"
-                                        />
-                                    </mask>
-                                    <g mask="url(#mask0_73_177)">
-                                        <path
-                                            d="M26.505 2.26924C13.4757 2.26924 2.91333 12.8315 2.91333 25.8609C2.91333 32.2223 5.44315 37.9842 9.53644 42.2273L2.91333 49.4526H26.505C39.5343 49.4526 50.0967 38.8902 50.0967 25.8609C50.0967 12.8315 39.5343 2.26924 26.505 2.26924Z"
-                                            stroke="currentColor"
-                                            stroke-width="3"
-                                            stroke-miterlimit="10"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                        <path
-                                            d="M29.5166 49.2619C30.5896 58.3735 38.3375 65.4424 47.7375 65.4424H66.0866L60.9352 59.8227C64.1191 56.5225 66.0866 52.041 66.0866 47.0933C66.0866 37.6932 59.0178 29.9454 49.9061 28.8724"
-                                            stroke="currentColor"
-                                            stroke-width="3"
-                                            stroke-miterlimit="10"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                        <path
-                                            d="M33.0583 16.3586C30.0046 16.3586 27.2325 18.4469 26.5051 21.2735V21.2734C25.7776 18.4469 23.0054 16.3586 19.9518 16.3586C16.3324 16.3586 13.3986 19.2924 13.3986 22.9118C13.3986 31.1034 26.5051 39.2949 26.5051 39.2949C26.5051 39.2949 39.6115 31.1034 39.6115 22.9118C39.6115 19.2924 36.6777 16.3586 33.0583 16.3586Z"
-                                            stroke="currentColor"
-                                            stroke-width="3"
-                                            stroke-miterlimit="10"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </g>
-                                </g>
-                                <defs>
-                                    <clipPath id="clip0_73_177">
-                                        <rect
-                                            width="67.1053"
-                                            height="67.1053"
-                                            fill="white"
-                                            transform="translate(0.947388 0.302734)"
-                                        />
-                                    </clipPath>
-                                </defs>
-                            </svg>
-                        </div>
-                        <div ref="counter2" class="number-counter percen">
-                            0
-                        </div>
-                        <span class="line"></span>
-                        <p class="title-counter">Total Positive<br />Reviews</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="tf-counter center tf-countto">
-                        <div class="icon mb-32">
-                            <svg
-                                width="62"
-                                height="62"
-                                viewBox="0 0 62 62"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M18.5935 13.1632C18.5935 9.99769 16.0182 7.42236 12.8527 7.42236C9.68721 7.42236 7.11176 9.99769 7.11176 13.1632C7.11176 16.3287 9.68709 18.904 12.8526 18.904C16.0181 18.904 18.5935 16.3287 18.5935 13.1632ZM12.8526 15.2753C11.6879 15.2753 10.7405 14.3279 10.7405 13.1632C10.7405 11.9985 11.6879 11.0511 12.8526 11.0511C14.0172 11.0511 14.9647 11.9985 14.9647 13.1632C14.9647 14.3279 14.0172 15.2753 12.8526 15.2753Z"
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M61.9985 30.1427C61.9699 29.4278 61.5237 28.7965 60.8594 28.5308L41.5731 20.8162C41.014 20.5927 40.3806 20.6609 39.882 20.9983C39.3834 21.3358 39.0848 21.8986 39.0848 22.5008V49.1118C36.8673 49.7672 35.148 51.5914 34.6425 53.8686H8.97854C7.04404 53.8686 5.4701 52.2947 5.4701 50.3602C5.4701 48.4257 7.04404 46.8518 8.97854 46.8518H25.3964C29.1293 46.8518 32.1663 43.8148 32.1663 40.0819C32.1663 36.349 29.1293 33.312 25.3964 33.312H16.0524L23.8586 20.2611C25.1816 18.0492 25.881 15.5177 25.881 12.9404C25.881 5.80508 20.0759 0 12.9405 0C5.80521 0 0 5.80496 0 12.9403V12.9866C0 15.5292 0.681958 18.0315 1.97207 20.2225L11.2895 36.0468C11.5802 36.5141 12.1159 36.9451 12.8468 36.9406H25.3966C27.1286 36.9406 28.5377 38.3497 28.5377 40.0818C28.5377 41.8138 27.1286 43.2229 25.3966 43.2229H8.97854C5.04308 43.2229 1.84124 46.4247 1.84124 50.3602C1.84124 54.2956 5.04308 57.4975 8.97854 57.4975H34.8937C35.8039 59.9304 38.1517 61.6673 40.8982 61.6673C44.4322 61.6673 47.3073 58.7923 47.3073 55.2582C47.3073 52.3548 45.3661 49.8976 42.7136 49.1127V40.9138L60.9922 31.841C61.6331 31.5227 62.0273 30.8576 61.9985 30.1427ZM5.09901 18.3813C4.13715 16.7476 3.62874 14.8821 3.62874 12.9864V12.9402C3.62874 7.80579 7.80592 3.6285 12.9404 3.6285C18.0749 3.6285 22.2521 7.80579 22.2521 12.9402C22.2521 14.8617 21.7307 16.749 20.7444 18.3982L12.8653 31.5711L5.09901 18.3813ZM43.6784 55.2581C43.6784 56.7912 42.431 58.0383 40.8982 58.0383C39.3654 58.0383 38.118 56.7911 38.118 55.2581C38.118 53.7269 39.3624 52.481 40.8928 52.478C40.8951 52.478 40.8973 52.4784 40.8993 52.4784C40.9013 52.4784 40.9033 52.4782 40.9052 52.4782C42.435 52.4817 43.6784 53.7273 43.6784 55.2581ZM42.7136 36.8623V25.1808L55.7456 30.3936L42.7136 36.8623Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
-                        </div>
-                        <div ref="counter3" class="number-counter plus">0</div>
-                        <span class="line"></span>
-                        <p class="title-counter">Tour<br />Completed</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="tf-counter center tf-countto">
-                        <div class="icon mb-32">
-                            <svg
-                                width="74"
-                                height="62"
-                                viewBox="0 0 74 62"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M73.9347 32.4115C73.888 32.373 73.8201 32.3607 73.7672 32.3785C73.7027 32.3984 73.6435 32.4156 73.5877 32.4319L73.5604 32.4399C73.4228 32.4802 73.3039 32.5147 73.1861 32.562C71.3254 33.3013 69.8604 34.5679 68.7075 36.4341C68.4228 36.8952 68.2023 37.3744 68.0266 37.8524C68.3147 36.2447 68.3814 35.6183 68.4324 33.8193C68.4348 33.7438 68.4348 33.6671 68.4348 33.5908C68.4348 33.3827 68.4348 33.1861 68.4803 33.0067C68.5348 32.7942 68.6444 32.5822 68.7505 32.377C68.7804 32.319 68.8103 32.2609 68.8349 32.2099C68.8435 32.1999 68.8711 32.183 68.8819 32.1814C69.414 32.1001 69.8846 31.8742 70.3208 31.4908C70.7604 31.1026 71.1219 30.6274 71.3955 30.078C72.3774 28.1089 72.8688 25.9325 72.8563 23.6099C72.8552 23.3858 72.8289 23.1677 72.8 22.9305C72.7868 22.8242 72.7734 22.7155 72.7623 22.6029C72.756 22.5412 72.718 22.4863 72.6629 22.4596C72.6085 22.4332 72.5429 22.4351 72.488 22.4683C72.4548 22.489 72.4264 22.5059 72.4006 22.5209C72.3507 22.5506 72.3127 22.5738 72.2767 22.5998C71.4391 23.2002 70.7003 23.9477 70.0806 24.8209C69.0694 26.2482 68.4812 27.8621 68.3228 29.6375C68.3071 29.4396 68.2911 29.2417 68.2751 29.0438L68.2696 28.972C68.2074 28.1961 68.1433 27.3937 68.091 26.6047C68.0778 26.4049 68.0394 26.2105 68.0023 26.0225C67.9307 25.661 67.863 25.3195 67.9713 24.9617C67.996 24.8808 68.0168 24.7994 68.0375 24.7182C68.0887 24.5169 68.336 24.207 68.7157 23.8681L68.7299 23.8553C68.87 23.7366 69.5893 23.0785 69.9973 21.7768C70.4115 20.4543 70.3802 19.0725 70.3574 18.0635L70.3568 18.0366C70.3264 16.6495 70.1765 15.6044 69.8708 14.6471C69.8313 14.5247 69.7844 14.4039 69.7347 14.2771C69.7089 14.211 69.6826 14.1428 69.6555 14.0714C69.6332 14.0109 69.5798 13.9669 69.5173 13.9566L69.4867 13.9538C69.4325 13.9538 69.3819 13.9781 69.3476 14.02L69.0506 14.3819C67.6269 16.1183 66.9274 18.1549 66.9712 20.4352C66.9788 20.8368 67.0089 21.2487 67.0621 21.674C66.7002 20.4252 66.2759 19.2096 65.7932 18.0401C65.7832 18.0145 65.7767 17.9828 65.7..."
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M24.9672 59.363C23.767 59.0979 22.5732 58.7115 21.3171 58.182C21.3021 58.175 21.2648 58.1329 21.2532 58.095C21.128 57.6682 21.086 57.2383 21.1246 56.7805C21.3706 53.8579 19.6302 50.7783 16.9869 49.4581C16.9307 49.4295 16.8721 49.4049 16.8046 49.3772L16.7419 49.3513C16.6824 49.3258 16.6098 49.3364 16.5618 49.375C16.5099 49.4151 16.4841 49.4804 16.4946 49.5458L16.567 49.9939C16.6312 50.3905 16.694 50.7785 16.7543 51.1669L16.7695 51.2686C16.9392 52.3724 17.1147 53.5138 17.4565 54.6104C17.765 55.5997 18.2409 56.3804 18.9029 56.9786C17.5044 56.154 16.2012 55.1629 15.0177 54.0231C14.9928 53.9992 14.9633 53.9358 14.959 53.8835L14.9273 53.1013C14.9271 53.0735 14.9268 52.9997 14.9425 52.9631C15.5255 51.605 15.6748 50.0763 15.3994 48.2899C15.1338 46.567 14.3982 44.9826 13.2127 43.5806C13.074 43.4164 12.9516 43.3333 12.8488 43.3333C12.8238 43.3333 12.8012 43.3383 12.7834 43.3476C12.7288 43.3747 12.6919 43.4272 12.6847 43.4878L12.653 43.7607C12.6285 43.9632 12.6049 44.1621 12.5838 44.3613C12.5472 44.7122 12.5072 45.0626 12.4669 45.4131L12.4612 45.4638C12.361 46.339 12.2571 47.2442 12.2022 48.1505C12.1384 49.2077 12.1574 50.4424 12.7822 51.5846C12.7856 51.5904 12.7886 51.5965 12.7919 51.6023C11.9233 50.5161 11.1304 49.3472 10.4229 48.1085C10.3604 47.9984 10.355 47.9017 10.3667 47.7615C10.417 47.1685 10.6926 46.6866 10.9829 46.2545C11.5436 45.4176 11.883 44.4284 12.0835 43.0469C12.3638..."
-                                    fill="currentColor"
-                                />
-                                <path
-                                    d="M45.798 35.4259L53.2507 28.1614C53.5033 27.9151 53.5945 27.5463 53.4853 27.2108C53.3762 26.8749 53.0861 26.6301 52.7367 26.5794L42.4382 25.0839L37.8318 15.7518C37.6756 15.4352 37.3533 15.2349 37.0003 15.2349C36.6473 15.2349 36.3248 15.4356 36.1688 15.7518L31.564 25.0839L21.2639 26.5794C20.9147 26.6301 20.6244 26.8751 20.5153 27.2108C20.4061 27.5463 20.4971 27.9151 20.75 28.1614L28.2026 35.4259L26.4442 45.6828C26.3845 46.0306 26.5275 46.3823 26.8131 46.5896C27.0984 46.7972 27.4768 46.8246 27.7897 46.6603L37.0007 41.8183L46.2117 46.6603C46.3472 46.7317 46.4954 46.7668 46.6429 46.7668C46.8352 46.7668 47.0265 46.7071 47.188 46.5896C47.4737 46.3825 47.6169 46.0306 47.5569 45.6828L45.798 35.4259Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
-                        </div>
-                        <div ref="counter4" class="number-counter">0</div>
-                        <span class="line"></span>
-                        <p class="title-counter">Awards<br />Winning</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Counter -->
-
-    <!-- Widget destination -->
-    <section class="widget-destination">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="center m0-auto w-text-heading mb-40">
-                        <span
-                            class="sub-title-heading text-main wow fadeInUp mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading wow fadeInUp">
-                            We provide top tourist destinations
-                        </h2>
-                    </div>
-                </div>
-            </div>
-            <div class="grid-three-destination">
-                <div
-                    class="tf-widget-destination"
-                    v-for="(dest, i) in destinations"
-                    :key="i"
-                >
-                    <a href="#" class="destination-imgae">
-                        <span class="tour">{{ dest.tours }} tours</span>
-                        <img :src="dest.image" alt="" />
-                    </a>
-                    <div class="destination-content">
-                        <span class="nation">{{ dest.nation }}</span>
-                        <div class="flex-two btn-destination">
-                            <h6 class="title">
-                                <a href="#">View all tours</a>
-                            </h6>
-                            <a href="#" class="flex-five btn-view"
-                                ><i class="icon-Vector-32"></i
-                            ></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget destination -->
-
-    <!-- Widget Adventure -->
-    <section class="widget-adventure">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="mb-40">
-                        <span
-                            class="sub-title-heading text-main wow fadeInUp mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading wow fadeInUp">
-                            Adventures for everyone
-                        </h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="adventure-content">
-                        <nav class="adventure-scroll mb-40">
-                            <div class="nav nav-justified nav-tabs-adventure">
-                                <li
-                                    class="nav-link flex-three"
-                                    :class="{
-                                        active: activeAdventureTab === tab.id,
-                                    }"
-                                    v-for="tab in adventureTabs"
-                                    :key="tab.id"
-                                    @click="activeAdventureTab = tab.id"
-                                >
-                                    <i :class="tab.icon"></i>
-                                    <span>{{ tab.label }}</span>
-                                </li>
-                            </div>
-                        </nav>
-                        <div class="tab-content">
-                            <div
-                                v-for="tab in adventureTabs"
-                                :key="tab.id"
-                                v-show="activeAdventureTab === tab.id"
-                            >
-                                <div class="row">
-                                    <div
-                                        class="col-sm-6 col-lg-3 col-6"
-                                        v-for="(item, i) in adventures"
-                                        :key="i"
-                                    >
-                                        <div
-                                            class="tf-adventure flex-three mb-43"
-                                        >
-                                            <a href="#" class="adventure-image">
-                                                <img :src="item.image" alt="" />
-                                            </a>
-                                            <div class="adventure-image">
-                                                <span class="tour-ad"
-                                                    >({{
-                                                        item.tours
-                                                    }}
-                                                    Tour)</span
-                                                >
-                                                <h6 class="title-ad">
-                                                    <a href="#">{{
-                                                        item.title
-                                                    }}</a>
-                                                </h6>
-                                                <p class="price-ad text-main">
-                                                    {{ item.price }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Adventure -->
-
-    <!-- Widget Testimonial -->
-    <section class="widget-testimonial-style01">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-md-5 relative">
-                    <div
-                        class="image-box-tesimonial box-testimonial1 wow fadeInLeft"
-                    >
-                        <img
-                            src="/template/images/page/testimonial1.jpg"
-                            alt=""
-                        />
-                    </div>
-                    <div
-                        class="image-box-tesimonial box-testimonial2 wow fadeInUp"
-                    >
-                        <img
-                            src="/template/images/page/testimonial2.jpg"
-                            alt=""
-                        />
-                    </div>
-                </div>
-                <div class="col-md-7">
-                    <div class="widget-testimonial overflow-hidden">
-                        <div class="swiper mySwiper2">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="testimonial-content relative">
-                                        <div class="profile mb-15">
-                                            <h3 class="name">Piter Bowman</h3>
-                                            <span class="job"
-                                                >Business CEO</span
-                                            >
-                                        </div>
-                                        <p class="tes">
-                                            Leverage agile frameworks to provide
-                                            a robust synopsis for high level
-                                            overviews. Iterative in approaches
-                                            to corporate strategy data foster go
-                                            to collaborative thinking.
-                                        </p>
-                                        <span class="line"></span>
-                                        <div class="icon-tes flex-five">
-                                            <i
-                                                class="icon-Group-1000002944"
-                                            ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="testimonial-content relative">
-                                        <div class="profile mb-15">
-                                            <h3 class="name">Sarah Johnson</h3>
-                                            <span class="job"
-                                                >Travel Blogger</span
-                                            >
-                                        </div>
-                                        <p class="tes">
-                                            Simply Safaris provided the most
-                                            incredible experience. From start to
-                                            finish, everything was perfectly
-                                            organized and the guides were
-                                            incredibly knowledgeable.
-                                        </p>
-                                        <span class="line"></span>
-                                        <div class="icon-tes flex-five">
-                                            <i
-                                                class="icon-Group-1000002944"
-                                            ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="testimonial-content relative">
-                                        <div class="profile mb-15">
-                                            <h3 class="name">Michael Chen</h3>
-                                            <span class="job"
-                                                >Photographer</span
-                                            >
-                                        </div>
-                                        <p class="tes">
-                                            The safari was a dream come true.
-                                            Capturing wildlife in their natural
-                                            habitat with expert guidance made
-                                            this trip unforgettable. Highly
-                                            recommended!
-                                        </p>
-                                        <span class="line"></span>
-                                        <div class="icon-tes flex-five">
-                                            <i
-                                                class="icon-Group-1000002944"
-                                            ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="swiper testimonial-image">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide avata">
-                                    <img
-                                        src="/template/images/avata/9.jpg"
-                                        alt="Image Testimonial"
-                                    />
-                                </div>
-                                <div class="swiper-slide avata">
-                                    <img
-                                        src="/template/images/avata/7.jpg"
-                                        alt="Image Testimonial"
-                                    />
-                                </div>
-                                <div class="swiper-slide avata">
-                                    <img
-                                        src="/template/images/avata/8.jpg"
-                                        alt="Image Testimonial"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Testimonial -->
-
-    <!-- Widget Banner Contact -->
-    <section class="widget-banner-contact relative">
-        <div class="tf-container">
-            <div class="row z-index3 relative">
-                <div class="col-lg-7 content-banner-contact">
-                    <div class="mb-32">
-                        <span
-                            class="sub-title-heading text-main font-yes fs-28-46 mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading text-white">
-                            Ready to travel with real adventure &amp; enjoy
-                            natural
-                        </h2>
-                    </div>
-                    <div class="flex-three">
-                        <div class="video-wrap">
-                            <a
-                                href="https://www.youtube.com/watch?v=n9LgeoJE4EI"
-                                class="widget-icon-video flex-five widget-videos"
-                            >
-                                <i class="icon-Polygon-4"></i>
-                            </a>
-                        </div>
-                        <address>
-                            Contact us at
-                            <a href="mailto:info@simplysafaris.com"
-                                >info@simplysafaris.com</a
-                            ><br />
-                        </address>
-                    </div>
-                    <img
-                        src="/template/images/page/vector2.png"
-                        alt="image"
-                        class="mask-icon-banner"
-                    />
-                </div>
-                <div class="col-lg-5">
-                    <div class="image-banner-contact">
-                        <img src="/template/images/page/ewewe1.png" alt="" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Widget Banner Contact -->
-
-    <!-- Widget Banner Blog -->
-    <section class="pd-main">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="center m0-auto w-text-heading">
-                        <span
-                            class="sub-title-heading text-main wow fadeInUp mb-15"
-                            >Explore the world</span
-                        >
-                        <h2 class="title-heading wow fadeInUp mb-40">
-                            Latest news &amp; articles
-                            <span class="text-gray font-yes">from</span> the
-                            blog
-                        </h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4" v-for="(post, i) in blogPosts" :key="i">
-                    <div class="tf-widget-blog blog-style">
-                        <a href="#" class="blog-image">
-                            <img :src="post.image" alt="" />
-                            <div class="category-blog">
-                                <i class="icon-Group-8"></i>
-                                <span>{{ post.category }}</span>
+    <!-- About Us Section -->
+    <section class="py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center gap-12 lg:flex-row lg:gap-16">
+                <div class="relative w-full lg:w-1/2">
+                    <div class="relative overflow-hidden rounded-2xl">
+                        <img src="/template/images/about-us/about-h41.jpg" alt="Travel video" class="h-auto w-full rounded-2xl" />
+                        <a href="https://www.youtube.com/watch?v=n9LgeoJE4EI" target="_blank" class="absolute inset-0 flex items-center justify-center">
+                            <div class="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg transition-transform hover:scale-110">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#4DA528" stroke="none"><path d="M8 5v14l11-7z" /></svg>
                             </div>
                         </a>
-                        <div class="blog-content">
-                            <ul class="meta-list flex-three">
-                                <li>
-                                    <i class="icon-4"></i>
-                                    <a href="#"
-                                        ><span>{{ post.date }}</span></a
-                                    >
-                                </li>
-                                <li>
-                                    <i class="icon-7"></i>
-                                    <a href="#"
-                                        ><span
-                                            >Comments ({{
-                                                post.comments
-                                            }})</span
-                                        ></a
-                                    >
-                                </li>
-                            </ul>
-                            <h3 class="entry-title">
-                                <a href="#">{{ post.title }}</a>
-                            </h3>
-                            <p class="des">
-                                Business is the activity of making or buying and
-                                selling products.
-                            </p>
-                            <a href="#" class="btn-read-more"
-                                >Read More <i class="icon-Vector-4"></i
-                            ></a>
+                    </div>
+                    <img src="/template/images/about-us/vali.png" alt="" class="absolute -right-4 -bottom-4 h-20 w-20 animate-bounce" style="animation-duration:3s" />
+                </div>
+
+                <div class="w-full lg:w-1/2">
+                    <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                    <h2 class="mb-4 mt-3 text-3xl leading-tight font-bold text-gray-900 md:text-4xl">
+                        Great opportunity for <span class="font-['Yesteryear'] text-[#64748B]">adventure</span> &amp; travels
+                    </h2>
+                    <p class="mb-8 leading-relaxed text-gray-500">
+                        Welcome to Simply Safaris! We are a professional and reliable travel company that offers a wide range of safari and adventure tours to the world's most stunning destinations.
+                    </p>
+
+                    <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#f0f9eb] text-[#4DA528]">
+                                <svg width="28" height="28" viewBox="0 0 51 51" fill="currentColor"><path d="M37.6 9.1c0-3.3-2.7-6-6-6s-6 2.7-6 6 2.7 6 6 6 6-2.7 6-6zm-6 3c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.4 3-3 3z" /><path d="M50.3 10.8c-1.2-1.9-3.7-2.5-5.7-1.4l-10.3 5.6H15.2V1.5c0-.8-.7-1.5-1.5-1.5H1.5C.7 0 0 .7 0 1.5v9.1c0 .8.7 1.5 1.5 1.5h10.7v37.4c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V24h9v22.5c0 3.9 4.6 5.9 7.5 3.3 2.9 2.6 7.5.5 7.5-3.3V23.3l10-6.5c2-1.3 2.6-4 .8-6z" /></svg>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 font-bold text-gray-900"><a href="#" class="transition-colors hover:text-[#4DA528]">Trusted travel guide</a></h6>
+                                <p class="text-sm text-gray-500">Expert guides with years of experience in safari adventures worldwide.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#f0f9eb] text-[#4DA528]">
+                                <svg width="28" height="28" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 23.1V38.8H38.8V12.3H34.1" /><path d="M5.9 12.3H1.2V38.8H20V23.2" /><path d="M27 9.1H34.1V34.1H26.5C23.6 34.1 21 36 20 38.8" /><path d="M13 9.1H5.9V34.1H13.5C16.4 34.1 19.1 36 20 38.8" /><path d="M20 1.2c-5.3 0-8.7 5.7-6.2 10.3L20 23l6.2-11.5c2.5-4.7-.9-10.3-6.2-10.3z" /><circle cx="20" cy="8.2" r="2.3" /></svg>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 font-bold text-gray-900"><a href="#" class="transition-colors hover:text-[#4DA528]">Personalized Trips</a></h6>
+                                <p class="text-sm text-gray-500">Tailored safari experiences designed around your preferences and schedule.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-6">
+                        <a href="#" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#3d8420]">
+                            More about us
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                        </a>
+                        <div class="flex items-center gap-3">
+                            <img src="/template/images/avata/10.jpg" alt="CEO" class="h-12 w-12 rounded-full object-cover" />
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Ebrahim H.</p>
+                                <span class="text-xs text-[#4DA528]">CEO &amp; Founder</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex items-center gap-2 text-sm font-medium text-[#4DA528]">
+                        <svg width="20" height="18" viewBox="0 0 33 30" fill="currentColor"><path d="M24.3.2c1.7 0 3.3.7 4.4 1.8 1.2 1.2 1.8 2.7 1.8 4.4 0 1-.2 2-.7 2.8-.8 1.6-4.9 4.4-5.6 7.4-1.2-2.9-4.8-5.8-5.6-7.4-.4-.9-.7-1.8-.7-2.8 0-3.4 2.8-6.2 6.2-6.2z" /><circle cx="24.3" cy="6.4" r="2.3" fill="white" /><path d="M9.4 6.8c2.4 0 4.5.9 6 2.5 1.6 1.6 2.5 3.7 2.5 6 0 1.3-.3 2.6-1 3.8-1.1 2.2-6.6 6-7.5 10.1C8.5 24.8 3 21 1.9 18.8c-.6-1.1-1-2.4-1-3.8 0-4.7 3.8-8.4 8.4-8.4z" /><circle cx="9.4" cy="15.2" r="4.2" fill="white" /></svg>
+                        <span>Checkout Beautiful Places Around the World.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tour Package Section -->
+    <section v-if="featuredTours && featuredTours.length > 0" class="bg-gray-50 py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-10 text-center">
+                <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
+                    Amazing Featured Tour <span class="font-['Yesteryear'] text-[#64748B]">Package</span> the world
+                </h2>
+            </div>
+
+            <div class="mb-10 flex flex-wrap justify-center gap-2">
+                <button
+                    v-for="country in countries ?? []"
+                    :key="country.id"
+                    type="button"
+                    class="rounded-full px-5 py-2 text-sm font-medium transition-colors"
+                    :class="activeTourTab === country.id ? 'bg-[#4DA528] text-white' : 'border border-gray-200 bg-white text-gray-600 hover:border-[#4DA528] hover:text-[#4DA528]'"
+                    @click="activeTourTab = country.id"
+                >{{ country.name }}</button>
+            </div>
+
+            <div class="tour-carousel-wrap relative">
+                <Swiper
+                    :modules="[Autoplay, Navigation, Pagination]"
+                    :pagination="{ clickable: true }"
+                    :navigation="{ nextEl: '.tour-swiper-next', prevEl: '.tour-swiper-prev' }"
+                    :slides-per-view="4"
+                    :space-between="24"
+                    :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 }, 1200: { slidesPerView: 4, spaceBetween: 24 } }"
+                    :loop="true"
+                    :autoplay="{ delay: 3500, disableOnInteraction: false }"
+                    class="tour-swiper pb-14"
+                >
+                    <SwiperSlide v-for="tour in filteredTours" :key="tour.id" class="!h-auto">
+                        <TourCardTailwind :tour="tour" />
+                        <div class="h-12"></div>
+                    </SwiperSlide>
+                </Swiper>
+                <button v-if="filteredTours.length > 4" class="swiper-custom-arrow swiper-custom-prev tour-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button v-if="filteredTours.length > 4" class="swiper-custom-arrow swiper-custom-next tour-swiper-next !h-[52px] !w-[52px]" aria-label="Next">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+            </div>
+
+            <div class="mt-10 text-center">
+                <a href="/tours" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#3d8420]">
+                    View all tours
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Activities Section -->
+    <section class="relative overflow-hidden bg-gray-900 py-10 lg:py-16">
+        <img src="/template/images/page/mask-activiti.png" alt="" class="pointer-events-none absolute top-0 left-0 w-full opacity-20" />
+        <img src="/template/images/page/mask-print-2.png" alt="" class="pointer-events-none absolute right-0 bottom-0 opacity-20" />
+
+        <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 class="mb-10 text-center text-6xl font-bold tracking-widest text-transparent md:text-8xl bg-cover bg-center" style="background-image: url('/template/images/page/clip-text.jpg'); -webkit-background-clip: text; background-clip: text;">ACTIVITIES</h2>
+
+            <div class="mb-10 flex flex-wrap justify-center gap-4">
+                <button
+                    v-for="(tab, index) in activityTabs"
+                    :key="index"
+                    type="button"
+                    class="flex flex-col items-center gap-2 rounded-xl px-6 py-4 text-white transition-all"
+                    :class="activeActivityTab === index ? 'bg-[#4DA528]' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+                    @click="activeActivityTab = index"
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path :d="tab.icon" /></svg>
+                    <span class="text-sm">{{ tab.label }}</span>
+                </button>
+            </div>
+
+            <div class="flex flex-col overflow-hidden rounded-2xl bg-white lg:flex-row">
+                <div class="w-full lg:w-1/2">
+                    <img :src="activeActivityContent.image" :alt="activeActivityContent.title" class="aspect-[4/3] w-full object-cover lg:h-full lg:min-h-0" />
+                </div>
+                <div class="flex w-full flex-col justify-center p-6 lg:w-1/2 lg:p-8">
+                    <span class="mb-1.5 text-sm font-medium tracking-wider text-[#4DA528] uppercase">{{ activeActivityContent.subtitle }}</span>
+                    <h3 class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl">{{ activeActivityContent.title }}</h3>
+                    <div class="mb-5 flex flex-wrap gap-6">
+                        <div v-for="feature in activeActivityContent.features" :key="feature" class="flex items-center gap-3 text-gray-600">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0f9eb] text-[#4DA528]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg></div>
+                            <span>{{ feature }}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="#" class="flex h-12 w-12 items-center justify-center rounded-full bg-[#4DA528] text-white transition-colors hover:bg-[#3d8420]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></a>
+                        <a href="#" class="font-semibold text-gray-900 transition-colors hover:text-[#4DA528]">{{ activeActivityContent.cta }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offer Package Section -->
+    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
+        <img :src="`/template/images/travel-list/1.jpg`" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10" />
+        <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center gap-12 lg:flex-row">
+                <div class="w-full lg:w-5/12">
+                    <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                    <h2 class="mb-4 mt-3 text-3xl leading-tight font-bold text-gray-900 md:text-4xl">
+                    Amazing Featured Tour <span class="font-['Yesteryear'] text-[#64748B]">Package</span> the world
+                    </h2>
+                    <p class="mb-8 text-gray-500">Discover exclusive tour packages with unbeatable prices and unforgettable experiences.</p>
+
+                    <div class="mb-8 flex items-center gap-6">
+                        <div class="text-center">
+                            <span class="text-5xl font-bold text-[#4DA528]">25</span>
+                            <span class="text-lg text-[#4DA528]">% off</span>
+                        </div>
+                        <p class="text-sm italic text-gray-600">Discover Great <span class="font-semibold text-[#4DA528]">Discount</span> Deals Around the World</p>
+                    </div>
+
+                    <div class="mb-8 flex items-center gap-4">
+                        <div class="text-sm text-gray-600">
+                            <span class="block font-bold text-gray-900">Hurry Up!</span>
+                            <span>Offer Ends in:</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="min-w-[56px] rounded-lg bg-white px-3 py-2 text-center shadow">
+                                <div class="text-lg font-bold text-gray-900">12</div>
+                                <div class="text-[10px] uppercase text-gray-400">Days</div>
+                            </div>
+                            <div class="min-w-[56px] rounded-lg bg-white px-3 py-2 text-center shadow">
+                                <div class="text-lg font-bold text-gray-900">08</div>
+                                <div class="text-[10px] uppercase text-gray-400">Hours</div>
+                            </div>
+                            <div class="min-w-[56px] rounded-lg bg-white px-3 py-2 text-center shadow">
+                                <div class="text-lg font-bold text-gray-900">45</div>
+                                <div class="text-[10px] uppercase text-gray-400">Min</div>
+                            </div>
+                            <div class="min-w-[56px] rounded-lg bg-white px-3 py-2 text-center shadow">
+                                <div class="text-lg font-bold text-gray-900">30</div>
+                                <div class="text-[10px] uppercase text-gray-400">Sec</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="#" class="inline-flex items-center gap-2 rounded bg-[#4DA528] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#3d8420]">
+                        Explore More
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                    </a>
+                </div>
+
+                <div class="w-full lg:w-7/12">
+                    <div class="mx-auto max-w-sm overflow-hidden rounded-2xl bg-white shadow-lg">
+                        <a href="#" class="group relative block overflow-hidden">
+                            <img src="/template/images/travel-list/2.jpg" alt="Offer Tour" class="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
+                                <span class="rounded-full bg-[#4DA528] px-3 py-1 text-xs font-medium text-white">Featured</span>
+                                <div class="flex gap-2">
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 7.8c-.7-2.4-2.6-4.3-5-5C14.8 2.5 13.5 2 12 2S9.2 2.5 8.2 2.8c-2.4.7-4.3 2.6-5 5C2.8 9 2.3 10.5 2.3 12s.5 3 1 4.2c.7 2.4 2.6 4.3 5 5 1 .3 2.3.8 3.8.8s2.8-.5 3.8-.8c2.4-.7 4.3-2.6 5-5 .5-1.2 1-2.7 1-4.2s-.6-3-1.1-4.2z"/></svg> 5</span>
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 2</span>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="p-4">
+                            <span class="mb-2 inline-block rounded bg-[#f0f9eb] px-2 py-0.5 text-xs font-medium text-[#4DA528]">Bestseller</span>
+                            <div class="mb-2 flex items-center gap-1 text-xs text-gray-400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg> United States USA</div>
+                            <h3 class="mb-2 font-bold leading-snug text-gray-900 transition-colors hover:text-[#4DA528]"><a href="#">Days and 6 nights From Moscow</a></h3>
+                            <div class="mb-3 flex items-center gap-1 text-xs text-yellow-400">★★★★★ <span class="text-gray-400">(1 Review)</span></div>
+                            <div class="mb-3 flex items-center justify-between text-xs text-gray-500">
+                                <span class="flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> 5 days</span>
+                                <span class="flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> 12 Person</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+                                <div><span class="text-xs text-gray-400">From</span> <span class="text-sm font-bold text-[#4DA528]">$169.00</span> <span class="text-xs text-gray-400 line-through">$199.00</span></div>
+                                <button class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-[#4DA528] hover:text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- Widget Banner Blog -->
 
-    <!-- Bottom CTA -->
-    <section class="mb--93">
-        <div class="tf-container">
-            <div class="callt-to-action flex-two">
-                <div class="callt-to-action-content flex-three">
-                    <div class="image">
-                        <img
-                            src="/template/images/page/ready.png"
-                            alt="Image"
-                        />
-                    </div>
-                    <div class="content">
-                        <h2 class="title-call">
-                            Ready to adventure and enjoy natural
-                        </h2>
-                        <p class="des">
-                            Lorem ipsum dolor sit amet, consectetur notted
-                            adipisicin
-                        </p>
+    <!-- Counter / Stats Section -->
+    <section class="relative py-20">
+        <div class="absolute inset-0 bg-[#4DA528]"></div>
+        <img src="/template/images/page/couter-top.png" alt="" class="pointer-events-none absolute top-0 left-0 w-full" />
+        <img src="/template/images/page/counter-bottom.png" alt="" class="pointer-events-none absolute bottom-0 left-0 w-full" />
+
+        <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-16 flex flex-col items-center justify-between gap-6 border-b border-white/20 pb-8 lg:flex-row">
+                <div class="flex items-center gap-4">
+                    <img src="/template/images/page/ready.png" alt="" class="h-14 w-14 rounded-full object-cover" />
+                    <div>
+                        <h3 class="text-xl font-bold text-white md:text-2xl">Ready to adventure and enjoy natural</h3>
+                        <p class="text-sm text-white/70">Lorem ipsum dolor sit amet, consectetur notted adipisicin</p>
                     </div>
                 </div>
-                <img
-                    src="/template/images/page/vector4.png"
-                    alt=""
-                    class="shape-ab"
-                />
-                <div class="callt-to-action-button">
-                    <a href="#" class="get-call">Let's get started</a>
+                <a href="#" class="shrink-0 rounded bg-white px-6 py-3 font-semibold text-[#4DA528] transition-colors hover:bg-gray-100">Let's get started</a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8 lg:grid-cols-4">
+                <div class="text-center">
+                    <div class="mx-auto mb-4 h-20 w-20 text-white/80">
+                        <svg viewBox="0 0 85 78" fill="currentColor"><path d="M0 62.7V40.9h13.8l9.9 15.7V30.8c-1.8-.5-3.1-2-3.1-4 0-2.3 1.8-4.1 4-4.4v-3.6h2.5v3.4h7.9l8.3-2.7c-1.7-.8-3-2.2-3.7-3.9l-1.5-3.8c-.7-1.8-.6-3.7.3-5.4.9-1.7 2.4-3 4.3-3.6 4-1.3 8.4.6 9.9 4.2l1.3 3.3h4.1v2.3h-3.5c.2 1.2 0 2.4-.4 3.5 1-.2 2.1-.2 3.1.3l1.2.5 9.6-.7 3.6 8.5-2.3.8-2.9-7-5.9.4c0 .1.1.2.2.3l8 18.8 4.7-3.4-2.9-7 2.3-.8 3.6 8.5-6.6 4.8c1.6 2.7 3.8 6.6.7 11.6l7.3 16.3v3.5H85v2.3H0v-9.1h2.5v6.8h53.4L43.3 61.9H18.8v-2.3h3.9l-10.4-16.5H2.5v19.6H0z"/></svg>
+                    </div>
+                    <div class="mb-2 text-4xl font-bold text-white">5489</div>
+                    <div class="mx-auto mb-2 h-0.5 w-10 bg-white/40"></div>
+                    <p class="text-sm text-white/80">Happy<br />Traveller</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-4 h-20 w-20 text-white/80">
+                        <svg viewBox="0 0 69 68" fill="none" stroke="currentColor" stroke-width="3"><path d="M26.5 2.3C13.5 2.3 2.9 12.8 2.9 25.9c0 6.4 2.5 12.1 6.6 16.4L2.9 49.5h23.6c13 0 23.6-10.6 23.6-23.6S39.5 2.3 26.5 2.3z"/><path d="M29.5 49.3c1.1 9.1 8.8 16.2 18.2 16.2h18.4l-5.2-5.6c3.2-3.3 5.2-7.8 5.2-12.7 0-9.4-7.1-17.2-16.2-18.2"/><path d="M33.1 16.4c-3.1 0-5.8 2.1-6.6 5v.1c-.8-2.9-3.5-5-6.6-5-3.6 0-6.6 2.9-6.6 6.6 0 8.2 13.1 16.4 13.1 16.4s13.1-8.2 13.1-16.4c0-3.6-3-6.6-6.6-6.6z"/></svg>
+                    </div>
+                    <div class="mb-2 text-4xl font-bold text-white">99.9%</div>
+                    <div class="mx-auto mb-2 h-0.5 w-10 bg-white/40"></div>
+                    <p class="text-sm text-white/80">Total Positive<br />Reviews</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-4 h-20 w-20 text-white/80">
+                        <svg viewBox="0 0 62 62" fill="currentColor"><path d="M18.6 13.2c0-3.2-2.6-5.7-5.7-5.7S7.1 10 7.1 13.2s2.6 5.7 5.7 5.7 5.8-2.5 5.8-5.7zm-5.7 2.1c-1.2 0-2.1-1-2.1-2.1s1-2.1 2.1-2.1 2.1 1 2.1 2.1-1 2.1-2.1 2.1z"/><path d="M62 30.1c0-1.8-2-3.1-3.7-2.3l-4.5 2.3h-9.4l-8.7 4.6c-.5.3-1.2.4-1.7.2-.6-.2-1-.7-1-1.3v-4.6l6.3-3.3c1.6-.8 2.7-2.4 3.1-4.2.3-1.5.1-3-.5-4.3l-1.8-3.8c-.6-1.2-1.6-2.1-2.9-2.5l-7.2-2.3c-.5-.2-1-.6-1.3-1.1L18.8 0l-8 6.2v9.1c0 .7.4 1.4 1 1.7l7.2 4.2v19.8c0 .7.4 1.3 1 1.6l10.4 5.7c.6.3 1.4.3 2 0l10.4-5.7c.6-.3 1-1 1-1.7v-6.1l5.2-2.7c.8-.4 1.7-.4 2.5 0l5.2 2.7v13.4c0 1.8 1.5 3.3 3.3 3.3h.7c1.8 0 3.3-1.5 3.3-3.3V30.1zM27.1 26.3l-3.8 2v-6.1l6.8-3.6 3.8 7.7h-6.8z"/></svg>
+                    </div>
+                    <div class="mb-2 text-4xl font-bold text-white">190+</div>
+                    <div class="mx-auto mb-2 h-0.5 w-10 bg-white/40"></div>
+                    <p class="text-sm text-white/80">Tour<br />Completed</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-4 h-20 w-20 text-white/80">
+                        <svg viewBox="0 0 74 62" fill="currentColor"><path d="M45.8 35.4l7.5-7.3c.3-.3.3-.6.2-.9 0-.3-.3-.6-.6-.6l-10.3-1.5-4.6-9.3c-.2-.3-.5-.5-.8-.5s-.7.2-.9.5l-4.6 9.3-10.3 1.5c-.3 0-.6.3-.7.6 0 .3 0 .7.3.9l7.4 7.3-1.8 10.3c-.1.3.1.7.4.9.3.2.6.2.9.1l9.2-4.8 9.2 4.8c.3.1.7.1.9-.1.3-.2.4-.5.4-.9L45.8 35.4z"/></svg>
+                    </div>
+                    <div class="mb-2 text-4xl font-bold text-white">5489</div>
+                    <div class="mx-auto mb-2 h-0.5 w-10 bg-white/40"></div>
+                    <p class="text-sm text-white/80">Awards<br />Winning</p>
                 </div>
             </div>
         </div>
     </section>
-    <!-- Bottom CTA -->
+
+    <!-- Destinations Section -->
+    <section class="bg-white py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-10 text-center">
+                <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">We provide top tourist destinations</h2>
+            </div>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div v-for="n in 6" :key="n" class="group relative overflow-hidden rounded-2xl">
+                    <a href="#" class="relative block h-64">
+                        <img :src="`/template/images/gallery/${n + 4}.jpg`" alt="Destination" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <span class="absolute top-4 left-4 rounded-full bg-[#4DA528] px-3 py-1 text-xs font-medium text-white">{{ n === 1 ? 3 : n === 2 ? 7 : n === 3 ? 9 : n === 4 ? 4 : 3 }} tours</span>
+                        <div class="absolute right-4 bottom-4 left-4">
+                            <span class="text-sm text-white/70">Nation</span>
+                            <h6 class="text-lg font-bold text-white"><a href="#" class="transition-colors hover:text-[#8dd266]">{{ ['Switzerland', 'Thailand', 'UK', 'Hongkong', 'Sri Lanka', 'Singapore'][n - 1] }}</a></h6>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-sm text-white/80">View all tours</span>
+                                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#4DA528] text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Adventures For Everyone -->
+    <section class="bg-gray-50 py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-10">
+                <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">Adventures for everyone</h2>
+            </div>
+
+            <div class="mb-8 flex flex-wrap gap-2 overflow-x-auto pb-2">
+                <button class="flex items-center gap-2 rounded-full bg-[#4DA528] px-5 py-2.5 text-sm font-medium whitespace-nowrap text-white transition-colors">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg>
+                    Hiking &amp; Tracking
+                </button>
+                <button class="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium whitespace-nowrap text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20" /><path d="M2 12c0-3 2-5 4-5s4 2 4 5" /><path d="M14 12c0-3 2-5 4-5s4 2 4 5" /></svg>
+                    River Cruises
+                </button>
+                <button class="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium whitespace-nowrap text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                    Adventure Tour
+                </button>
+                <button class="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium whitespace-nowrap text-gray-600 transition-colors hover:border-[#4DA528] hover:text-[#4DA528]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></svg>
+                    Animals plant
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <div v-for="n in 8" :key="n" class="flex items-center gap-3 rounded-xl bg-white p-3 transition-shadow hover:shadow-md">
+                    <a href="#" class="shrink-0"><img :src="`/template/images/gallery/${n + 6}.jpg`" alt="" class="h-16 w-16 rounded-lg object-cover" /></a>
+                    <div class="min-w-0">
+                        <span class="text-xs text-gray-400">(3 Tour)</span>
+                        <h6 class="truncate text-sm font-bold text-gray-900 transition-colors hover:text-[#4DA528]"><a href="#">Switzerland</a></h6>
+                        <p class="text-xs font-semibold text-[#4DA528]">$169.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Section -->
+    <section class="bg-white py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center gap-12 lg:flex-row">
+                <div class="relative w-full lg:w-5/12">
+                    <div class="flex gap-4">
+                        <img src="/template/images/about-us/about-h41.jpg" alt="" class="h-72 w-1/2 rounded-2xl object-cover" />
+                        <img src="/template/images/about-us/about-h4.jpg" alt="" class="mt-12 h-72 w-1/2 rounded-2xl object-cover" />
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-7/12">
+                    <div class="rounded-2xl bg-gray-50 p-8 lg:p-10">
+                        <div class="mb-8">
+                            <div class="mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">Michael Chen</h3>
+                                <span class="text-sm text-[#4DA528]">Photographer</span>
+                            </div>
+                            <p class="mb-6 leading-relaxed text-gray-600">
+                                The safari was a dream come true. Capturing wildlife in their natural habitat with expert guidance made this trip unforgettable. Highly recommended!
+                            </p>
+                            <div class="h-0.5 w-12 bg-[#4DA528]"></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <img :src="`/template/images/avata/${n}.jpg`" v-for="n in 3" :key="n" alt="" :class="['h-12 w-12 cursor-pointer rounded-full object-cover transition-opacity', n === 1 ? 'ring-2 ring-[#4DA528] ring-offset-2' : 'opacity-60 hover:opacity-100']" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Banner Contact Section -->
+    <section class="relative overflow-hidden bg-gray-800 py-20">
+        <div class="absolute inset-0">
+            <img src="/template/images/page/bg-counter.jpg" alt="" class="h-full w-full object-cover opacity-30" />
+        </div>
+        <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center gap-12 lg:flex-row">
+                <div class="w-full lg:w-7/12">
+                    <span class="text-lg italic text-[#66c333]">Explore the world</span>
+                    <h2 class="mb-8 mt-3 text-3xl leading-tight font-bold text-white md:text-4xl">
+                        Ready to travel with real adventure &amp; enjoy natural
+                    </h2>
+                    <div class="flex flex-wrap items-center gap-6">
+                        <a href="https://www.youtube.com/watch?v=n9LgeoJE4EI" target="_blank" class="flex h-14 w-14 items-center justify-center rounded-full bg-white transition-transform hover:scale-110">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#4DA528" stroke="none"><path d="M8 5v14l11-7z" /></svg>
+                        </a>
+                        <div class="text-sm text-white/80">
+                            <span>Contact us at</span>
+                            <a href="mailto:info@simplysafaris.com" class="block font-medium text-[#66c333] transition-colors hover:text-[#8dd266]">info@simplysafaris.com</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex w-full justify-center lg:w-5/12">
+                    <img src="/template/images/page/ready.png" alt="" class="max-w-xs object-contain lg:max-w-sm" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog Section -->
+    <section v-if="blogPosts && blogPosts.length > 0" class="py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-10 text-center">
+                <span class="text-sm font-medium tracking-wider text-[#4DA528] uppercase">Explore the world</span>
+                <h2 class="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
+                    Latest news &amp; articles <span class="font-['Yesteryear'] text-[#64748B]">from</span> the blog
+                </h2>
+            </div>
+            <div class="blog-carousel-wrap relative">
+                <Swiper
+                    :modules="[Autoplay, Navigation, Pagination]"
+                    :pagination="{ clickable: true }"
+                    :navigation="{ nextEl: '.blog-swiper-next', prevEl: '.blog-swiper-prev' }"
+                    :slides-per-view="3"
+                    :space-between="24"
+                    :grab-cursor="true"
+                    :breakpoints="{ 320: { slidesPerView: 1, spaceBetween: 16 }, 640: { slidesPerView: 2, spaceBetween: 20 }, 992: { slidesPerView: 3, spaceBetween: 24 } }"
+                    :loop="blogPosts.length > 3"
+                    :autoplay="{ delay: 3500, disableOnInteraction: true }"
+                    class="blog-swiper overflow-hidden"
+                >
+                    <SwiperSlide v-for="post in blogPosts" :key="post.id" class="!h-auto">
+                        <BlogCard :post="post" />
+                    </SwiperSlide>
+                </Swiper>
+                <button v-if="blogPosts.length > 1" class="swiper-custom-arrow swiper-custom-prev blog-swiper-prev !h-[52px] !w-[52px]" aria-label="Previous">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button v-if="blogPosts.length > 1" class="swiper-custom-arrow swiper-custom-next blog-swiper-next !h-[52px] !w-[52px]" aria-label="Next">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom CTA Bar -->
+    <section class="-mb-[93px]">
+        <div class="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+            <div class="relative flex items-center justify-between rounded-[7px] bg-[#4DA528] px-[39px] py-[35px] max-md:flex-col max-md:gap-5 max-md:text-center max-sm:px-5 max-sm:py-[30px]">
+                <div class="flex items-center gap-[43px] max-md:flex-col max-md:gap-4">
+                    <div class="shrink-0">
+                        <img src="/template/images/page/ready.png" alt="" class="w-[74px]" />
+                    </div>
+                    <div>
+                        <h2 class="mb-[10px] text-[36px] leading-[45px] font-bold text-white max-md:text-[29px] max-md:leading-[40px]">Ready to adventure and enjoy natural</h2>
+                        <p class="text-[18px] leading-[32px] text-white/50">Lorem ipsum dolor sit amet, consectetur notted adipisicin</p>
+                    </div>
+                </div>
+                <img src="/template/images/page/vector4.png" alt="" class="absolute right-[22%] hidden w-auto xl:block" />
+                <div class="shrink-0 max-md:mt-5">
+                    <a href="#" class="inline-block rounded-[5px] bg-white px-9 py-[23px] text-[15px] font-semibold tracking-[0.05em] text-[#4DA528] uppercase transition-all hover:bg-[#FF970D] hover:text-white">Let's get started</a>
+                </div>
+            </div>
+        </div>
+    </section>
 </template>
 
 <style scoped>
-.duration-slider-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    width: 280px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 16px 20px;
-    z-index: 100;
-}
-
-.slider-header {
-    margin-bottom: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    color: #081e2a;
-}
-
-.slider-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #999;
-    line-height: 1;
-}
-
-.slider-close:hover {
-    color: #4da528;
-}
-
 .range-slider {
     position: relative;
     display: flex;
     align-items: center;
     width: 100%;
     height: 18px;
-    margin-bottom: 8px;
-    margin-top: 6px;
     user-select: none;
     touch-action: none;
 }
-
 .slider-track {
     position: relative;
     flex: 1;
@@ -2779,14 +955,12 @@ onUnmounted(() => {
     background: #e0e0e0;
     border-radius: 2px;
 }
-
 .slider-fill {
     position: absolute;
     height: 100%;
     background: #4da528;
     border-radius: 2px;
 }
-
 .slider-thumb {
     display: block;
     width: 18px;
@@ -2797,14 +971,100 @@ onUnmounted(() => {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     cursor: pointer;
 }
-
 .slider-thumb:focus-visible {
     outline: 2px solid rgba(77, 165, 40, 0.35);
     outline-offset: 2px;
 }
 
-.slider-labels {
-    font-size: 12px;
-    color: #999;
+.blog-swiper :deep(.swiper-pagination) {
+    bottom: 0;
+}
+.blog-swiper :deep(.swiper-pagination-bullet-active) {
+    background: #4da528;
+}
+
+.swiper-custom-arrow {
+    position: absolute;
+    top: 42%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+    color: #081e2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease, background 0.2s;
+}
+.swiper-custom-arrow:hover {
+    background: #ffffff;
+}
+.blog-carousel-wrap:hover .swiper-custom-arrow,
+.tour-carousel-wrap:hover .swiper-custom-arrow {
+    opacity: 1;
+}
+.swiper-custom-prev {
+    left: 8px;
+}
+.swiper-custom-next {
+    right: 8px;
+}
+.blog-carousel-wrap .blog-swiper-prev {
+    left: -70px;
+}
+.blog-carousel-wrap .blog-swiper-next {
+    right: -70px;
+}
+
+.tour-swiper :deep(.swiper-pagination) {
+    bottom: 0;
+}
+.tour-swiper :deep(.swiper-pagination-bullet-active) {
+    background: #4da528;
+}
+.tour-carousel-wrap .swiper-custom-arrow {
+    top: 38%;
+}
+.tour-carousel-wrap .tour-swiper-prev {
+    left: -70px;
+}
+.tour-carousel-wrap .tour-swiper-next {
+    right: -70px;
+}
+@media (hover: none) {
+    .swiper-custom-arrow {
+        opacity: 0.9;
+    }
+}
+@media (max-width: 1299px) {
+    .blog-carousel-wrap .swiper-custom-arrow,
+    .tour-carousel-wrap .swiper-custom-arrow {
+        width: 44px;
+        height: 44px;
+    }
+    .blog-carousel-wrap .swiper-custom-arrow svg,
+    .tour-carousel-wrap .swiper-custom-arrow svg {
+        width: 20px;
+        height: 20px;
+    }
+    .blog-carousel-wrap .blog-swiper-prev {
+        left: -70px;
+    }
+    .blog-carousel-wrap .blog-swiper-next {
+        right: -70px;
+    }
+    .tour-carousel-wrap .tour-swiper-prev {
+        left: -70px;
+    }
+    .tour-carousel-wrap .tour-swiper-next {
+        right: -70px;
+    }
 }
 </style>

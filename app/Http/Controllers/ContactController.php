@@ -24,15 +24,6 @@ class ContactController extends Controller
         ]);
     }
 
-    public function contact2(Request $request): Response
-    {
-        return Inertia::render('ContactTailwind', [
-            'turnstileSiteKey' => config('services.cf_turnstile.site_key'),
-            'isLocal' => app()->environment('local'),
-            'status' => $request->session()->get('status'),
-        ]);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([

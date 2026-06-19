@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { MapPin } from 'lucide-vue-next';
-import { show as tourShow } from '@/routes/tours2';
+import { show as tourShow } from '@/routes/tours';
 
 interface TourCardPlace {
     id: number;

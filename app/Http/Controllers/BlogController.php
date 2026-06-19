@@ -79,68 +79,6 @@ class BlogController extends Controller
         ]);
     }
 
-    public function index2(Request $request): Response
-    {
-        $selectedCategory = null;
-
-        if ($request->filled('category')) {
-            $selectedCategory = BlogCategory::query()
-                ->where('slug', $request->input('category'))
-                ->first(['id', 'name', 'slug']);
-        }
-
-        $posts = BlogPost::query()
-            ->where('is_published', true)
-            ->whereNotNull('published_at')
-            ->when($selectedCategory, fn ($query) => $query
-                ->whereHas('categories', fn ($q) => $q->where('blog_categories.id', $selectedCategory->id))
-            )
-            ->with(['user:id,name', 'categories:id,name'])
-            ->latest('published_at')
-            ->paginate(12, ['id', 'user_id', 'title', 'slug', 'content', 'featured_image', 'published_at'])
-            ->appends($request->only('category'))
-            ->through(fn (BlogPost $post) => $this->mapPublicPost($post));
-
-        $recentPosts = BlogPost::query()
-            ->where('is_published', true)
-            ->whereNotNull('published_at')
-            ->latest('published_at')
-            ->limit(5)
-            ->get(['id', 'title', 'slug', 'featured_image', 'published_at'])
-            ->map(fn (BlogPost $post) => [
-                'id' => $post->id,
-                'title' => $post->title,
-                'slug' => $post->slug,
-                'featured_image' => $this->resolveImageUrl($post->featured_image),
-                'published_at' => $post->published_at?->format('M j, Y'),
-            ]);
-
-        $categories = BlogCategory::query()
-            ->withCount(['posts' => fn ($query) => $query
-                ->where('is_published', true)
-                ->whereNotNull('published_at'),
-            ])
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug'])
-            ->map(fn (BlogCategory $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'slug' => $category->slug,
-                'posts_count' => $category->posts_count,
-            ]);
-
-        return Inertia::render('blog/IndexTailwind', [
-            'posts' => $posts,
-            'recentPosts' => $recentPosts,
-            'categories' => $categories,
-            'selectedCategory' => $selectedCategory ? [
-                'id' => $selectedCategory->id,
-                'name' => $selectedCategory->name,
-                'slug' => $selectedCategory->slug,
-            ] : null,
-        ]);
-    }
-
     public function show(BlogPost $post): Response
     {
         abort_unless($post->is_published && $post->published_at !== null, 404);
@@ -198,64 +136,7 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show2(BlogPost $post): Response
-    {
-        abort_unless($post->is_published && $post->published_at !== null, 404);
-
-        $post->load(['user:id,name', 'categories:id,name,slug']);
-
-        $recentPosts = BlogPost::query()
-            ->where('is_published', true)
-            ->whereNotNull('published_at')
-            ->where('id', '!=', $post->id)
-            ->latest('published_at')
-            ->limit(5)
-            ->get(['id', 'title', 'slug', 'featured_image', 'published_at'])
-            ->map(fn (BlogPost $recent) => [
-                'id' => $recent->id,
-                'title' => $recent->title,
-                'slug' => $recent->slug,
-                'featured_image' => $this->resolveImageUrl($recent->featured_image),
-                'published_at' => $recent->published_at?->format('M j, Y'),
-            ]);
-
-        $categories = BlogCategory::query()
-            ->withCount(['posts' => fn ($query) => $query
-                ->where('is_published', true)
-                ->whereNotNull('published_at'),
-            ])
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug'])
-            ->map(fn (BlogCategory $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'slug' => $category->slug,
-                'posts_count' => $category->posts_count,
-            ]);
-
-        return Inertia::render('blog/ShowTailwind', [
-            'post' => [
-                'id' => $post->id,
-                'title' => $post->title,
-                'slug' => $post->slug,
-                'content' => $post->content,
-                'excerpt' => $this->makeExcerpt($post->content),
-                'featured_image' => $this->resolveImageUrl($post->featured_image),
-                'published_at' => $post->published_at?->toIso8601String(),
-                'published_at_display' => $post->published_at?->format('M j, Y'),
-                'author' => $post->user?->name ?? 'Unknown',
-                'categories' => $post->categories->map(fn ($category) => [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                ])->all(),
-            ],
-            'recentPosts' => $recentPosts,
-            'categories' => $categories,
-        ]);
-    }
-
-    public function home2(): Response
+    public function home(): Response
     {
         $posts = BlogPost::query()
             ->where('is_published', true)
@@ -315,7 +196,7 @@ class BlogController extends Controller
                 'places' => $tour->places->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'country' => $p->country?->name, 'country_code' => $p->country?->country_code])->all(),
             ]);
 
-        return Inertia::render('HomeTailwind', [
+        return Inertia::render('Home', [
             'blogPosts' => $posts,
             'countries' => $countries,
             'categories' => $categories,

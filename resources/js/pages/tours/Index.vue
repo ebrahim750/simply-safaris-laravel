@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash-es';
-import { MapPin, Bike, Tag } from 'lucide-vue-next';
+import { Bike, MapPin, Tag } from 'lucide-vue-next';
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
 import Pagination from '@/components/Pagination.vue';
-import TourCard from '@/components/tours/TourCard.vue';
+import TourCardTailwind from '@/components/tours/TourCardTailwind.vue';
 import { home } from '@/routes';
 import tourRoutes from '@/routes/tours';
 import type { QueryParams } from '@/wayfinder';
@@ -39,12 +39,7 @@ interface ToursPaginator {
 
 const props = defineProps<{
     tours: ToursPaginator;
-    countries: Array<{
-        id: number;
-        name: string;
-        country_code: string | null;
-        places: Array<{ id: number; name: string }>;
-    }>;
+    countries: Array<{ id: number; name: string; country_code: string | null; places: Array<{ id: number; name: string }> }>;
     activities: Array<{ id: number; name: string }>;
     categories: Array<{ id: number; name: string }>;
     filters: {
@@ -72,7 +67,7 @@ const durationRange = ref([props.filters.duration.min, props.filters.duration.ma
 
 const destinationCount = computed(() => selectedCountries.value.length + selectedPlaces.value.length);
 
-const hasActiveFilters = computed(() =>
+const hasFilterFilters = computed(() =>
     selectedCountries.value.length > 0 ||
     selectedPlaces.value.length > 0 ||
     selectedCategories.value.length > 0 ||
@@ -80,57 +75,56 @@ const hasActiveFilters = computed(() =>
     priceRange.value[0] !== 100 ||
     priceRange.value[1] !== 5000 ||
     durationRange.value[0] !== 1 ||
-    durationRange.value[1] !== 30 ||
-    props.filters.search !== null
+    durationRange.value[1] !== 30
+);
+
+const hasActiveFilters = computed(() =>
+    hasFilterFilters.value || props.filters.search !== null
 );
 
 function applyFilters(): void {
     const params: QueryParams = {};
 
     if (selectedCategories.value.length > 0) {
-        params.categories = selectedCategories.value;
-    }
+ params.categories = selectedCategories.value; 
+}
 
     if (selectedActivities.value.length > 0) {
-        params.activities = selectedActivities.value;
-    }
+ params.activities = selectedActivities.value; 
+}
 
     if (selectedPlaces.value.length > 0) {
-        params.places = selectedPlaces.value;
-    }
+ params.places = selectedPlaces.value; 
+}
 
     if (selectedCountries.value.length > 0) {
-        params.countries = selectedCountries.value;
-    }
+ params.countries = selectedCountries.value; 
+}
 
     if (priceRange.value[0] !== 100) {
-        params.price_min = priceRange.value[0];
-    }
+ params.price_min = priceRange.value[0]; 
+}
 
     if (priceRange.value[1] !== 5000) {
-        params.price_max = priceRange.value[1];
-    }
+ params.price_max = priceRange.value[1]; 
+}
 
     if (durationRange.value[0] !== 1) {
-        params.duration_min = durationRange.value[0];
-    }
+ params.duration_min = durationRange.value[0]; 
+}
 
     if (durationRange.value[1] !== 30) {
-        params.duration_max = durationRange.value[1];
-    }
+ params.duration_max = durationRange.value[1]; 
+}
 
     if (props.filters.search) {
-        params.search = props.filters.search;
-    }
+ params.search = props.filters.search; 
+}
 
     isLoading.value = true;
-    router.get(tourRoutes.index({ query: params }).url, {}, {
-        preserveState: true,
-        preserveScroll: true,
-        onFinish: () => {
-            isLoading.value = false;
-        },
-    });
+    router.get(tourRoutes.index({ query: params }).url, {}, { preserveState: true, preserveScroll: true, onFinish: () => {
+ isLoading.value = false; 
+} });
 }
 
 const debouncedApplyFilters = debounce(applyFilters, 300);
@@ -147,13 +141,9 @@ function clearFilters(): void {
     durationRange.value = [1, 30];
 
     isLoading.value = true;
-    router.get(tourRoutes.index().url, {}, {
-        preserveState: true,
-        preserveScroll: true,
-        onFinish: () => {
-            isLoading.value = false;
-        },
-    });
+    router.get(tourRoutes.index().url, {}, { preserveState: true, preserveScroll: true, onFinish: () => {
+ isLoading.value = false; 
+} });
 }
 </script>
 
@@ -161,296 +151,167 @@ function clearFilters(): void {
     <Head title="Tours" />
 
     <!-- Breadcrumb -->
-    <section class="breadcumb-section">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-12 center z-index1">
-                    <h1 class="title">Tours</h1>
-                    <ul class="breadcumb-list flex-five">
-                        <li><Link :href="home()">Home</Link></li>
-                        <li><span>Tours</span></li>
-                    </ul>
-                    <img
-                        class="bcrumb-ab"
-                        src="/template/images/page/mask-bcrumb.png"
-                        alt=""
-                    />
-                </div>
+    <section class="relative flex items-center bg-cover bg-center bg-no-repeat py-[137px]" style="background-image: url('/template/images/page/breakcrumb.jpg')">
+        <div class="absolute inset-0" style="background: linear-gradient(262deg, rgba(0,0,0,0.33), rgba(4,29,11,0.89))"></div>
+        <div class="relative z-[1] mx-auto w-full max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="mb-[26px] text-[65px] font-semibold leading-[82px] text-white max-lg:text-[45px] max-lg:leading-[50px]">Tours</h1>
+                <nav class="flex items-center justify-center text-[18px] leading-[22.68px]">
+                    <Link :href="home()" class="relative mr-[30px] text-[#4DA528] after:absolute after:right-[-18px] after:top-1/2 after:-translate-y-1/2 after:text-[10px] after:text-white after:content-['\203A']">Home</Link>
+                    <span class="text-white">Tours</span>
+                </nav>
+                <img class="absolute left-[7%] top-[40%] hidden w-auto lg:block" src="/template/images/page/mask-bcrumb.png" alt="" />
             </div>
         </div>
     </section>
 
-    <!-- Widget archieve tour -->
-    <section class="archieve-tour">
-        <div class="tf-container">
-            <div class="row">
-                <div class="col-lg-3">
-                    <form action="/" class="sider-bar-tour-package">
-                        <div class="widget-filter mb-40">
-                            <div class="flex items-center justify-between gap-2">
-                                <h6 class="title-tour !mb-0 whitespace-nowrap">Filter Tours</h6>
-                                <button
-                                    type="button"
-                                    class="shrink-0 whitespace-nowrap font-medium !text-red-500 !border-red-500 bg-transparent hover:!bg-red-50 rounded-md px-2 py-0.5 my-1 transition-colors btn-clear-filter"
-                                    :class="{ 'opacity-0 pointer-events-none': !hasActiveFilters }"
-                                    @click="clearFilters"
-                                >
-                                    Clear filters
-                                </button>
-                            </div>
-                            <div class="group-select-wrap">
-                                <div class="destination-accordion mb-22">
-                                    <button
-                                        type="button"
-                                        class="accordion-trigger"
-                                        @click="isDestinationOpen = !isDestinationOpen"
-                                    >
-                                        <MapPin class="filter-icon" />
-                                        <div class="search-bar-group relative">
-                                            <label>Destination</label>
-                                            <span class="current">Location</span>
-                                        </div>
-                                        <span v-if="destinationCount > 0" class="filter-badge">selected: {{ destinationCount }}</span>
-                                        <span
-                                            class="trigger-chevron"
-                                            :class="{ 'is-open': isDestinationOpen }"
-                                        >&#9662;</span>
-                                    </button>
-                                    <div v-show="isDestinationOpen" class="accordion-panel">
-                                        <div
-                                            v-for="country in countries"
-                                            :key="country.id"
-                                            class="accordion-country"
-                                        >
-                                            <div class="country-header group-check-box-wrap">
-                                                <div class="checkbox">
-                                                    <input
-                                                        :id="'country-' + country.id"
-                                                        v-model="selectedCountries"
-                                                        type="checkbox"
-                                                        :value="country.id"
-                                                        @change="applyFilters"
-                                                    />
-                                                    <label :for="'country-' + country.id">
-                                                        <img
-                                                            v-if="country.country_code"
-                                                            :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`"
-                                                            :alt="country.name"
-                                                            class="country-flag"
-                                                        />
-                                                        <span>{{ country.name }}</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="country-places group-check-box-wrap">
-                                                <div
-                                                    v-for="place in country.places"
-                                                    :key="place.id"
-                                                    class="checkbox"
-                                                >
-                                                    <input
-                                                        :id="'place-' + place.id"
-                                                        v-model="selectedPlaces"
-                                                        type="checkbox"
-                                                        :value="place.id"
-                                                        @change="applyFilters"
-                                                    />
-                                                    <label :for="'place-' + place.id">{{ place.name }}</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="destination-accordion mb-22">
-                                    <button
-                                        type="button"
-                                        class="accordion-trigger"
-                                        @click="isCategoriesOpen = !isCategoriesOpen"
-                                    >
-                                        <Tag class="filter-icon" />
-                                        <div class="search-bar-group relative">
-                                            <label>Categories</label>
-                                            <span class="current">Tour Type</span>
-                                        </div>
-                                        <span v-if="selectedCategories.length > 0" class="filter-badge">selected: {{ selectedCategories.length }}</span>
-                                        <span
-                                            class="trigger-chevron"
-                                            :class="{ 'is-open': isCategoriesOpen }"
-                                        >&#9662;</span>
-                                    </button>
-                                    <div v-show="isCategoriesOpen" class="accordion-panel">
-                                        <div
-                                            v-for="category in categories"
-                                            :key="category.id"
-                                            class="category-item group-check-box-wrap"
-                                        >
-                                            <div class="checkbox">
-                                                <input
-                                                    :id="'category-' + category.id"
-                                                    v-model="selectedCategories"
-                                                    type="checkbox"
-                                                    :value="category.id"
-                                                    @change="applyFilters"
-                                                />
-                                                <label :for="'category-' + category.id">{{ category.name }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="destination-accordion mb-22">
-                                    <button
-                                        type="button"
-                                        class="accordion-trigger"
-                                        @click="isActivitiesOpen = !isActivitiesOpen"
-                                    >
-                                        <Bike class="filter-icon" />
-                                        <div class="search-bar-group relative">
-                                            <label>Activities</label>
-                                            <span class="current">Booking Type</span>
-                                        </div>
-                                        <span v-if="selectedActivities.length > 0" class="filter-badge">selected: {{ selectedActivities.length }}</span>
-                                        <span
-                                            class="trigger-chevron"
-                                            :class="{ 'is-open': isActivitiesOpen }"
-                                        >&#9662;</span>
-                                    </button>
-                                    <div v-show="isActivitiesOpen" class="accordion-panel">
-                                        <div
-                                            v-for="activity in activities"
-                                            :key="activity.id"
-                                            class="activity-item group-check-box-wrap"
-                                        >
-                                            <div class="checkbox">
-                                                <input
-                                                    :id="'activity-' + activity.id"
-                                                    v-model="selectedActivities"
-                                                    type="checkbox"
-                                                    :value="activity.id"
-                                                    @change="applyFilters"
-                                                />
-                                                <label :for="'activity-' + activity.id">{{ activity.name }}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <fieldset class="group-select relative mb-40">
-                                    <h6 class="title-tour">Filter By Price</h6>
-                                    <div class="widget widget-price">
-                                        <div class="slider-labels flex-two">
-                                            <span>Min</span>
-                                            <span>Max</span>
-                                        </div>
-                                        <SliderRoot
-                                            v-model="priceRange"
-                                            class="range-slider"
-                                            :min="100"
-                                            :max="5000"
-                                            :step="100"
-                                            :min-steps-between-thumbs="1"
-                                        >
-                                            <SliderTrack class="slider-track">
-                                                <SliderRange class="slider-fill" />
-                                            </SliderTrack>
-                                            <SliderThumb
-                                                v-for="(_, index) in priceRange"
-                                                :key="index"
-                                                class="slider-thumb"
-                                                :aria-label="index === 0 ? 'Minimum price' : 'Maximum price'"
-                                            />
-                                        </SliderRoot>
-                                        <div class="slider-labels flex-two">
-                                            <span>${{ priceRange[0].toLocaleString() }}</span>
-                                            <span>${{ priceRange[1].toLocaleString() }}</span>
-                                        </div>
-                                    </div>
-                                </fieldset>
-                                <fieldset class="group-select relative mb-40">
-                                    <h6 class="title-tour">Filter By Duration</h6>
-                                    <div class="widget widget-price">
-                                        <div class="slider-labels flex-two">
-                                            <span>Min</span>
-                                            <span>Max</span>
-                                        </div>
-                                        <SliderRoot
-                                            v-model="durationRange"
-                                            class="range-slider"
-                                            :min="1"
-                                            :max="30"
-                                            :step="1"
-                                            :min-steps-between-thumbs="1"
-                                        >
-                                            <SliderTrack class="slider-track">
-                                                <SliderRange class="slider-fill" />
-                                            </SliderTrack>
-                                            <SliderThumb
-                                                v-for="(_, index) in durationRange"
-                                                :key="index"
-                                                class="slider-thumb"
-                                                :aria-label="index === 0 ? 'Minimum duration' : 'Maximum duration'"
-                                            />
-                                        </SliderRoot>
-                                        <div class="slider-labels flex-two">
-                                            <span>{{ durationRange[0] }} {{ durationRange[0] === 1 ? 'day' : 'days' }}</span>
-                                            <span>{{ durationRange[1] }} {{ durationRange[1] === 1 ? 'day' : 'days' }}</span>
-                                        </div>
-                                    </div>
-                                </fieldset>
+    <!-- Tours + Filter -->
+    <section class="pt-8 pb-[105px]">
+        <div class="mx-auto max-w-[1366px] px-4 sm:px-6 lg:px-8">
+            <p v-if="props.filters.search" class="mb-3 text-center text-[25px] text-gray-600">Search results for: "{{ props.filters.search }}"</p>
+            <div v-if="props.filters.search" class="mb-12 flex justify-center">
+                <button
+                    type="button"
+                    class="cursor-pointer rounded-md px-3 py-1 text-[13px] font-medium text-gray-500 transition-colors hover:bg-gray-100"
+                    @click="clearFilters"
+                >Clear search term</button>
+            </div>
+            <div class="flex flex-wrap lg:gap-[30px]">
+                <!-- Sidebar Filters -->
+                <div class="w-full lg:w-[340px] lg:shrink-0 xl:w-[380px]">
+                    <form class="rounded-[10px] border border-[#EDEEEE] px-10 py-9" @submit.prevent>
+                        <div class="mb-10">
+                            <div class="mb-[30px] flex items-center justify-between gap-2">
+                                <h6 class="title-tour-tailwind pl-[10px] text-[20px] font-semibold text-[#081e2a]">Filter Tours</h6>
+                                <button type="button" class="rounded-md px-2 py-0.5 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50" :class="{ 'opacity-0 pointer-events-none': !hasFilterFilters }" @click="clearFilters">Clear filters</button>
                             </div>
 
+                            <!-- Destinations -->
+                            <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isDestinationOpen = !isDestinationOpen">
+                                    <MapPin class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
+                                    <div class="flex-1">
+                                        <span class="block text-[14px] font-medium text-[#4f545a]">Destination</span>
+                                        <span class="block text-[16px] font-semibold text-[#081e2a]">Location</span>
+                                    </div>
+                                    <span v-if="destinationCount > 0" class="mr-1 inline-flex items-center justify-center rounded-full bg-[#4DA528] px-1.5 py-0.5 text-[12px] font-semibold text-white">selected: {{ destinationCount }}</span>
+                                    <span class="absolute right-4 top-1/2 -mt-1 h-2 w-2 border-r-[1.7px] border-b-[1.7px] border-[#3a3a3c] transition-transform duration-150" :class="isDestinationOpen ? '-rotate-[135deg]' : 'rotate-45'" />
+                                </button>
+                                <div v-show="isDestinationOpen" class="max-h-[280px] overflow-y-auto border-t border-gray-100 px-4 py-3">
+                                    <div v-for="country in countries" :key="country.id">
+                                        <div class="py-1.5">
+                                            <label :for="'country-' + country.id" class="inline-flex items-center gap-2 text-[15px] font-semibold text-[#081e2a] cursor-pointer">
+                                                <input :id="'country-' + country.id" v-model="selectedCountries" type="checkbox" :value="country.id" class="accent-[#4da528]" @change="applyFilters" />
+                                                {{ country.name }}
+                                                <img v-if="country.country_code" :src="`https://flagcdn.com/w40/${country.country_code.toLowerCase()}.png`" :alt="country.name" class="ml-auto h-4 w-6 rounded-sm border border-gray-200 object-cover" />
+                                            </label>
+                                        </div>
+                                        <div class="pl-7 pb-2">
+                                            <div v-for="place in country.places" :key="place.id" class="py-1">
+                                                <label :for="'place-' + place.id" class="inline-flex items-center gap-2 text-[14px] text-[#4f545a] cursor-pointer">
+                                                    <input :id="'place-' + place.id" v-model="selectedPlaces" type="checkbox" :value="place.id" class="accent-[#4da528]" @change="applyFilters" />
+                                                    {{ place.name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categories -->
+                            <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isCategoriesOpen = !isCategoriesOpen">
+                                    <Tag class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
+                                    <div class="flex-1">
+                                        <span class="block text-[14px] font-medium text-[#4f545a]">Categories</span>
+                                        <span class="block text-[16px] font-semibold text-[#081e2a]">Tour Type</span>
+                                    </div>
+                                    <span v-if="selectedCategories.length > 0" class="mr-1 inline-flex items-center justify-center rounded-full bg-[#4DA528] px-1.5 py-0.5 text-[12px] font-semibold text-white">selected: {{ selectedCategories.length }}</span>
+                                    <span class="absolute right-4 top-1/2 -mt-1 h-2 w-2 border-r-[1.7px] border-b-[1.7px] border-[#3a3a3c] transition-transform duration-150" :class="isCategoriesOpen ? '-rotate-[135deg]' : 'rotate-45'" />
+                                </button>
+                                <div v-show="isCategoriesOpen" class="max-h-[280px] overflow-y-auto border-t border-gray-100 px-4 py-3">
+                                    <div v-for="category in categories" :key="category.id" class="py-1.5">
+                                        <label :for="'category-' + category.id" class="inline-flex items-center gap-2 text-[14px] text-[#4f545a] cursor-pointer">
+                                            <input :id="'category-' + category.id" v-model="selectedCategories" type="checkbox" :value="category.id" class="accent-[#4da528]" @change="applyFilters" />
+                                            {{ category.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activities -->
+                            <div class="mb-[22px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                <button type="button" class="relative flex w-full items-center py-3 pl-[53px] pr-10 text-left" @click="isActivitiesOpen = !isActivitiesOpen">
+                                    <Bike class="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#4DA528]" />
+                                    <div class="flex-1">
+                                        <span class="block text-[14px] font-medium text-[#4f545a]">Activities</span>
+                                        <span class="block text-[16px] font-semibold text-[#081e2a]">Activity Type</span>
+                                    </div>
+                                    <span v-if="selectedActivities.length > 0" class="mr-1 inline-flex items-center justify-center rounded-full bg-[#4DA528] px-1.5 py-0.5 text-[12px] font-semibold text-white">selected: {{ selectedActivities.length }}</span>
+                                    <span class="absolute right-4 top-1/2 -mt-1 h-2 w-2 border-r-[1.7px] border-b-[1.7px] border-[#3a3a3c] transition-transform duration-150" :class="isActivitiesOpen ? '-rotate-[135deg]' : 'rotate-45'" />
+                                </button>
+                                <div v-show="isActivitiesOpen" class="max-h-[280px] overflow-y-auto border-t border-gray-100 px-4 py-3">
+                                    <div v-for="activity in activities" :key="activity.id" class="py-1.5">
+                                        <label :for="'activity-' + activity.id" class="inline-flex items-center gap-2 text-[14px] text-[#4f545a] cursor-pointer">
+                                            <input :id="'activity-' + activity.id" v-model="selectedActivities" type="checkbox" :value="activity.id" class="accent-[#4da528]" @change="applyFilters" />
+                                            {{ activity.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Price Filter -->
+                            <fieldset class="relative mb-10 mt-10">
+                                <h6 class="mb-3 text-[18px] font-semibold text-[#081e2a]">Filter By Price</h6>
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between text-[12px] text-gray-400">
+                                        <span>Min</span><span>Max</span>
+                                    </div>
+                                    <SliderRoot v-model="priceRange" class="range-slider" :min="100" :max="5000" :step="100" :min-steps-between-thumbs="1">
+                                        <SliderTrack class="slider-track"><SliderRange class="slider-fill" /></SliderTrack>
+                                        <SliderThumb v-for="(_, index) in priceRange" :key="index" class="slider-thumb" :aria-label="index === 0 ? 'Minimum price' : 'Maximum price'" />
+                                    </SliderRoot>
+                                    <div class="mt-2 flex items-center justify-between text-[12px] text-gray-400">
+                                        <span>${{ priceRange[0].toLocaleString() }}</span><span>${{ priceRange[1].toLocaleString() }}</span>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <!-- Duration Filter -->
+                            <fieldset class="relative mb-10">
+                                <h6 class="mb-3 text-[18px] font-semibold text-[#081e2a]">Filter By Duration</h6>
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between text-[12px] text-gray-400">
+                                        <span>Min</span><span>Max</span>
+                                    </div>
+                                    <SliderRoot v-model="durationRange" class="range-slider" :min="1" :max="30" :step="1" :min-steps-between-thumbs="1">
+                                        <SliderTrack class="slider-track"><SliderRange class="slider-fill" /></SliderTrack>
+                                        <SliderThumb v-for="(_, index) in durationRange" :key="index" class="slider-thumb" :aria-label="index === 0 ? 'Minimum duration' : 'Maximum duration'" />
+                                    </SliderRoot>
+                                    <div class="mt-2 flex items-center justify-between text-[12px] text-gray-400">
+                                        <span>{{ durationRange[0] }} {{ durationRange[0] === 1 ? 'day' : 'days' }}</span><span>{{ durationRange[1] }} {{ durationRange[1] === 1 ? 'day' : 'days' }}</span>
+                                    </div>
+                                </div>
+                            </fieldset>
                         </div>
                     </form>
                 </div>
-                <div class="col-lg-9 listing-list-car-wrap" style="position: relative">
-                    <p
-                        v-if="props.filters.search"
-                        class="text-center text-gray-600"
-                        style="font-size: 25px; position: absolute; top: 0; left: 0; right: 0;"
-                    >
-                        Search results for: "{{ props.filters.search }}"
-                    </p>
-                    <div class="listing-list-car-grid mb-60" style="padding-top: 45px">
-                        <TourCard
-                            v-for="tour in tours.data"
-                            :key="tour.id"
-                            :tour="tour"
-                            :is-loading="isLoading"
-                        />
+
+                <!-- Tour Cards -->
+                <div class="relative w-full lg:min-w-0 lg:flex-1 max-lg:mt-10">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <TourCardTailwind v-for="tour in tours.data" :key="tour.id" :tour="tour" :is-loading="isLoading" />
                     </div>
-                    <div class="row" v-if="tours.data.length > 0 && !isLoading">
-                        <div class="col-md-12">
-                            <div class="flex justify-center">
-                                <Pagination :paginator="tours" />
-                            </div>
-                        </div>
+                    <div v-if="tours.data.length > 0 && !isLoading" class="mt-16 flex justify-center">
+                        <Pagination :paginator="tours" />
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-
 </template>
 
 <style scoped>
-.listing-list-car-grid {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-.filter-icon {
-    width: 20px;
-    height: 20px;
-    color: #4DA528;
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-.mt-30 {
-    margin-top: 30px;
-}
-
 .range-slider {
     position: relative;
     display: flex;
@@ -494,164 +355,18 @@ function clearFilters(): void {
     outline-offset: 2px;
 }
 
-.slider-labels {
-    font-size: 12px;
-    color: #999;
-}
-
-.destination-accordion {
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    background: #fff;
-    overflow: hidden;
-}
-
-.accordion-trigger {
+.title-tour-tailwind {
     position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 12px 40px 12px 53px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
 }
 
-.accordion-trigger .search-bar-group {
-    flex: 1;
-}
-
-.accordion-trigger .search-bar-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #4f545a;
-    margin-bottom: 2px;
-}
-
-.accordion-trigger .current {
-    display: block;
-    font-size: 16px;
-    font-weight: 600;
-    color: #081e2a;
-}
-
-.trigger-chevron {
+.title-tour-tailwind::before {
+    height: 17px;
+    width: 1px;
+    background-color: #4DA528;
     position: absolute;
-    right: 16px;
+    content: '';
+    left: 0;
     top: 50%;
-    margin-top: -4px;
-    width: 8px;
-    height: 8px;
-    border-bottom: 1.7px solid #3a3a3c;
-    border-right: 1.7px solid #3a3a3c;
-    transform: rotate(45deg);
-    transition: all 0.15s ease-in-out;
-    pointer-events: none;
-}
-
-.trigger-chevron.is-open {
-    transform: rotate(-135deg);
-    margin-top: 0;
-}
-
-.accordion-panel {
-    max-height: 280px;
-    overflow-y: auto;
-    padding: 0 16px 12px;
-    border-top: 1px solid #f0f0f0;
-}
-
-.country-header {
-    padding: 6px 0;
-}
-
-.destination-accordion .country-header.group-check-box-wrap input[type="checkbox"] + label {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #081e2a !important;
-}
-
-.country-flag {
-    width: 20px;
-    height: 14px;
-    border-radius: 2px;
-    object-fit: cover;
-    border: 1px solid #e5e5e5;
-    order: 1;
-}
-
-.country-places {
-    padding-left: 28px;
-    padding-bottom: 8px;
-}
-
-.activity-item,
-.category-item {
-    padding: 6px 0;
-}
-
-.btn-clear-filter {
-    font-size: 13px !important;
-}
-
-.filter-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: #4DA528;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    margin-right: 4px;
-}
-
-.destination-accordion .activity-item.group-check-box-wrap input[type="checkbox"] + label,
-.destination-accordion .category-item.group-check-box-wrap input[type="checkbox"] + label {
-    font-size: 14px !important;
-    font-weight: 400 !important;
-    color: #4f545a !important;
-}
-
-.destination-accordion .country-places.group-check-box-wrap input[type="checkbox"] + label {
-    font-size: 14px !important;
-    font-weight: 400 !important;
-    color: #4f545a !important;
-}
-
-.place-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    font-size: 14px;
-    color: #4f545a;
-    cursor: pointer;
-}
-
-.place-option input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #4da528;
-}
-
-@media (max-width: 991px) {
-    .listing-list-car-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 767px) {
-    .listing-list-car-grid {
-        grid-template-columns: 1fr;
-    }
+    transform: translateY(-50%);
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { User } from 'lucide-vue-next';
-import { show as blogShow } from '@/routes/blog2';
+import { show as blogShow } from '@/routes/blog';
 
 interface BlogCategory {
     id: number;
