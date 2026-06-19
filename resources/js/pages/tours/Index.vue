@@ -139,11 +139,9 @@ function clearFilters(): void {
     selectedActivities.value = [];
     priceRange.value = [100, 5000];
     durationRange.value = [1, 30];
-
-    isLoading.value = true;
-    router.get(tourRoutes.index().url, {}, { preserveState: true, preserveScroll: true, onFinish: () => {
- isLoading.value = false; 
-} });
+    debouncedApplyFilters.cancel();
+    window.history.replaceState({}, '', '/tours');
+    router.reload({ preserveScroll: true });
 }
 </script>
 
